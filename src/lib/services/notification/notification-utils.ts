@@ -384,27 +384,27 @@ export class NotificationUtils {
     const sortedNotifications = [...notifications];
 
     switch (sortBy) {
-    case "priority":
-      return sortedNotifications.sort((a, b) => {
-        const priorityOrder: { [key in NotificationPriority]?: number } = {
-          URGENT: 4,
-          HIGH: 3,
-          MEDIUM: 2,
-          LOW: 1,
-        };
-        const bScore = priorityOrder[b.priority as NotificationPriority] ?? 0;
-        const aScore = priorityOrder[a.priority as NotificationPriority] ?? 0;
-        return bScore - aScore;
-      });
+      case "priority":
+        return sortedNotifications.sort((a, b) => {
+          const priorityOrder: { [key in NotificationPriority]?: number } = {
+            URGENT: 4,
+            HIGH: 3,
+            MEDIUM: 2,
+            LOW: 1,
+          };
+          const bScore = priorityOrder[b.priority as NotificationPriority] ?? 0;
+          const aScore = priorityOrder[a.priority as NotificationPriority] ?? 0;
+          return bScore - aScore;
+        });
 
-    case "time":
-      return sortedNotifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      case "time":
+        return sortedNotifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-    case "score":
-    default:
-      return sortedNotifications.sort(
-        (a, b) => this.calculateNotificationScore(b) - this.calculateNotificationScore(a)
-      );
+      case "score":
+      default:
+        return sortedNotifications.sort(
+          (a, b) => this.calculateNotificationScore(b) - this.calculateNotificationScore(a)
+        );
     }
   }
 }

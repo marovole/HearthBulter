@@ -435,10 +435,10 @@ export default async function MemberDetailPage({
 
                       {member.medicalReports[0].ocrStatus === "COMPLETED" &&
                         member.medicalReports[0].indicators.length > 0 && (
-                        <div className="mt-3">
-                          {member.medicalReports[0].indicators.filter(
-                            (ind: MedicalIndicator) => ind.isAbnormal
-                          ).length > 0 ? (
+                          <div className="mt-3">
+                            {member.medicalReports[0].indicators.filter(
+                              (ind: MedicalIndicator) => ind.isAbnormal
+                            ).length > 0 ? (
                               <div className="rounded border border-red-200 bg-red-50 p-3">
                                 <p className="mb-2 text-sm font-medium text-red-900">
                                   发现{" "}
@@ -476,8 +476,8 @@ export default async function MemberDetailPage({
                                 <p className="text-sm font-medium text-green-900">所有指标均正常</p>
                               </div>
                             )}
-                        </div>
-                      )}
+                          </div>
+                        )}
 
                       <div className="mt-4 flex gap-2">
                         <Link

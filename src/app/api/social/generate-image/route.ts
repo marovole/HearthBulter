@@ -67,32 +67,32 @@ function validateTemplateData(
 ): { isValid: boolean; error?: string } {
   try {
     switch (template) {
-    case ShareTemplate.HEALTH_REPORT:
-      return validateHealthReportData(data);
+      case ShareTemplate.HEALTH_REPORT:
+        return validateHealthReportData(data);
 
-    case ShareTemplate.GOAL_ACHIEVED:
-      return validateGoalAchievedData(data);
+      case ShareTemplate.GOAL_ACHIEVED:
+        return validateGoalAchievedData(data);
 
-    case ShareTemplate.ACHIEVEMENT_UNLOCKED:
-      return validateAchievementUnlockedData(data);
+      case ShareTemplate.ACHIEVEMENT_UNLOCKED:
+        return validateAchievementUnlockedData(data);
 
-    case ShareTemplate.WEIGHT_LOSS:
-      return validateWeightLossData(data);
+      case ShareTemplate.WEIGHT_LOSS:
+        return validateWeightLossData(data);
 
-    case ShareTemplate.STREAK_CELEBRATION:
-      return validateStreakCelebrationData(data);
+      case ShareTemplate.STREAK_CELEBRATION:
+        return validateStreakCelebrationData(data);
 
-    case ShareTemplate.RECIPE_CARD:
-      return validateRecipeCardData(data);
+      case ShareTemplate.RECIPE_CARD:
+        return validateRecipeCardData(data);
 
-    case ShareTemplate.PERSONAL_RECORD:
-      return validatePersonalRecordData(data);
+      case ShareTemplate.PERSONAL_RECORD:
+        return validatePersonalRecordData(data);
 
-    case ShareTemplate.COMMUNITY_POST:
-      return validateCommunityPostData(data);
+      case ShareTemplate.COMMUNITY_POST:
+        return validateCommunityPostData(data);
 
-    default:
-      return { isValid: false, error: "不支持的模板类型" };
+      default:
+        return { isValid: false, error: "不支持的模板类型" };
     }
   } catch (error) {
     return {
@@ -330,17 +330,17 @@ export async function GET(request: NextRequest) {
       const socialTemplates = [ShareTemplate.RECIPE_CARD, ShareTemplate.COMMUNITY_POST];
 
       switch (category) {
-      case "health":
-        templates = healthTemplates;
-        break;
-      case "achievement":
-        templates = achievementTemplates;
-        break;
-      case "social":
-        templates = socialTemplates;
-        break;
-      default:
-        templates = [];
+        case "health":
+          templates = healthTemplates;
+          break;
+        case "achievement":
+          templates = achievementTemplates;
+          break;
+        case "social":
+          templates = socialTemplates;
+          break;
+        default:
+          templates = [];
       }
     }
 

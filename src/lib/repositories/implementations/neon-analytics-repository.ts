@@ -214,15 +214,15 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
 
   private async fetchTrendPoints(query: TrendQueryDTO): Promise<TimeSeriesPointDTO[]> {
     switch (query.metric) {
-    case "CALORIES":
-    case "PROTEIN":
-    case "CARBS":
-    case "FAT":
-      return this.fetchNutritionTrend(query);
-    case "HEALTH_SCORE":
-      return this.fetchScoreTrend(query);
-    default:
-      return this.fetchHealthMetricTrend(query);
+      case "CALORIES":
+      case "PROTEIN":
+      case "CARBS":
+      case "FAT":
+        return this.fetchNutritionTrend(query);
+      case "HEALTH_SCORE":
+        return this.fetchScoreTrend(query);
+      default:
+        return this.fetchHealthMetricTrend(query);
     }
   }
 
@@ -474,10 +474,10 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
         >,
         medicalReportsLimit > 0
           ? (neonAdapter.healthReport.findMany({
-            where: { memberId, deletedAt: null },
-            orderBy: { reportDate: "desc" },
-            take: medicalReportsLimit,
-          }) as Promise<
+              where: { memberId, deletedAt: null },
+              orderBy: { reportDate: "desc" },
+              take: medicalReportsLimit,
+            }) as Promise<
               Array<{
                 id: string;
                 reportType: string;

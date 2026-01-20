@@ -96,19 +96,19 @@ export function MealListView({ meals }: MealListViewProps) {
       let comparison = 0;
 
       switch (sortField) {
-      case "date":
-        comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
-        break;
-      case "calories":
-        comparison = a.calories - b.calories;
-        break;
-      case "protein":
-        comparison = a.protein - b.protein;
-        break;
-      case "mealType":
-        const typeOrder = ["BREAKFAST", "LUNCH", "DINNER", "SNACK"];
-        comparison = typeOrder.indexOf(a.mealType) - typeOrder.indexOf(b.mealType);
-        break;
+        case "date":
+          comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+          break;
+        case "calories":
+          comparison = a.calories - b.calories;
+          break;
+        case "protein":
+          comparison = a.protein - b.protein;
+          break;
+        case "mealType":
+          const typeOrder = ["BREAKFAST", "LUNCH", "DINNER", "SNACK"];
+          comparison = typeOrder.indexOf(a.mealType) - typeOrder.indexOf(b.mealType);
+          break;
       }
 
       return sortOrder === "asc" ? comparison : -comparison;

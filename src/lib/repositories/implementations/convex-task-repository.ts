@@ -247,15 +247,15 @@ function applyTaskSort(tasks: Doc<"tasks">[], query: TaskListQuery) {
 
 function taskSortValue(task: Doc<"tasks">, field: NonNullable<TaskListQuery["sort"]>["field"]) {
   switch (field) {
-  case "priority":
-    return task.priority ?? "MEDIUM";
-  case "dueDate":
-    return task.dueDate ?? 0;
-  case "createdAt":
-    return task.createdAt;
-  case "updatedAt":
-    return task.updatedAt;
-  default:
-    return task.createdAt;
+    case "priority":
+      return task.priority ?? "MEDIUM";
+    case "dueDate":
+      return task.dueDate ?? 0;
+    case "createdAt":
+      return task.createdAt;
+    case "updatedAt":
+      return task.updatedAt;
+    default:
+      return task.createdAt;
   }
 }

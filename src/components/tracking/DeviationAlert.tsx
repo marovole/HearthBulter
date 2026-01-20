@@ -59,40 +59,40 @@ export function DeviationAlert({ memberId, onDismiss, onViewDetails }: Deviation
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-    case "HIGH":
-      return "bg-red-50 border-red-200 text-red-800";
-    case "MEDIUM":
-      return "bg-yellow-50 border-yellow-200 text-yellow-800";
-    case "LOW":
-      return "bg-blue-50 border-blue-200 text-blue-800";
-    default:
-      return "bg-gray-50 border-gray-200 text-gray-800";
+      case "HIGH":
+        return "bg-red-50 border-red-200 text-red-800";
+      case "MEDIUM":
+        return "bg-yellow-50 border-yellow-200 text-yellow-800";
+      case "LOW":
+        return "bg-blue-50 border-blue-200 text-blue-800";
+      default:
+        return "bg-gray-50 border-gray-200 text-gray-800";
     }
   };
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
-    case "HIGH":
-      return <AlertTriangle className="h-5 w-5 text-red-600" />;
-    case "MEDIUM":
-      return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
-    case "LOW":
-      return <Info className="h-5 w-5 text-blue-600" />;
-    default:
-      return <Info className="h-5 w-5 text-gray-600" />;
+      case "HIGH":
+        return <AlertTriangle className="h-5 w-5 text-red-600" />;
+      case "MEDIUM":
+        return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
+      case "LOW":
+        return <Info className="h-5 w-5 text-blue-600" />;
+      default:
+        return <Info className="h-5 w-5 text-gray-600" />;
     }
   };
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-    case "IMPROVING":
-      return <TrendingDown className="h-4 w-4 text-green-600" />;
-    case "WORSENING":
-      return <TrendingUp className="h-4 w-4 text-red-600" />;
-    case "STABLE":
-      return <div className="h-4 w-4 rounded-full bg-gray-400" />;
-    default:
-      return null;
+      case "IMPROVING":
+        return <TrendingDown className="h-4 w-4 text-green-600" />;
+      case "WORSENING":
+        return <TrendingUp className="h-4 w-4 text-red-600" />;
+      case "STABLE":
+        return <div className="h-4 w-4 rounded-full bg-gray-400" />;
+      default:
+        return null;
     }
   };
 
@@ -108,14 +108,14 @@ export function DeviationAlert({ memberId, onDismiss, onViewDetails }: Deviation
 
   const getTrendText = (trend: string) => {
     switch (trend) {
-    case "IMPROVING":
-      return "趋势改善";
-    case "WORSENING":
-      return "趋势恶化";
-    case "STABLE":
-      return "保持稳定";
-    default:
-      return "";
+      case "IMPROVING":
+        return "趋势改善";
+      case "WORSENING":
+        return "趋势恶化";
+      case "STABLE":
+        return "保持稳定";
+      default:
+        return "";
     }
   };
 

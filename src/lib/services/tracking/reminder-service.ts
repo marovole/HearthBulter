@@ -133,16 +133,16 @@ class ReminderService {
     const { memberId, reminderType, message } = reminder;
 
     switch (reminderType) {
-    case "WEIGHT":
-      return this.generateWeightReminder(memberId, scheduledTime, message ?? undefined);
-    case "BLOOD_PRESSURE":
-      return this.generateBloodPressureReminder(memberId, scheduledTime, message ?? undefined);
-    case "HEART_RATE":
-      return this.generateHeartRateReminder(memberId, scheduledTime, message ?? undefined);
-    case "GENERAL":
-      return this.generateGeneralReminder(memberId, scheduledTime, message ?? undefined);
-    default:
-      return null;
+      case "WEIGHT":
+        return this.generateWeightReminder(memberId, scheduledTime, message ?? undefined);
+      case "BLOOD_PRESSURE":
+        return this.generateBloodPressureReminder(memberId, scheduledTime, message ?? undefined);
+      case "HEART_RATE":
+        return this.generateHeartRateReminder(memberId, scheduledTime, message ?? undefined);
+      case "GENERAL":
+        return this.generateGeneralReminder(memberId, scheduledTime, message ?? undefined);
+      default:
+        return null;
     }
   }
 

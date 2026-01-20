@@ -173,7 +173,7 @@ export class DashboardDataService {
 
     const family = await convexClient.query<(Doc<"families"> & { creatorId: Id<"users"> }) | null>(
       api.families.getById,
-    { familyId: member.familyId }
+      { familyId: member.familyId }
     );
 
     const isAdmin = family?.creatorId === member.userId || member.role === "ADMIN";

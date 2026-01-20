@@ -230,8 +230,8 @@ export class ConvexRecommendationRepository implements RecommendationRepository 
     const recipeIds = Array.from(new Set([...ratingIds, ...favoriteIds, ...viewIds]));
     const recipes = recipeIds.length
       ? await convexClient.query<Array<Record<string, unknown>>>(api.recipes.listByIds, {
-        ids: recipeIds as Id<"recipes">[],
-      })
+          ids: recipeIds as Id<"recipes">[],
+        })
       : [];
 
     const recipeMap = new Map(recipes.map((recipe) => [recipe._id, recipe]));

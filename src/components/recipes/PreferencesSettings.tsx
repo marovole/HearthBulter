@@ -548,25 +548,25 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
 
               {preferences.learnedPreferences &&
                 Object.keys(preferences.learnedPreferences).length > 0 && (
-                <div className="space-y-2">
-                  <Label>AI学习到的偏好</Label>
-                  <div className="rounded-lg border bg-muted/50 p-3">
-                    <div className="text-sm">
-                      <div>偏好明确度: {(preferences.preferenceScore * 100).toFixed(1)}%</div>
-                      <div className="mt-2">
+                  <div className="space-y-2">
+                    <Label>AI学习到的偏好</Label>
+                    <div className="rounded-lg border bg-muted/50 p-3">
+                      <div className="text-sm">
+                        <div>偏好明确度: {(preferences.preferenceScore * 100).toFixed(1)}%</div>
+                        <div className="mt-2">
                           学习到的菜系:{" "}
-                        {preferences.learnedPreferences.preferredCuisines?.join(", ") || "暂无"}
-                      </div>
-                      <div className="mt-1">
+                          {preferences.learnedPreferences.preferredCuisines?.join(", ") || "暂无"}
+                        </div>
+                        <div className="mt-1">
                           学习到的食材:{" "}
-                        {preferences.learnedPreferences.preferredIngredients
-                          ?.slice(0, 5)
-                          .join(", ") || "暂无"}
+                          {preferences.learnedPreferences.preferredIngredients
+                            ?.slice(0, 5)
+                            .join(", ") || "暂无"}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
             </CardContent>
           </Card>
         </TabsContent>

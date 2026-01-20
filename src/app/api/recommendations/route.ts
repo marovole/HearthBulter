@@ -108,68 +108,68 @@ export async function POST(request: NextRequest) {
     const { type, data } = body;
 
     switch (type) {
-    case "rating": {
-      const rating = await convexClient.mutation<Record<string, unknown>>(
-        api["recipe-interactions"].addOrUpdateRating,
-        {
-          recipeId: data.recipeId as Id<"recipes">,
-          memberId: data.memberId as Id<"familyMembers">,
-          rating: data.rating,
-          comment: data.review ?? undefined,
-          tags: data.tags ?? undefined,
-        }
-      );
-      return NextResponse.json({ success: true, data: rating });
-    }
-    case "favorite": {
-      const favorite = await convexClient.mutation<Record<string, unknown>>(
-        api["recipe-interactions"].addFavorite,
-        {
-          recipeId: data.recipeId as Id<"recipes">,
-          memberId: data.memberId as Id<"familyMembers">,
-          notes: data.notes ?? undefined,
-        }
-      );
-      return NextResponse.json({ success: true, data: favorite });
-    }
-    case "view": {
-      const view = await convexClient.mutation<Record<string, unknown>>(
-        api["recipe-interactions"].addView,
-        {
-          recipeId: data.recipeId as Id<"recipes">,
-          memberId: data.memberId as Id<"familyMembers">,
-          viewDuration: data.viewDuration ?? undefined,
-          source: data.viewSource ?? undefined,
-        }
-      );
-      return NextResponse.json({ success: true, data: view });
-    }
-    case "substitution": {
-      const substitutionId = await convexClient.mutation<string>(
-        api.recipes.createIngredientSubstitution,
-        {
-          originalIngredientId: data.originalIngredientId as Id<"recipeIngredients">,
-          substituteFoodId: data.substitutedIngredientId as Id<"foods">,
-          substitutionType: data.substitutionType || "MANUAL",
-          reason: data.substitutionReason ?? undefined,
-          nutritionDelta: {
-            qualityImpact: data.qualityImpact,
-            isSuccessful: data.isSuccessful,
-            feedback: data.feedback,
-          },
-        }
-      );
+      case "rating": {
+        const rating = await convexClient.mutation<Record<string, unknown>>(
+          api["recipe-interactions"].addOrUpdateRating,
+          {
+            recipeId: data.recipeId as Id<"recipes">,
+            memberId: data.memberId as Id<"familyMembers">,
+            rating: data.rating,
+            comment: data.review ?? undefined,
+            tags: data.tags ?? undefined,
+          }
+        );
+        return NextResponse.json({ success: true, data: rating });
+      }
+      case "favorite": {
+        const favorite = await convexClient.mutation<Record<string, unknown>>(
+          api["recipe-interactions"].addFavorite,
+          {
+            recipeId: data.recipeId as Id<"recipes">,
+            memberId: data.memberId as Id<"familyMembers">,
+            notes: data.notes ?? undefined,
+          }
+        );
+        return NextResponse.json({ success: true, data: favorite });
+      }
+      case "view": {
+        const view = await convexClient.mutation<Record<string, unknown>>(
+          api["recipe-interactions"].addView,
+          {
+            recipeId: data.recipeId as Id<"recipes">,
+            memberId: data.memberId as Id<"familyMembers">,
+            viewDuration: data.viewDuration ?? undefined,
+            source: data.viewSource ?? undefined,
+          }
+        );
+        return NextResponse.json({ success: true, data: view });
+      }
+      case "substitution": {
+        const substitutionId = await convexClient.mutation<string>(
+          api.recipes.createIngredientSubstitution,
+          {
+            originalIngredientId: data.originalIngredientId as Id<"recipeIngredients">,
+            substituteFoodId: data.substitutedIngredientId as Id<"foods">,
+            substitutionType: data.substitutionType || "MANUAL",
+            reason: data.substitutionReason ?? undefined,
+            nutritionDelta: {
+              qualityImpact: data.qualityImpact,
+              isSuccessful: data.isSuccessful,
+              feedback: data.feedback,
+            },
+          }
+        );
 
-      return NextResponse.json({
-        success: true,
-        data: { id: substitutionId },
-      });
-    }
-    default:
-      return NextResponse.json(
-        { success: false, error: "Invalid interaction type" },
-        { status: 400 }
-      );
+        return NextResponse.json({
+          success: true,
+          data: { id: substitutionId },
+        });
+      }
+      default:
+        return NextResponse.json(
+          { success: false, error: "Invalid interaction type" },
+          { status: 400 }
+        );
     }
   } catch (error) {
     console.error("Interaction API error:", error);

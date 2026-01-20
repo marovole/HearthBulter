@@ -435,14 +435,14 @@ export class ColdStartHandler {
       const sodium = (recipe.sodium as number | undefined) ?? 0;
 
       switch (goalType) {
-      case "LOSE_WEIGHT":
-        return calories <= 400 && carbs <= 30;
-      case "GAIN_MUSCLE":
-        return protein >= 25 && calories >= 500;
-      case "IMPROVE_HEALTH":
-        return fiber >= 5 && sodium <= 600;
-      default:
-        return true;
+        case "LOSE_WEIGHT":
+          return calories <= 400 && carbs <= 30;
+        case "GAIN_MUSCLE":
+          return protein >= 25 && calories >= 500;
+        case "IMPROVE_HEALTH":
+          return fiber >= 5 && sodium <= 600;
+        default:
+          return true;
       }
     });
 

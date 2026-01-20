@@ -505,14 +505,14 @@ export class SpendingAnalyzer {
 
   private getThresholdValue(type: string): number {
     switch (type) {
-    case "WARNING_80":
-      return 80;
-    case "WARNING_100":
-      return 100;
-    case "OVER_BUDGET_110":
-      return 110;
-    default:
-      return 100;
+      case "WARNING_80":
+        return 80;
+      case "WARNING_100":
+        return 100;
+      case "OVER_BUDGET_110":
+        return 110;
+      default:
+        return 100;
     }
   }
 
@@ -523,14 +523,14 @@ export class SpendingAnalyzer {
     usedAmount: number
   ): string {
     switch (type) {
-    case "WARNING_80":
-      return `${budgetName}已使用${currentValue.toFixed(1)}%，请注意控制支出`;
-    case "WARNING_100":
-      return `${budgetName}已用完预算，当前支出${usedAmount.toFixed(2)}元`;
-    case "OVER_BUDGET_110":
-      return `${budgetName}已超支${(currentValue - 100).toFixed(1)}%，请立即控制支出`;
-    default:
-      return `${budgetName}支出异常`;
+      case "WARNING_80":
+        return `${budgetName}已使用${currentValue.toFixed(1)}%，请注意控制支出`;
+      case "WARNING_100":
+        return `${budgetName}已用完预算，当前支出${usedAmount.toFixed(2)}元`;
+      case "OVER_BUDGET_110":
+        return `${budgetName}已超支${(currentValue - 100).toFixed(1)}%，请立即控制支出`;
+      default:
+        return `${budgetName}支出异常`;
     }
   }
 
@@ -539,18 +539,18 @@ export class SpendingAnalyzer {
     let start = now;
 
     switch (type) {
-    case "WEEKLY":
-      start = now - 7 * 24 * 60 * 60 * 1000;
-      break;
-    case "MONTHLY":
-      start = now - 30 * 24 * 60 * 60 * 1000;
-      break;
-    case "QUARTERLY":
-      start = now - 90 * 24 * 60 * 60 * 1000;
-      break;
-    case "YEARLY":
-      start = now - 365 * 24 * 60 * 60 * 1000;
-      break;
+      case "WEEKLY":
+        start = now - 7 * 24 * 60 * 60 * 1000;
+        break;
+      case "MONTHLY":
+        start = now - 30 * 24 * 60 * 60 * 1000;
+        break;
+      case "QUARTERLY":
+        start = now - 90 * 24 * 60 * 60 * 1000;
+        break;
+      case "YEARLY":
+        start = now - 365 * 24 * 60 * 60 * 1000;
+        break;
     }
 
     return { start, end: now, type };
@@ -561,26 +561,26 @@ export class SpendingAnalyzer {
     const end = current.end;
 
     switch (type) {
-    case "WEEKLY":
-      return {
-        start: start - 7 * 24 * 60 * 60 * 1000,
-        end: end - 7 * 24 * 60 * 60 * 1000,
-      };
-    case "MONTHLY":
-      return {
-        start: start - 30 * 24 * 60 * 60 * 1000,
-        end: end - 30 * 24 * 60 * 60 * 1000,
-      };
-    case "QUARTERLY":
-      return {
-        start: start - 90 * 24 * 60 * 60 * 1000,
-        end: end - 90 * 24 * 60 * 60 * 1000,
-      };
-    case "YEARLY":
-      return {
-        start: start - 365 * 24 * 60 * 60 * 1000,
-        end: end - 365 * 24 * 60 * 60 * 1000,
-      };
+      case "WEEKLY":
+        return {
+          start: start - 7 * 24 * 60 * 60 * 1000,
+          end: end - 7 * 24 * 60 * 60 * 1000,
+        };
+      case "MONTHLY":
+        return {
+          start: start - 30 * 24 * 60 * 60 * 1000,
+          end: end - 30 * 24 * 60 * 60 * 1000,
+        };
+      case "QUARTERLY":
+        return {
+          start: start - 90 * 24 * 60 * 60 * 1000,
+          end: end - 90 * 24 * 60 * 60 * 1000,
+        };
+      case "YEARLY":
+        return {
+          start: start - 365 * 24 * 60 * 60 * 1000,
+          end: end - 365 * 24 * 60 * 60 * 1000,
+        };
     }
     return { start, end };
   }

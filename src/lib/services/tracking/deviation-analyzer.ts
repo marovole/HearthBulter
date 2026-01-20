@@ -209,16 +209,16 @@ export async function analyzePeriodDeviation(memberId: string, days: number = 7)
   for (const nutrient of nutrients) {
     const deviations = targets.map((t) => {
       switch (nutrient) {
-      case "calories":
-        return t.caloriesDeviation;
-      case "protein":
-        return t.proteinDeviation;
-      case "carbs":
-        return t.carbsDeviation;
-      case "fat":
-        return t.fatDeviation;
-      default:
-        return 0;
+        case "calories":
+          return t.caloriesDeviation;
+        case "protein":
+          return t.proteinDeviation;
+        case "carbs":
+          return t.carbsDeviation;
+        case "fat":
+          return t.fatDeviation;
+        default:
+          return 0;
       }
     });
 

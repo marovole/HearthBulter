@@ -83,8 +83,8 @@ export class ConvexRecipeRepository implements RecipeRepository {
     const recipeIds = result.items.map((favorite) => favorite.recipeId as string);
     const recipes = recipeIds.length
       ? await convexClient.query<Array<Record<string, unknown>>>(api.recipes.listByIds, {
-        ids: recipeIds as Id<"recipes">[],
-      })
+          ids: recipeIds as Id<"recipes">[],
+        })
       : [];
 
     const recipeMap = new Map(recipes.map((recipe) => [recipe._id, recipe]));

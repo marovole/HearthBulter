@@ -116,9 +116,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       ...deviceConnection,
       member: member
         ? {
-          id: member.id,
-          name: member.name,
-        }
+            id: member.id,
+            name: member.name,
+          }
         : null,
       healthData: healthData || [],
     };
