@@ -100,33 +100,33 @@ export function ConsentDialog({
 
   const getCategoryIcon = (category: ConsentType["category"]) => {
     switch (category) {
-    case "ai_analysis":
-      return <Brain className="w-5 h-5" />;
-    case "data_processing":
-      return <Database className="w-5 h-5" />;
-    case "health_sharing":
-      return <Users className="w-5 h-5" />;
-    case "research":
-      return <Shield className="w-5 h-5" />;
-    default:
-      return <Info className="w-5 h-5" />;
+      case "ai_analysis":
+        return <Brain className="w-5 h-5" />;
+      case "data_processing":
+        return <Database className="w-5 h-5" />;
+      case "health_sharing":
+        return <Users className="w-5 h-5" />;
+      case "research":
+        return <Shield className="w-5 h-5" />;
+      default:
+        return <Info className="w-5 h-5" />;
     }
   };
 
   const getCategoryColor = (category: ConsentType["category"]) => {
     switch (category) {
-    case "ai_analysis":
-      return "text-blue-600 bg-blue-50 border-blue-200";
-    case "data_processing":
-      return "text-green-600 bg-green-50 border-green-200";
-    case "health_sharing":
-      return "text-purple-600 bg-purple-50 border-purple-200";
-    case "research":
-      return "text-orange-600 bg-orange-50 border-orange-200";
-    case "marketing":
-      return "text-pink-600 bg-pink-50 border-pink-200";
-    default:
-      return "text-gray-600 bg-gray-50 border-gray-200";
+      case "ai_analysis":
+        return "text-blue-600 bg-blue-50 border-blue-200";
+      case "data_processing":
+        return "text-green-600 bg-green-50 border-green-200";
+      case "health_sharing":
+        return "text-purple-600 bg-purple-50 border-purple-200";
+      case "research":
+        return "text-orange-600 bg-orange-50 border-orange-200";
+      case "marketing":
+        return "text-pink-600 bg-pink-50 border-pink-200";
+      default:
+        return "text-gray-600 bg-gray-50 border-gray-200";
     }
   };
 

@@ -111,18 +111,18 @@ export async function shareToPlatform(
     const shareUrl = generateShareUrl(platform, data);
 
     switch (platform) {
-    case "wechat":
-    case "wechatMoments":
-      // 微信分享需要生成二维码
-      return await shareToWechat(shareUrl, data);
+      case "wechat":
+      case "wechatMoments":
+        // 微信分享需要生成二维码
+        return await shareToWechat(shareUrl, data);
 
-    case "copy":
-      return await copyToClipboard(shareUrl);
+      case "copy":
+        return await copyToClipboard(shareUrl);
 
-    default:
-      // 其他平台直接打开链接
-      window.open(shareUrl, "_blank", "width=600,height=400");
-      return true;
+      default:
+        // 其他平台直接打开链接
+        window.open(shareUrl, "_blank", "width=600,height=400");
+        return true;
     }
   } catch (error) {
     console.error(`分享到${platform}失败:`, error);

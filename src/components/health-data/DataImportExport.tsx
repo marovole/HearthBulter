@@ -196,14 +196,14 @@ export function DataImportExport({ memberId, onClose }: DataImportExportProps) {
 
   const getFormatIcon = (format: string) => {
     switch (format) {
-    case "csv":
-      return <FileSpreadsheet className="h-5 w-5 text-green-600" />;
-    case "pdf":
-      return <FileText className="h-5 w-5 text-red-600" />;
-    case "excel":
-      return <FileSpreadsheet className="h-5 w-5 text-blue-600" />;
-    default:
-      return <FileText className="h-5 w-5 text-gray-600" />;
+      case "csv":
+        return <FileSpreadsheet className="h-5 w-5 text-green-600" />;
+      case "pdf":
+        return <FileText className="h-5 w-5 text-red-600" />;
+      case "excel":
+        return <FileSpreadsheet className="h-5 w-5 text-blue-600" />;
+      default:
+        return <FileText className="h-5 w-5 text-gray-600" />;
     }
   };
 

@@ -195,21 +195,21 @@ export function BudgetSetting({
     let endDate: Date;
 
     switch (period) {
-    case BudgetPeriod.WEEKLY:
-      endDate = addWeeks(startDate, 1);
-      break;
-    case BudgetPeriod.MONTHLY:
-      endDate = addMonths(startDate, 1);
-      break;
-    case BudgetPeriod.QUARTERLY:
-      endDate = addQuarters(startDate, 1);
-      break;
-    case BudgetPeriod.YEARLY:
-      endDate = addMonths(startDate, 12);
-      break;
-    case BudgetPeriod.CUSTOM:
-      // 保持当前日期
-      return;
+      case BudgetPeriod.WEEKLY:
+        endDate = addWeeks(startDate, 1);
+        break;
+      case BudgetPeriod.MONTHLY:
+        endDate = addMonths(startDate, 1);
+        break;
+      case BudgetPeriod.QUARTERLY:
+        endDate = addQuarters(startDate, 1);
+        break;
+      case BudgetPeriod.YEARLY:
+        endDate = addMonths(startDate, 12);
+        break;
+      case BudgetPeriod.CUSTOM:
+        // 保持当前日期
+        return;
     }
 
     form.setValue("startDate", startDate);

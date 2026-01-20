@@ -208,21 +208,21 @@ export class RuleBasedRecommender {
     const fat = recipe.fat ?? 0;
 
     switch (healthGoal.goalType) {
-    case "LOSE_WEIGHT":
-      if (calories <= 400) score += 10;
-      if (carbs <= protein * 2) score += 5;
-      break;
-    case "GAIN_MUSCLE":
-      if (protein >= 25) score += 10;
-      if (calories >= 500) score += 5;
-      break;
-    case "MAINTAIN":
-      if (calories >= 300 && calories <= 600) score += 10;
-      break;
-    case "IMPROVE_HEALTH":
-      if (calories <= 500) score += 8;
-      if (fat <= 20) score += 7;
-      break;
+      case "LOSE_WEIGHT":
+        if (calories <= 400) score += 10;
+        if (carbs <= protein * 2) score += 5;
+        break;
+      case "GAIN_MUSCLE":
+        if (protein >= 25) score += 10;
+        if (calories >= 500) score += 5;
+        break;
+      case "MAINTAIN":
+        if (calories >= 300 && calories <= 600) score += 10;
+        break;
+      case "IMPROVE_HEALTH":
+        if (calories <= 500) score += 8;
+        if (fat <= 20) score += 7;
+        break;
     }
 
     return Math.min(score, 30);

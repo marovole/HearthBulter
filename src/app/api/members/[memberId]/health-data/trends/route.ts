@@ -272,11 +272,11 @@ export async function GET(
           firstBloodPressure &&
           lastBloodPressure
             ? {
-              systolic:
+                systolic:
                   lastBloodPressure.systolic - firstBloodPressure.systolic,
-              diastolic:
+                diastolic:
                   lastBloodPressure.diastolic - firstBloodPressure.diastolic,
-            }
+              }
             : null,
       };
     }

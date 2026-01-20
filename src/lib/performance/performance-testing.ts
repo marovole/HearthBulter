@@ -251,11 +251,11 @@ export class PerformanceTestManager {
       baseline && firstResult
         ? this.compareResults(firstResult, baseline)
         : {
-          responseTimeChange: 0,
-          throughputChange: 0,
-          errorRateChange: 0,
-          overallPerformance: "stable" as const,
-        };
+            responseTimeChange: 0,
+            throughputChange: 0,
+            errorRateChange: 0,
+            overallPerformance: "stable" as const,
+          };
 
     const benchmark: PerformanceBenchmark = {
       name,

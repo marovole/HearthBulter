@@ -89,27 +89,27 @@ export function HealthAnalysisPanel({
 
   const getRiskBadgeVariant = (level: string) => {
     switch (level) {
-    case "low":
-      return "default";
-    case "medium":
-      return "secondary";
-    case "high":
-      return "destructive";
-    default:
-      return "outline";
+      case "low":
+        return "default";
+      case "medium":
+        return "secondary";
+      case "high":
+        return "destructive";
+      default:
+        return "outline";
     }
   };
 
   const getRiskIcon = (level: string) => {
     switch (level) {
-    case "low":
-      return <TrendingDown className="w-4 h-4" />;
-    case "medium":
-      return <Minus className="w-4 h-4" />;
-    case "high":
-      return <TrendingUp className="w-4 h-4" />;
-    default:
-      return <AlertCircle className="w-4 h-4" />;
+      case "low":
+        return <TrendingDown className="w-4 h-4" />;
+      case "medium":
+        return <Minus className="w-4 h-4" />;
+      case "high":
+        return <TrendingUp className="w-4 h-4" />;
+      default:
+        return <AlertCircle className="w-4 h-4" />;
     }
   };
 

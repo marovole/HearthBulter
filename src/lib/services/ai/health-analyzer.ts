@@ -127,50 +127,50 @@ export class HealthAnalyzer {
       const value = indicator.value;
 
       switch (indicator.indicatorType) {
-      case IndicatorType.TOTAL_CHOLESTEROL:
-        structured.blood_tests.total_cholesterol = value;
-        break;
-      case IndicatorType.LDL_CHOLESTEROL:
-        structured.blood_tests.ldl_cholesterol = value;
-        break;
-      case IndicatorType.HDL_CHOLESTEROL:
-        structured.blood_tests.hdl_cholesterol = value;
-        break;
-      case IndicatorType.TRIGLYCERIDES:
-        structured.blood_tests.triglycerides = value;
-        break;
-      case IndicatorType.FASTING_GLUCOSE:
-        structured.blood_tests.fasting_glucose = value;
-        break;
-      case IndicatorType.GLYCATED_HEMOGLOBIN:
-        structured.blood_tests.hba1c = value;
-        break;
-      case IndicatorType.ALT:
-        structured.liver_function.alt = value;
-        break;
-      case IndicatorType.AST:
-        structured.liver_function.ast = value;
-        break;
-      case IndicatorType.CREATININE:
-        structured.kidney_function.creatinine = value;
-        break;
-      case IndicatorType.UREA_NITROGEN:
-        structured.kidney_function.bun = value;
-        break;
-      case IndicatorType.URIC_ACID:
-        structured.kidney_function.uric_acid = value;
-        break;
-      case IndicatorType.HEMOGLOBIN:
-        structured.complete_blood_count.hemoglobin = value;
-        break;
-      case IndicatorType.WHITE_BLOOD_CELL:
-        structured.complete_blood_count.white_blood_cell = value;
-        break;
-      case IndicatorType.PLATELET:
-        structured.complete_blood_count.platelet = value;
-        break;
-      default:
-        structured.other_indicators[indicator.name] = value;
+        case IndicatorType.TOTAL_CHOLESTEROL:
+          structured.blood_tests.total_cholesterol = value;
+          break;
+        case IndicatorType.LDL_CHOLESTEROL:
+          structured.blood_tests.ldl_cholesterol = value;
+          break;
+        case IndicatorType.HDL_CHOLESTEROL:
+          structured.blood_tests.hdl_cholesterol = value;
+          break;
+        case IndicatorType.TRIGLYCERIDES:
+          structured.blood_tests.triglycerides = value;
+          break;
+        case IndicatorType.FASTING_GLUCOSE:
+          structured.blood_tests.fasting_glucose = value;
+          break;
+        case IndicatorType.GLYCATED_HEMOGLOBIN:
+          structured.blood_tests.hba1c = value;
+          break;
+        case IndicatorType.ALT:
+          structured.liver_function.alt = value;
+          break;
+        case IndicatorType.AST:
+          structured.liver_function.ast = value;
+          break;
+        case IndicatorType.CREATININE:
+          structured.kidney_function.creatinine = value;
+          break;
+        case IndicatorType.UREA_NITROGEN:
+          structured.kidney_function.bun = value;
+          break;
+        case IndicatorType.URIC_ACID:
+          structured.kidney_function.uric_acid = value;
+          break;
+        case IndicatorType.HEMOGLOBIN:
+          structured.complete_blood_count.hemoglobin = value;
+          break;
+        case IndicatorType.WHITE_BLOOD_CELL:
+          structured.complete_blood_count.white_blood_cell = value;
+          break;
+        case IndicatorType.PLATELET:
+          structured.complete_blood_count.platelet = value;
+          break;
+        default:
+          structured.other_indicators[indicator.name] = value;
       }
     });
 

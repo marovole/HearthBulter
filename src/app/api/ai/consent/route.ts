@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
       });
     } else {
       return NextResponse.json(
-        { error: "Invalid action. Use \"request\" or \"grant\"." },
+        { error: 'Invalid action. Use "request" or "grant".' },
         { status: 400 },
       );
     }

@@ -38,9 +38,9 @@ export async function GET(request: NextRequest) {
     const recipeIds = pageViews.map((view) => view.recipeId as string);
     const recipes = recipeIds.length
       ? await convexClient.query<Array<Record<string, unknown>>>(
-        api.recipes.listByIds,
-        { ids: recipeIds as Id<"recipes">[] },
-      )
+          api.recipes.listByIds,
+          { ids: recipeIds as Id<"recipes">[] },
+        )
       : [];
 
     const recipeMap = new Map(recipes.map((recipe) => [recipe._id, recipe]));

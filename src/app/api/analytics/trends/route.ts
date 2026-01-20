@@ -92,10 +92,10 @@ export async function GET(request: NextRequest) {
         _cache:
           process.env.NODE_ENV === "development"
             ? {
-              source: result.source,
-              hit: result.hit,
-              duration: result.duration,
-            }
+                source: result.source,
+                hit: result.hit,
+                duration: result.duration,
+              }
             : undefined,
       },
       { headers },

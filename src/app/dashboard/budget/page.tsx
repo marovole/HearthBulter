@@ -592,160 +592,160 @@ export default function BudgetManagementPage() {
                 !historyLoading &&
                 !historyError &&
                 historyData && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">总支出</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">总支出</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">
                             ¥{historyData.statistics.totalAmount.toFixed(2)}
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {historyData.statistics.totalTransactions} 笔记录
-                        </p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">平均单笔</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {historyData.statistics.totalTransactions} 笔记录
+                          </p>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">平均单笔</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">
                             ¥{historyData.statistics.averageAmount.toFixed(2)}
-                        </div>
-                        <p className="text-xs text-muted-foreground">
+                          </div>
+                          <p className="text-xs text-muted-foreground">
                             当前预算周期
-                        </p>
+                          </p>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">分类数量</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">
+                            {historyData.statistics.categoryBreakdown.length}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            覆盖分类数
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>分类支出统计</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {historyData.statistics.categoryBreakdown.length > 0 ? (
+                          historyData.statistics.categoryBreakdown.map(
+                            (item) => (
+                              <div key={item.category} className="space-y-2">
+                                <div className="flex items-center justify-between text-sm">
+                                  <span>{CATEGORY_LABELS[item.category]}</span>
+                                  <span className="text-muted-foreground">
+                                    ¥{item.amount.toFixed(2)} · {item.count} 笔
+                                  </span>
+                                </div>
+                                <Progress
+                                  value={
+                                    historyData.statistics.totalAmount > 0
+                                      ? (item.amount /
+                                          historyData.statistics.totalAmount) *
+                                        100
+                                      : 0
+                                  }
+                                  className="h-2"
+                                />
+                              </div>
+                            ),
+                          )
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            暂无分类统计
+                          </p>
+                        )}
                       </CardContent>
                     </Card>
+
                     <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">分类数量</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">
-                          {historyData.statistics.categoryBreakdown.length}
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                          <CardTitle>支出明细</CardTitle>
+                          <CardDescription>
+                            第 {historyData.pagination.page} /{" "}
+                            {historyData.pagination.totalPages} 页
+                          </CardDescription>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                            覆盖分类数
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={historyData.pagination.page <= 1}
+                            onClick={() =>
+                              setHistoryPage((prev) => Math.max(prev - 1, 1))
+                            }
+                          >
+                            上一页
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={
+                              historyData.pagination.page >=
+                              historyData.pagination.totalPages
+                            }
+                            onClick={() => setHistoryPage((prev) => prev + 1)}
+                          >
+                            下一页
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {historyData.spendings.length > 0 ? (
+                          historyData.spendings.map((spending) => (
+                            <div
+                              key={spending.id}
+                              className="flex items-center justify-between border-b border-dashed pb-3 text-sm"
+                            >
+                              <div>
+                                <div className="font-medium">
+                                  {spending.description || "未命名支出"}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {CATEGORY_LABELS[spending.category]} ·{" "}
+                                  {new Date(
+                                    spending.purchaseDate,
+                                  ).toLocaleDateString("zh-CN")}
+                                </div>
+                              </div>
+                              <span className="font-medium">
+                                ¥{spending.amount.toFixed(2)}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center text-muted-foreground py-6">
+                            暂无支出记录
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </div>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>分类支出统计</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      {historyData.statistics.categoryBreakdown.length > 0 ? (
-                        historyData.statistics.categoryBreakdown.map(
-                          (item) => (
-                            <div key={item.category} className="space-y-2">
-                              <div className="flex items-center justify-between text-sm">
-                                <span>{CATEGORY_LABELS[item.category]}</span>
-                                <span className="text-muted-foreground">
-                                    ¥{item.amount.toFixed(2)} · {item.count} 笔
-                                </span>
-                              </div>
-                              <Progress
-                                value={
-                                  historyData.statistics.totalAmount > 0
-                                    ? (item.amount /
-                                          historyData.statistics.totalAmount) *
-                                        100
-                                    : 0
-                                }
-                                className="h-2"
-                              />
-                            </div>
-                          ),
-                        )
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                            暂无分类统计
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                      <div>
-                        <CardTitle>支出明细</CardTitle>
-                        <CardDescription>
-                            第 {historyData.pagination.page} /{" "}
-                          {historyData.pagination.totalPages} 页
-                        </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={historyData.pagination.page <= 1}
-                          onClick={() =>
-                            setHistoryPage((prev) => Math.max(prev - 1, 1))
-                          }
-                        >
-                            上一页
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={
-                            historyData.pagination.page >=
-                              historyData.pagination.totalPages
-                          }
-                          onClick={() => setHistoryPage((prev) => prev + 1)}
-                        >
-                            下一页
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {historyData.spendings.length > 0 ? (
-                        historyData.spendings.map((spending) => (
-                          <div
-                            key={spending.id}
-                            className="flex items-center justify-between border-b border-dashed pb-3 text-sm"
-                          >
-                            <div>
-                              <div className="font-medium">
-                                {spending.description || "未命名支出"}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {CATEGORY_LABELS[spending.category]} ·{" "}
-                                {new Date(
-                                  spending.purchaseDate,
-                                ).toLocaleDateString("zh-CN")}
-                              </div>
-                            </div>
-                            <span className="font-medium">
-                                ¥{spending.amount.toFixed(2)}
-                            </span>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center text-muted-foreground py-6">
-                            暂无支出记录
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
+                )}
 
               {selectedBudgetId &&
                 !historyLoading &&
                 !historyError &&
                 !historyData && (
-                <div className="text-center py-10 text-muted-foreground">
-                  <SettingsIcon className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                  <p>暂无历史记录</p>
-                </div>
-              )}
+                  <div className="text-center py-10 text-muted-foreground">
+                    <SettingsIcon className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                    <p>暂无历史记录</p>
+                  </div>
+                )}
             </CardContent>
           </Card>
         </TabsContent>

@@ -207,8 +207,8 @@ export class ConvexNotificationRepository implements NotificationRepository {
 
     const user = member.userId
       ? await convexClient.query<Doc<"users"> | null>(api.users.getById, {
-        userId: member.userId,
-      })
+          userId: member.userId,
+        })
       : null;
 
     const preferencesDoc =

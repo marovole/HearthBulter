@@ -61,40 +61,40 @@ export function PriceComparison({
   const getSortedData = () => {
     const sorted = [...priceData];
     switch (sortBy) {
-    case "price":
-      return sorted.sort((a, b) => a.price - b.price);
-    case "rating":
-      return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    case "sales":
-      return sorted.sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
-    default:
-      return sorted;
+      case "price":
+        return sorted.sort((a, b) => a.price - b.price);
+      case "rating":
+        return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      case "sales":
+        return sorted.sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
+      default:
+        return sorted;
     }
   };
 
   const getAvailabilityText = (availability: string) => {
     switch (availability) {
-    case "IN_STOCK":
-      return "有货";
-    case "OUT_OF_STOCK":
-      return "缺货";
-    case "LOW_STOCK":
-      return "库存紧张";
-    default:
-      return "未知";
+      case "IN_STOCK":
+        return "有货";
+      case "OUT_OF_STOCK":
+        return "缺货";
+      case "LOW_STOCK":
+        return "库存紧张";
+      default:
+        return "未知";
     }
   };
 
   const getAvailabilityColor = (availability: string) => {
     switch (availability) {
-    case "IN_STOCK":
-      return "text-green-600 bg-green-50";
-    case "OUT_OF_STOCK":
-      return "text-red-600 bg-red-50";
-    case "LOW_STOCK":
-      return "text-orange-600 bg-orange-50";
-    default:
-      return "text-gray-600 bg-gray-50";
+      case "IN_STOCK":
+        return "text-green-600 bg-green-50";
+      case "OUT_OF_STOCK":
+        return "text-red-600 bg-red-50";
+      case "LOW_STOCK":
+        return "text-orange-600 bg-orange-50";
+      default:
+        return "text-gray-600 bg-gray-50";
     }
   };
 

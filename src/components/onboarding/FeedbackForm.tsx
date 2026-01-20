@@ -215,29 +215,29 @@ export function FeedbackForm({
           {/* Category */}
           {formData.type &&
             categories[formData.type as keyof typeof categories] && (
-            <div className="space-y-2">
-              <Label>详细分类</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) =>
-                  handleInputChange("category", value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="请选择分类" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories[formData.type as keyof typeof categories].map(
-                    (category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ),
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+              <div className="space-y-2">
+                <Label>详细分类</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) =>
+                    handleInputChange("category", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="请选择分类" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories[formData.type as keyof typeof categories].map(
+                      (category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ),
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
           {/* Title */}
           <div className="space-y-2">

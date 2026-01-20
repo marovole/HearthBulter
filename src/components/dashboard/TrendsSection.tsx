@@ -120,19 +120,19 @@ function NutritionChart({
       target={
         data.targetCarbs && data.targetProtein && data.targetFat
           ? {
-            carbs: data.targetCarbs,
-            protein: data.targetProtein,
-            fat: data.targetFat,
-          }
+              carbs: data.targetCarbs,
+              protein: data.targetProtein,
+              fat: data.targetFat,
+            }
           : undefined
       }
       actual={
         data.actualCarbs && data.actualProtein && data.actualFat
           ? {
-            carbs: data.actualCarbs,
-            protein: data.actualProtein,
-            fat: data.actualFat,
-          }
+              carbs: data.actualCarbs,
+              protein: data.actualProtein,
+              fat: data.actualFat,
+            }
           : undefined
       }
     />

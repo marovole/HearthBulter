@@ -174,13 +174,13 @@ export function FoodPhotoUpload({
       setRecognitionResult((prev) =>
         prev
           ? {
-            ...prev,
-            foodId: correctionFoodId,
-            name: data.name || prev.name,
-            confidence: 100,
-            estimatedAmount: correctionAmount,
-            nutrition: data.nutrition || prev.nutrition,
-          }
+              ...prev,
+              foodId: correctionFoodId,
+              name: data.name || prev.name,
+              confidence: 100,
+              estimatedAmount: correctionAmount,
+              nutrition: data.nutrition || prev.nutrition,
+            }
           : prev,
       );
     } catch (error) {
@@ -217,17 +217,17 @@ export function FoodPhotoUpload({
 
   const correctionOptions = recognitionResult
     ? [
-      ...(recognitionResult.foodId
-        ? [
-          {
-            id: recognitionResult.foodId,
-            name: recognitionResult.name,
-            confidence: recognitionResult.confidence,
-          },
-        ]
-        : []),
-      ...(recognitionResult.alternatives ?? []),
-    ]
+        ...(recognitionResult.foodId
+          ? [
+              {
+                id: recognitionResult.foodId,
+                name: recognitionResult.name,
+                confidence: recognitionResult.confidence,
+              },
+            ]
+          : []),
+        ...(recognitionResult.alternatives ?? []),
+      ]
     : [];
 
   return (

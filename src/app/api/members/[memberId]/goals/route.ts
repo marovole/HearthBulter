@@ -178,11 +178,11 @@ export async function POST(
     const bmr =
       memberDetails.weight && memberDetails.height
         ? calculateBMR(
-          memberDetails.weight,
-          memberDetails.height,
-          age,
-          memberDetails.gender,
-        )
+            memberDetails.weight,
+            memberDetails.height,
+            age,
+            memberDetails.gender,
+          )
         : undefined;
 
     const activityFactor = ACTIVITY_FACTORS[activityLevel];

@@ -40,10 +40,10 @@ export async function POST(request: NextRequest) {
           _id: string;
           memberId: Id<"familyMembers">;
         })
-        | null
-        >(api.tracking.getMealLogById, {
-          id: photo.mealLogId,
-        });
+      | null
+    >(api.tracking.getMealLogById, {
+      id: photo.mealLogId,
+    });
 
     if (!mealLog) {
       return NextResponse.json({ error: "未找到餐食记录" }, { status: 404 });

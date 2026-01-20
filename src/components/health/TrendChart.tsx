@@ -70,18 +70,18 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
 
   const getTypeLabel = () => {
     switch (type) {
-    case "weight":
-      return "体重 (kg)";
-    case "bodyFat":
-      return "体脂率 (%)";
-    case "muscleMass":
-      return "肌肉量 (kg)";
-    case "heartRate":
-      return "心率 (bpm)";
-    case "bloodPressure":
-      return "血压 (mmHg)";
-    default:
-      return "";
+      case "weight":
+        return "体重 (kg)";
+      case "bodyFat":
+        return "体脂率 (%)";
+      case "muscleMass":
+        return "肌肉量 (kg)";
+      case "heartRate":
+        return "心率 (bpm)";
+      case "bloodPressure":
+        return "血压 (mmHg)";
+      default:
+        return "";
     }
   };
 

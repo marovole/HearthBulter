@@ -78,19 +78,19 @@ export class ChartDataOptimizer {
 
   private static getTimeKey(date: Date, interval: string): string {
     switch (interval) {
-    case "hour":
-      return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}`;
-    case "day":
-      return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-    case "week": {
-      const weekStart = new Date(date);
-      weekStart.setDate(date.getDate() - date.getDay());
-      return `${weekStart.getFullYear()}-${weekStart.getMonth()}-${weekStart.getDate()}`;
-    }
-    case "month":
-      return `${date.getFullYear()}-${date.getMonth()}`;
-    default:
-      return date.toISOString();
+      case "hour":
+        return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}`;
+      case "day":
+        return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      case "week": {
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() - date.getDay());
+        return `${weekStart.getFullYear()}-${weekStart.getMonth()}-${weekStart.getDate()}`;
+      }
+      case "month":
+        return `${date.getFullYear()}-${date.getMonth()}`;
+      default:
+        return date.toISOString();
     }
   }
 }
@@ -420,12 +420,12 @@ export class ResourcePreloader {
   ) {
     const promises = resources.map((resource) => {
       switch (resource.type) {
-      case "image":
-        return this.preloadImage(resource.src);
-      case "script":
-        return this.preloadScript(resource.src);
-      default:
-        return Promise.resolve();
+        case "image":
+          return this.preloadImage(resource.src);
+        case "script":
+          return this.preloadScript(resource.src);
+        default:
+          return Promise.resolve();
       }
     });
 

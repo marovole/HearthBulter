@@ -422,60 +422,60 @@ export function SmartRecipeOptimizer({
           <TabsContent value="substitutions" className="space-y-4">
             {optimizationResult.optimizations.ingredient_substitutions.length >
             0 ? (
-                <div className="space-y-3">
-                  {optimizationResult.optimizations.ingredient_substitutions.map(
-                    (sub, index) => (
-                      <Card key={index}>
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <span className="font-medium">
-                                {sub.original_ingredient}
-                              </span>
-                              <span className="text-muted-foreground mx-2">
+              <div className="space-y-3">
+                {optimizationResult.optimizations.ingredient_substitutions.map(
+                  (sub, index) => (
+                    <Card key={index}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <span className="font-medium">
+                              {sub.original_ingredient}
+                            </span>
+                            <span className="text-muted-foreground mx-2">
                               →
-                              </span>
-                              <span className="font-medium text-green-600">
-                                {sub.substitute_ingredient}
-                              </span>
-                            </div>
-                            <Badge variant="outline">
-                              {sub.cost_difference === "cheaper"
-                                ? "💰更便宜"
-                                : sub.cost_difference === "expensive"
-                                  ? "💎更贵"
-                                  : "⚖️价格相似"}
-                            </Badge>
+                            </span>
+                            <span className="font-medium text-green-600">
+                              {sub.substitute_ingredient}
+                            </span>
                           </div>
+                          <Badge variant="outline">
+                            {sub.cost_difference === "cheaper"
+                              ? "💰更便宜"
+                              : sub.cost_difference === "expensive"
+                                ? "💎更贵"
+                                : "⚖️价格相似"}
+                          </Badge>
+                        </div>
 
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {sub.reason}
-                          </p>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {sub.reason}
+                        </p>
 
-                          <div className="text-xs space-y-1">
-                            <div>
-                              <span className="font-medium">营养相似性：</span>
-                              {sub.nutritional_impact.similar_nutrients.join(
-                                "、",
-                              )}
-                            </div>
-                            <div>
-                              <span className="font-medium">改善方面：</span>
-                              {sub.nutritional_impact.improved_aspects.join("、")}
-                            </div>
+                        <div className="text-xs space-y-1">
+                          <div>
+                            <span className="font-medium">营养相似性：</span>
+                            {sub.nutritional_impact.similar_nutrients.join(
+                              "、",
+                            )}
                           </div>
-                        </CardContent>
-                      </Card>
-                    ),
-                  )}
-                </div>
-              ) : (
-                <div className="text-center text-muted-foreground py-8">
-                  <Lightbulb className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>暂无食材替代建议</p>
-                  <p className="text-sm">当前食谱食材搭配已经很合理</p>
-                </div>
-              )}
+                          <div>
+                            <span className="font-medium">改善方面：</span>
+                            {sub.nutritional_impact.improved_aspects.join("、")}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ),
+                )}
+              </div>
+            ) : (
+              <div className="text-center text-muted-foreground py-8">
+                <Lightbulb className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>暂无食材替代建议</p>
+                <p className="text-sm">当前食谱食材搭配已经很合理</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="adjustments" className="space-y-4">

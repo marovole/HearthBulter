@@ -126,22 +126,22 @@ export class NeighborSelector {
     let candidates: SimilarityResult[] = [];
 
     switch (config.selectionStrategy) {
-    case "top_k":
-      candidates = similarities.slice(0, config.maxNeighbors);
-      break;
+      case "top_k":
+        candidates = similarities.slice(0, config.maxNeighbors);
+        break;
 
-    case "threshold":
-      candidates = similarities.filter(
-        (s) => s.similarity >= config.minSimilarity,
-      );
-      break;
+      case "threshold":
+        candidates = similarities.filter(
+          (s) => s.similarity >= config.minSimilarity,
+        );
+        break;
 
-    case "hybrid":
-      // 先按阈值过滤，再取前K个
-      candidates = similarities
-        .filter((s) => s.similarity >= config.minSimilarity)
-        .slice(0, config.maxNeighbors);
-      break;
+      case "hybrid":
+        // 先按阈值过滤，再取前K个
+        candidates = similarities
+          .filter((s) => s.similarity >= config.minSimilarity)
+          .slice(0, config.maxNeighbors);
+        break;
     }
 
     // 转换为Neighbor对象并计算权重

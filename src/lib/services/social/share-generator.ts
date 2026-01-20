@@ -58,26 +58,26 @@ export class ShareContentGenerator {
 
   private mapToConvexContentType(type: ShareContentType): string {
     switch (type) {
-    case ShareContentType.HEALTH_REPORT:
-      return "HEALTH_REPORT";
-    case ShareContentType.GOAL_ACHIEVED:
-      return "GOAL_ACHIEVEMENT";
-    case ShareContentType.RECIPE_CREATED:
-      return "RECIPE";
-    case ShareContentType.ACHIEVEMENT_UNLOCKED:
-      return "ACHIEVEMENT";
-    case ShareContentType.MEAL_PLAN_COMPLETED:
-      return "MEAL_LOG";
-    case ShareContentType.WEIGHT_MILESTONE:
-      return "WEIGHT_MILESTONE";
-    case ShareContentType.CHECKIN_STREAK:
-      return "CHECK_IN_STREAK";
-    case ShareContentType.PERSONAL_RECORD:
-      return "WEEKLY_SUMMARY";
-    case ShareContentType.COMMUNITY_POST:
-      return "WEEKLY_SUMMARY";
-    default:
-      return "HEALTH_REPORT";
+      case ShareContentType.HEALTH_REPORT:
+        return "HEALTH_REPORT";
+      case ShareContentType.GOAL_ACHIEVED:
+        return "GOAL_ACHIEVEMENT";
+      case ShareContentType.RECIPE_CREATED:
+        return "RECIPE";
+      case ShareContentType.ACHIEVEMENT_UNLOCKED:
+        return "ACHIEVEMENT";
+      case ShareContentType.MEAL_PLAN_COMPLETED:
+        return "MEAL_LOG";
+      case ShareContentType.WEIGHT_MILESTONE:
+        return "WEIGHT_MILESTONE";
+      case ShareContentType.CHECKIN_STREAK:
+        return "CHECK_IN_STREAK";
+      case ShareContentType.PERSONAL_RECORD:
+        return "WEEKLY_SUMMARY";
+      case ShareContentType.COMMUNITY_POST:
+        return "WEEKLY_SUMMARY";
+      default:
+        return "HEALTH_REPORT";
     }
   }
 
@@ -137,28 +137,28 @@ export class ShareContentGenerator {
     shareToken: string,
   ): Promise<{ content: unknown; imageUrl: string }> {
     switch (input.type) {
-    case ShareContentType.HEALTH_REPORT:
-      return this.generateHealthReportContent(input, shareUrl, shareToken);
-    case ShareContentType.GOAL_ACHIEVED:
-      return this.generateGoalAchievedContent(input, shareUrl, shareToken);
-    case ShareContentType.RECIPE_CREATED:
-      return this.generateRecipeCreatedContent(input, shareUrl, shareToken);
-    case ShareContentType.ACHIEVEMENT_UNLOCKED:
-      return this.generateAchievementUnlockedContent(
-        input,
-        shareUrl,
-        shareToken,
-      );
-    case ShareContentType.CHECKIN_STREAK:
-      return this.generateCheckinStreakContent(input, shareUrl, shareToken);
-    case ShareContentType.WEIGHT_MILESTONE:
-      return this.generateWeightMilestoneContent(input, shareUrl, shareToken);
-    case ShareContentType.PERSONAL_RECORD:
-      return this.generatePersonalRecordContent(input, shareUrl, shareToken);
-    case ShareContentType.COMMUNITY_POST:
-      return this.generateCommunityPostContent(input, shareUrl, shareToken);
-    default:
-      return this.generateDefaultContent(input, shareUrl, shareToken);
+      case ShareContentType.HEALTH_REPORT:
+        return this.generateHealthReportContent(input, shareUrl, shareToken);
+      case ShareContentType.GOAL_ACHIEVED:
+        return this.generateGoalAchievedContent(input, shareUrl, shareToken);
+      case ShareContentType.RECIPE_CREATED:
+        return this.generateRecipeCreatedContent(input, shareUrl, shareToken);
+      case ShareContentType.ACHIEVEMENT_UNLOCKED:
+        return this.generateAchievementUnlockedContent(
+          input,
+          shareUrl,
+          shareToken,
+        );
+      case ShareContentType.CHECKIN_STREAK:
+        return this.generateCheckinStreakContent(input, shareUrl, shareToken);
+      case ShareContentType.WEIGHT_MILESTONE:
+        return this.generateWeightMilestoneContent(input, shareUrl, shareToken);
+      case ShareContentType.PERSONAL_RECORD:
+        return this.generatePersonalRecordContent(input, shareUrl, shareToken);
+      case ShareContentType.COMMUNITY_POST:
+        return this.generateCommunityPostContent(input, shareUrl, shareToken);
+      default:
+        return this.generateDefaultContent(input, shareUrl, shareToken);
     }
   }
 

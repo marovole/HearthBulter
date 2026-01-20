@@ -124,45 +124,45 @@ export async function POST(request: NextRequest) {
     const { action, memberIds } = body;
 
     switch (action) {
-    case "clear-cache":
-      // 清除缓存
-      dashboardDataService.clearCache();
-      return NextResponse.json(
-        { success: true, message: "缓存已清除" },
-        { status: 200 },
-      );
-
-    case "preload":
-      // 预加载数据
-      if (!Array.isArray(memberIds)) {
+      case "clear-cache":
+        // 清除缓存
+        dashboardDataService.clearCache();
         return NextResponse.json(
-          { error: "memberIds 必须是数组" },
-          { status: 400 },
+          { success: true, message: "缓存已清除" },
+          { status: 200 },
         );
-      }
 
-      // 验证权限
-      for (const memberId of memberIds) {
-        const { hasAccess } = await verifyMemberAccess(
-          memberId,
-          session.user.id,
-        );
-        if (!hasAccess) {
+      case "preload":
+        // 预加载数据
+        if (!Array.isArray(memberIds)) {
           return NextResponse.json(
-            { error: `无权限访问成员 ${memberId} 的数据` },
-            { status: 403 },
+            { error: "memberIds 必须是数组" },
+            { status: 400 },
           );
         }
-      }
 
-      await dashboardDataService.preloadData(memberIds);
-      return NextResponse.json(
-        { success: true, message: "数据预加载完成" },
-        { status: 200 },
-      );
+        // 验证权限
+        for (const memberId of memberIds) {
+          const { hasAccess } = await verifyMemberAccess(
+            memberId,
+            session.user.id,
+          );
+          if (!hasAccess) {
+            return NextResponse.json(
+              { error: `无权限访问成员 ${memberId} 的数据` },
+              { status: 403 },
+            );
+          }
+        }
 
-    default:
-      return NextResponse.json({ error: "不支持的操作" }, { status: 400 });
+        await dashboardDataService.preloadData(memberIds);
+        return NextResponse.json(
+          { success: true, message: "数据预加载完成" },
+          { status: 200 },
+        );
+
+      default:
+        return NextResponse.json({ error: "不支持的操作" }, { status: 400 });
     }
   } catch (error) {
     console.error("仪表盘数据操作失败:", error);

@@ -40,10 +40,10 @@ export async function POST(request: NextRequest) {
           _id: string;
           mealLogId: Id<"mealLogs">;
         })
-        | null
-        >(asConvexQueryReference("tracking:getFoodPhotoById"), {
-          id: photoId as Id<"foodPhotos">,
-        });
+      | null
+    >(asConvexQueryReference("tracking:getFoodPhotoById"), {
+      id: photoId as Id<"foodPhotos">,
+    });
 
     if (!photo) {
       return NextResponse.json({ error: "未找到照片记录" }, { status: 404 });
@@ -54,10 +54,10 @@ export async function POST(request: NextRequest) {
           _id: string;
           memberId: Id<"familyMembers">;
         })
-        | null
-        >(api.tracking.getMealLogById, {
-          id: photo.mealLogId,
-        });
+      | null
+    >(api.tracking.getMealLogById, {
+      id: photo.mealLogId,
+    });
 
     if (!mealLog) {
       return NextResponse.json({ error: "未找到餐食记录" }, { status: 404 });
@@ -180,10 +180,10 @@ export async function POST(request: NextRequest) {
 
         return food
           ? {
-            id: food._id,
-            name: food.name,
-            confidence: Math.round(match.confidence * 100),
-          }
+              id: food._id,
+              name: food.name,
+              confidence: Math.round(match.confidence * 100),
+            }
           : null;
       }),
     );
