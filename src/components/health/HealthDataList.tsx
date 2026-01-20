@@ -83,14 +83,14 @@ export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
 
   const getSourceLabel = (source: string) => {
     switch (source) {
-      case "MANUAL":
-        return "手动录入";
-      case "WEARABLE":
-        return "可穿戴设备";
-      case "MEDICAL_REPORT":
-        return "体检报告";
-      default:
-        return source;
+    case "MANUAL":
+      return "手动录入";
+    case "WEARABLE":
+      return "可穿戴设备";
+    case "MEDICAL_REPORT":
+      return "体检报告";
+    default:
+      return source;
     }
   };
 

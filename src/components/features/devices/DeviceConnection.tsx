@@ -179,29 +179,29 @@ export function DeviceConnection({
   // 获取设备图标
   const getDeviceIcon = (deviceType: DeviceType) => {
     switch (deviceType) {
-      case "SMARTWATCH":
-      case "FITNESS_BAND":
-        return <Watch className="h-5 w-5" />;
-      case "SMART_SCALE":
-        return <Scale className="h-5 w-5" />;
-      case "BLOOD_PRESSURE_MONITOR":
-        return <Heart className="h-5 w-5" />;
-      default:
-        return <Smartphone className="h-5 w-5" />;
+    case "SMARTWATCH":
+    case "FITNESS_BAND":
+      return <Watch className="h-5 w-5" />;
+    case "SMART_SCALE":
+      return <Scale className="h-5 w-5" />;
+    case "BLOOD_PRESSURE_MONITOR":
+      return <Heart className="h-5 w-5" />;
+    default:
+      return <Smartphone className="h-5 w-5" />;
     }
   };
 
   // 获取同步状态图标
   const getSyncStatusIcon = (status: string) => {
     switch (status) {
-      case "SUCCESS":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "FAILED":
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case "SYNCING":
-        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
-      default:
-        return <AlertCircle className="h-4 w-4 text-gray-500" />;
+    case "SUCCESS":
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    case "FAILED":
+      return <AlertCircle className="h-4 w-4 text-red-500" />;
+    case "SYNCING":
+      return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
+    default:
+      return <AlertCircle className="h-4 w-4 text-gray-500" />;
     }
   };
 

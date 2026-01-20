@@ -550,8 +550,8 @@ export class RateLimiter {
       blockRate:
         rangeRequests.length > 0
           ? Math.round(
-              ((rangeRequests.length - stats.allowedRequests) / rangeRequests.length) * 100
-            )
+            ((rangeRequests.length - stats.allowedRequests) / rangeRequests.length) * 100
+          )
           : 0,
       currentUsage,
       remainingRequests,

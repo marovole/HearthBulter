@@ -107,15 +107,15 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
 
       // 根据报告类型设置日期范围
       switch (reportType) {
-        case "weekly":
-          startDate.setDate(startDate.getDate() - 7);
-          break;
-        case "monthly":
-          startDate.setMonth(startDate.getMonth() - 1);
-          break;
-        case "quarterly":
-          startDate.setMonth(startDate.getMonth() - 3);
-          break;
+      case "weekly":
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case "monthly":
+        startDate.setMonth(startDate.getMonth() - 1);
+        break;
+      case "quarterly":
+        startDate.setMonth(startDate.getMonth() - 3);
+        break;
       }
 
       const response = await fetch("/api/ai/generate-report", {
@@ -197,27 +197,27 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "high":
-        return "text-red-600";
-      case "medium":
-        return "text-yellow-600";
-      case "low":
-        return "text-green-600";
-      default:
-        return "text-gray-600";
+    case "high":
+      return "text-red-600";
+    case "medium":
+      return "text-yellow-600";
+    case "low":
+      return "text-green-600";
+    default:
+      return "text-gray-600";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "completed":
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case "generating":
-        return <AIThinkingIndicator size="sm" />;
-      case "failed":
-        return <AlertCircle className="h-4 w-4 text-red-600" />;
-      default:
-        return <FileText className="h-4 w-4" />;
+    case "completed":
+      return <CheckCircle className="h-4 w-4 text-green-600" />;
+    case "generating":
+      return <AIThinkingIndicator size="sm" />;
+    case "failed":
+      return <AlertCircle className="h-4 w-4 text-red-600" />;
+    default:
+      return <FileText className="h-4 w-4" />;
     }
   };
 
@@ -236,67 +236,67 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
     }
 
     switch (chart.type) {
-      case "line":
-        return (
-          <ResponsiveContainer width="100%" height={160}>
-            <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey={xKey} />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey={yKey} stroke={colors[0]} />
-            </LineChart>
-          </ResponsiveContainer>
-        );
-      case "bar":
-        return (
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey={xKey} />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey={yKey} fill={colors[0]} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        );
-      case "area":
-        return (
-          <ResponsiveContainer width="100%" height={160}>
-            <AreaChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey={xKey} />
-              <YAxis />
-              <Tooltip />
-              <Area
-                type="monotone"
-                dataKey={yKey}
-                stroke={colors[0]}
-                fill={colors[0]}
-                fillOpacity={0.2}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        );
-      case "pie":
-        return (
-          <ResponsiveContainer width="100%" height={160}>
-            <PieChart>
-              <Tooltip />
-              <Pie data={data} dataKey={yKey} nameKey={xKey} outerRadius={60}>
-                {data.map((_, index) => (
-                  <Cell key={index} fill={colors[index % colors.length]} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-        );
-      default:
-        return (
-          <div className="flex h-32 items-center justify-center rounded bg-muted">
-            <span className="text-sm text-muted-foreground">图表类型不支持</span>
-          </div>
-        );
+    case "line":
+      return (
+        <ResponsiveContainer width="100%" height={160}>
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey={xKey} />
+            <YAxis />
+            <Tooltip />
+            <Line type="monotone" dataKey={yKey} stroke={colors[0]} />
+          </LineChart>
+        </ResponsiveContainer>
+      );
+    case "bar":
+      return (
+        <ResponsiveContainer width="100%" height={160}>
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey={xKey} />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey={yKey} fill={colors[0]} radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      );
+    case "area":
+      return (
+        <ResponsiveContainer width="100%" height={160}>
+          <AreaChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey={xKey} />
+            <YAxis />
+            <Tooltip />
+            <Area
+              type="monotone"
+              dataKey={yKey}
+              stroke={colors[0]}
+              fill={colors[0]}
+              fillOpacity={0.2}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      );
+    case "pie":
+      return (
+        <ResponsiveContainer width="100%" height={160}>
+          <PieChart>
+            <Tooltip />
+            <Pie data={data} dataKey={yKey} nameKey={xKey} outerRadius={60}>
+              {data.map((_, index) => (
+                <Cell key={index} fill={colors[index % colors.length]} />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+      );
+    default:
+      return (
+        <div className="flex h-32 items-center justify-center rounded bg-muted">
+          <span className="text-sm text-muted-foreground">图表类型不支持</span>
+        </div>
+      );
     }
   };
 

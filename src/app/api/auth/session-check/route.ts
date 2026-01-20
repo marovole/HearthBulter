@@ -11,9 +11,9 @@ export async function GET() {
       authenticated: !!session,
       session: session
         ? {
-            user: session.user,
-            expires: null,
-          }
+          user: session.user,
+          expires: null,
+        }
         : null,
       timestamp: new Date().toISOString(),
     });

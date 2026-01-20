@@ -215,15 +215,15 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
    */
   private async fetchTrendPoints(query: TrendQueryDTO): Promise<TimeSeriesPointDTO[]> {
     switch (query.metric) {
-      case "CALORIES":
-      case "PROTEIN":
-      case "CARBS":
-      case "FAT":
-        return this.fetchNutritionTrend(query);
-      case "HEALTH_SCORE":
-        return this.fetchScoreTrend(query);
-      default:
-        return this.fetchHealthMetricTrend(query);
+    case "CALORIES":
+    case "PROTEIN":
+    case "CARBS":
+    case "FAT":
+      return this.fetchNutritionTrend(query);
+    case "HEALTH_SCORE":
+      return this.fetchScoreTrend(query);
+    default:
+      return this.fetchHealthMetricTrend(query);
     }
   }
 

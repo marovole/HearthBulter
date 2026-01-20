@@ -261,9 +261,9 @@ export async function GET(
         change:
           bloodPressureData.length > 1 && firstBloodPressure && lastBloodPressure
             ? {
-                systolic: lastBloodPressure.systolic - firstBloodPressure.systolic,
-                diastolic: lastBloodPressure.diastolic - firstBloodPressure.diastolic,
-              }
+              systolic: lastBloodPressure.systolic - firstBloodPressure.systolic,
+              diastolic: lastBloodPressure.diastolic - firstBloodPressure.diastolic,
+            }
             : null,
       };
     }

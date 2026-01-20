@@ -107,32 +107,32 @@ export async function checkShareAccess(
       | "PRIVATE";
 
     switch (privacyLevel) {
-      case "PUBLIC": {
-        if (!privacySettings.allowStrangerView && !viewerId) {
-          return { hasAccess: false, reason: "不允许陌生人访问" };
-        }
-        break;
+    case "PUBLIC": {
+      if (!privacySettings.allowStrangerView && !viewerId) {
+        return { hasAccess: false, reason: "不允许陌生人访问" };
       }
-      case "FRIENDS": {
-        if (!viewerId) {
-          return { hasAccess: false, reason: "需要登录才能查看" };
-        }
+      break;
+    }
+    case "FRIENDS": {
+      if (!viewerId) {
+        return { hasAccess: false, reason: "需要登录才能查看" };
+      }
 
-        const isFriend = await checkFriendship(
+      const isFriend = await checkFriendship(
           (share as Record<string, unknown>).memberId as string,
           viewerId
-        );
-        if (!isFriend && !privacySettings.trustedFriends.includes(viewerId)) {
-          return { hasAccess: false, reason: "仅好友可见" };
-        }
-        break;
+      );
+      if (!isFriend && !privacySettings.trustedFriends.includes(viewerId)) {
+        return { hasAccess: false, reason: "仅好友可见" };
       }
-      case "PRIVATE": {
-        if (!viewerId) {
-          return { hasAccess: false, reason: "需要授权才能查看" };
-        }
-        return { hasAccess: false, reason: "无权访问此分享" };
+      break;
+    }
+    case "PRIVATE": {
+      if (!viewerId) {
+        return { hasAccess: false, reason: "需要授权才能查看" };
       }
+      return { hasAccess: false, reason: "无权访问此分享" };
+    }
     }
 
     return {

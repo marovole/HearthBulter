@@ -38,62 +38,62 @@ export function DataValidationAlert({
 }: DataValidationAlertProps) {
   const getAlertStyles = () => {
     switch (type) {
-      case "error":
-        return {
-          container: "bg-red-50 border-red-200",
-          icon: "text-red-400",
-          title: "text-red-800",
-          message: "text-red-700",
-          button: "bg-red-100 text-red-800 hover:bg-red-200",
-        };
-      case "warning":
-        return {
-          container: "bg-yellow-50 border-yellow-200",
-          icon: "text-yellow-400",
-          title: "text-yellow-800",
-          message: "text-yellow-700",
-          button: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
-        };
-      case "success":
-        return {
-          container: "bg-green-50 border-green-200",
-          icon: "text-green-400",
-          title: "text-green-800",
-          message: "text-green-700",
-          button: "bg-green-100 text-green-800 hover:bg-green-200",
-        };
-      default:
-        return {
-          container: "bg-blue-50 border-blue-200",
-          icon: "text-blue-400",
-          title: "text-blue-800",
-          message: "text-blue-700",
-          button: "bg-blue-100 text-blue-800 hover:bg-blue-200",
-        };
+    case "error":
+      return {
+        container: "bg-red-50 border-red-200",
+        icon: "text-red-400",
+        title: "text-red-800",
+        message: "text-red-700",
+        button: "bg-red-100 text-red-800 hover:bg-red-200",
+      };
+    case "warning":
+      return {
+        container: "bg-yellow-50 border-yellow-200",
+        icon: "text-yellow-400",
+        title: "text-yellow-800",
+        message: "text-yellow-700",
+        button: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+      };
+    case "success":
+      return {
+        container: "bg-green-50 border-green-200",
+        icon: "text-green-400",
+        title: "text-green-800",
+        message: "text-green-700",
+        button: "bg-green-100 text-green-800 hover:bg-green-200",
+      };
+    default:
+      return {
+        container: "bg-blue-50 border-blue-200",
+        icon: "text-blue-400",
+        title: "text-blue-800",
+        message: "text-blue-700",
+        button: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+      };
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case "error":
-        return <AlertTriangle className="h-5 w-5" />;
-      case "warning":
-        return <AlertTriangle className="h-5 w-5" />;
-      case "success":
-        return <CheckCircle className="h-5 w-5" />;
-      default:
-        return <Info className="h-5 w-5" />;
+    case "error":
+      return <AlertTriangle className="h-5 w-5" />;
+    case "warning":
+      return <AlertTriangle className="h-5 w-5" />;
+    case "success":
+      return <CheckCircle className="h-5 w-5" />;
+    default:
+      return <Info className="h-5 w-5" />;
     }
   };
 
   const getTrendIcon = () => {
     switch (trend?.direction) {
-      case "up":
-        return <TrendingUp className="h-4 w-4 text-green-600" />;
-      case "down":
-        return <TrendingDown className="h-4 w-4 text-red-600" />;
-      default:
-        return <Activity className="h-4 w-4 text-gray-600" />;
+    case "up":
+      return <TrendingUp className="h-4 w-4 text-green-600" />;
+    case "down":
+      return <TrendingDown className="h-4 w-4 text-red-600" />;
+    default:
+      return <Activity className="h-4 w-4 text-gray-600" />;
     }
   };
 

@@ -96,7 +96,7 @@ export class InventoryShoppingIntegration {
       totalItems: number;
       completedItems: number;
     }[]
-  > {
+    > {
     return [];
   }
 }

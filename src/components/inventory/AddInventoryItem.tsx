@@ -439,8 +439,8 @@ export function AddInventoryItem({ isOpen, onClose, memberId, onSuccess }: AddIn
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {formData.productionDate
                         ? format(formData.productionDate, "yyyy-MM-dd", {
-                            locale: zhCN,
-                          })
+                          locale: zhCN,
+                        })
                         : "选择日期"}
                     </Button>
                   </PopoverTrigger>
@@ -474,8 +474,8 @@ export function AddInventoryItem({ isOpen, onClose, memberId, onSuccess }: AddIn
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {formData.expiryDate
                         ? format(formData.expiryDate, "yyyy-MM-dd", {
-                            locale: zhCN,
-                          })
+                          locale: zhCN,
+                        })
                         : "选择日期"}
                     </Button>
                   </PopoverTrigger>

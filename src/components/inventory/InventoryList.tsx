@@ -140,18 +140,18 @@ export function InventoryList({ memberId, onAddItem, onEditItem, onUseItem }: In
         // 排序
         filteredItems.sort((a: InventoryItem, b: InventoryItem) => {
           switch (sortBy) {
-            case "status":
-              return a.status.localeCompare(b.status);
-            case "expiry":
-              if (!a.expiryDate) return 1;
-              if (!b.expiryDate) return -1;
-              return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
-            case "name":
-              return a.food.name.localeCompare(b.food.name);
-            case "quantity":
-              return b.quantity - a.quantity;
-            default:
-              return 0;
+          case "status":
+            return a.status.localeCompare(b.status);
+          case "expiry":
+            if (!a.expiryDate) return 1;
+            if (!b.expiryDate) return -1;
+            return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+          case "name":
+            return a.food.name.localeCompare(b.food.name);
+          case "quantity":
+            return b.quantity - a.quantity;
+          default:
+            return 0;
           }
         });
 

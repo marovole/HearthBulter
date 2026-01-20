@@ -67,112 +67,112 @@ export function HealthDataDashboard({
     }
 
     switch (activeView) {
-      case "add":
-        return (
-          <div className="space-y-6">
-            <div className="rounded-lg bg-white p-6 shadow">
-              <h2 className="mb-6 text-xl font-semibold text-gray-900">录入健康数据</h2>
-              <HealthDataForm
-                memberId={selectedMemberId}
-                onSuccess={handleDataAdded}
-                onCancel={() => setActiveView("overview")}
-              />
-            </div>
-          </div>
-        );
-
-      case "history":
-        return (
-          <div className="space-y-6">
-            <div className="rounded-lg bg-white p-6 shadow">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">历史数据</h2>
-                <button className="flex items-center space-x-2 rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100">
-                  <Download className="h-4 w-4" />
-                  <span>导出数据</span>
-                </button>
-              </div>
-              <HealthDataList
-                memberId={selectedMemberId}
-                onDelete={(id) => console.log("删除数据:", id)}
-              />
-            </div>
-          </div>
-        );
-
-      case "sync":
-        return (
-          <div className="space-y-6">
-            <div className="rounded-lg bg-white p-6 shadow">
-              <h2 className="mb-6 text-xl font-semibold text-gray-900">设备数据同步</h2>
-              <DeviceDataSync memberId={selectedMemberId} />
-            </div>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="space-y-6">
-            <QuickEntryButtons
+    case "add":
+      return (
+        <div className="space-y-6">
+          <div className="rounded-lg bg-white p-6 shadow">
+            <h2 className="mb-6 text-xl font-semibold text-gray-900">录入健康数据</h2>
+            <HealthDataForm
               memberId={selectedMemberId}
-              onDataAdded={() => setActiveView("overview")}
+              onSuccess={handleDataAdded}
+              onCancel={() => setActiveView("overview")}
             />
+          </div>
+        </div>
+      );
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              <div className="rounded-lg bg-white p-6 shadow">
-                <div className="flex items-center">
-                  <div className="rounded-lg bg-blue-100 p-3">
-                    <Activity className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">今日记录</h3>
-                    <p className="text-2xl font-semibold text-gray-900">3</p>
-                  </div>
+    case "history":
+      return (
+        <div className="space-y-6">
+          <div className="rounded-lg bg-white p-6 shadow">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">历史数据</h2>
+              <button className="flex items-center space-x-2 rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100">
+                <Download className="h-4 w-4" />
+                <span>导出数据</span>
+              </button>
+            </div>
+            <HealthDataList
+              memberId={selectedMemberId}
+              onDelete={(id) => console.log("删除数据:", id)}
+            />
+          </div>
+        </div>
+      );
+
+    case "sync":
+      return (
+        <div className="space-y-6">
+          <div className="rounded-lg bg-white p-6 shadow">
+            <h2 className="mb-6 text-xl font-semibold text-gray-900">设备数据同步</h2>
+            <DeviceDataSync memberId={selectedMemberId} />
+          </div>
+        </div>
+      );
+
+    default:
+      return (
+        <div className="space-y-6">
+          <QuickEntryButtons
+            memberId={selectedMemberId}
+            onDataAdded={() => setActiveView("overview")}
+          />
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="rounded-lg bg-white p-6 shadow">
+              <div className="flex items-center">
+                <div className="rounded-lg bg-blue-100 p-3">
+                  <Activity className="h-6 w-6 text-blue-600" />
                 </div>
-              </div>
-
-              <div className="rounded-lg bg-white p-6 shadow">
-                <div className="flex items-center">
-                  <div className="rounded-lg bg-green-100 p-3">
-                    <TrendingUp className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">连续打卡</h3>
-                    <p className="text-2xl font-semibold text-gray-900">7天</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-white p-6 shadow">
-                <div className="flex items-center">
-                  <div className="rounded-lg bg-purple-100 p-3">
-                    <Smartphone className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">设备状态</h3>
-                    <p className="text-2xl font-semibold text-gray-900">已连接</p>
-                  </div>
+                <div className="ml-4">
+                  <h3 className="text-sm font-medium text-gray-500">今日记录</h3>
+                  <p className="text-2xl font-semibold text-gray-900">3</p>
                 </div>
               </div>
             </div>
 
             <div className="rounded-lg bg-white p-6 shadow">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">最近数据</h2>
-                <button
-                  onClick={() => setActiveView("history")}
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  查看全部
-                </button>
+              <div className="flex items-center">
+                <div className="rounded-lg bg-green-100 p-3">
+                  <TrendingUp className="h-6 w-6 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-sm font-medium text-gray-500">连续打卡</h3>
+                  <p className="text-2xl font-semibold text-gray-900">7天</p>
+                </div>
               </div>
-              <HealthDataList
-                memberId={selectedMemberId}
-                onDelete={(id) => console.log("删除数据:", id)}
-              />
+            </div>
+
+            <div className="rounded-lg bg-white p-6 shadow">
+              <div className="flex items-center">
+                <div className="rounded-lg bg-purple-100 p-3">
+                  <Smartphone className="h-6 w-6 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-sm font-medium text-gray-500">设备状态</h3>
+                  <p className="text-2xl font-semibold text-gray-900">已连接</p>
+                </div>
+              </div>
             </div>
           </div>
-        );
+
+          <div className="rounded-lg bg-white p-6 shadow">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">最近数据</h2>
+              <button
+                onClick={() => setActiveView("history")}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                  查看全部
+              </button>
+            </div>
+            <HealthDataList
+              memberId={selectedMemberId}
+              onDelete={(id) => console.log("删除数据:", id)}
+            />
+          </div>
+        </div>
+      );
     }
   };
 

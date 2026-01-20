@@ -158,10 +158,10 @@ function mapShoppingList(list: Record<string, unknown>): ShoppingListDTO {
     deletedAt: typeof list.deletedAt === "number" ? new Date(list.deletedAt) : undefined,
     plan: plan
       ? {
-          id: plan.id,
-          name: plan.name,
-          member: plan.member,
-        }
+        id: plan.id,
+        name: plan.name,
+        member: plan.member,
+      }
       : undefined,
     items: items ? items.map(mapShoppingListItem) : undefined,
   };
@@ -191,12 +191,12 @@ function mapShoppingListItem(item: Record<string, unknown>): ShoppingListItemDTO
     updatedAt: new Date(Number(item.updatedAt)),
     food: food
       ? {
-          id: food.id,
-          name: food.name,
-          category: food.category ?? undefined,
-          defaultUnit: food.defaultUnit ?? undefined,
-          imageUrl: food.imageUrl ?? undefined,
-        }
+        id: food.id,
+        name: food.name,
+        category: food.category ?? undefined,
+        defaultUnit: food.defaultUnit ?? undefined,
+        imageUrl: food.imageUrl ?? undefined,
+      }
       : undefined,
   };
 }

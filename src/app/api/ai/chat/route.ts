@@ -64,11 +64,11 @@ export async function POST(request: NextRequest) {
           error: "Required consent not granted",
           requiredConsent: consentType
             ? {
-                id: consentType.id,
-                name: consentType.name,
-                description: consentType.description,
-                content: consentType.content,
-              }
+              id: consentType.id,
+              name: consentType.name,
+              description: consentType.description,
+              content: consentType.content,
+            }
             : null,
         },
         { status: 403 }
@@ -119,10 +119,10 @@ export async function POST(request: NextRequest) {
       })),
       dietaryPreference: memberContext.dietaryPreference
         ? {
-            dietType: memberContext.dietaryPreference.dietType,
-            isVegetarian: memberContext.dietaryPreference.isVegetarian,
-            isVegan: memberContext.dietaryPreference.isVegan,
-          }
+          dietType: memberContext.dietaryPreference.dietType,
+          isVegetarian: memberContext.dietaryPreference.isVegetarian,
+          isVegan: memberContext.dietaryPreference.isVegan,
+        }
         : null,
       allergies: memberContext.allergies.map((a) => ({
         allergenName: a.allergenName,
@@ -139,30 +139,30 @@ export async function POST(request: NextRequest) {
     const conversationSession = sessionId
       ? conversationManager.getOrCreateSession(sessionId, memberId)
       : conversationManager.createSession(memberId, {
-          userProfile: {
-            name: member.name,
-            age: Math.floor(
-              (Date.now() - new Date(member.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)
-            ),
-            gender: member.gender.toLowerCase(),
-            healthGoals: member.healthGoals.map((g) => g.goalType),
-            dietaryPreferences: member.dietaryPreference
-              ? {
-                  dietType: member.dietaryPreference.dietType,
-                  restrictions: [
-                    ...(member.dietaryPreference.isVegetarian ? ["vegetarian"] : []),
-                    ...(member.dietaryPreference.isVegan ? ["vegan"] : []),
-                  ],
-                }
-              : null,
-            allergies: member.allergies.map((a) => a.allergenName),
-          },
-          preferences: {
-            language: "zh",
-            detailLevel: "detailed",
-            tone: "friendly",
-          },
-        });
+        userProfile: {
+          name: member.name,
+          age: Math.floor(
+            (Date.now() - new Date(member.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+          ),
+          gender: member.gender.toLowerCase(),
+          healthGoals: member.healthGoals.map((g) => g.goalType),
+          dietaryPreferences: member.dietaryPreference
+            ? {
+              dietType: member.dietaryPreference.dietType,
+              restrictions: [
+                ...(member.dietaryPreference.isVegetarian ? ["vegetarian"] : []),
+                ...(member.dietaryPreference.isVegan ? ["vegan"] : []),
+              ],
+            }
+            : null,
+          allergies: member.allergies.map((a) => a.allergenName),
+        },
+        preferences: {
+          language: "zh",
+          detailLevel: "detailed",
+          tone: "friendly",
+        },
+      });
 
     // 识别用户意图
     const intent = await conversationManager.recognizeIntent(message);

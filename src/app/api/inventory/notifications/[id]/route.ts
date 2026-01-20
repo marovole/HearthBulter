@@ -25,13 +25,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     let message = "";
 
     switch (action) {
-      case "mark_as_read":
-        success = await inventoryNotificationService.markNotificationAsRead(id, memberId);
-        message = success ? "标记已读成功" : "标记已读失败";
-        break;
+    case "mark_as_read":
+      success = await inventoryNotificationService.markNotificationAsRead(id, memberId);
+      message = success ? "标记已读成功" : "标记已读失败";
+      break;
 
-      default:
-        return NextResponse.json({ error: "无效的操作" }, { status: 400 });
+    default:
+      return NextResponse.json({ error: "无效的操作" }, { status: 400 });
     }
 
     return NextResponse.json({

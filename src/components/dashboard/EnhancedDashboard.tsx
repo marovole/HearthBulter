@@ -116,89 +116,89 @@ export function EnhancedDashboard({
     }
 
     switch (activeTab) {
-      case "overview":
-        return (
-          <div className="space-y-6">
-            <OverviewCards memberId={selectedMemberId} />
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-              <WeightTrendChart memberId={selectedMemberId} />
-              <HealthScoreCard memberId={selectedMemberId} />
-            </div>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <NutritionAnalysisChart memberId={selectedMemberId} />
-              <TrendsSection memberId={selectedMemberId} />
-            </div>
-            <QuickActionsPanel memberId={selectedMemberId} />
-          </div>
-        );
-
-      case "health":
-        return (
-          <div className="space-y-6">
+    case "overview":
+      return (
+        <div className="space-y-6">
+          <OverviewCards memberId={selectedMemberId} />
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
             <WeightTrendChart memberId={selectedMemberId} />
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <HealthMetricsChart memberId={selectedMemberId} />
-              <TrendsSection memberId={selectedMemberId} />
-            </div>
-          </div>
-        );
-
-      case "nutrition":
-        return (
-          <div className="space-y-6">
-            <NutritionAnalysisChart memberId={selectedMemberId} />
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <NutritionTrendChart memberId={selectedMemberId} />
-              <div className="rounded-lg bg-white p-6 shadow">
-                <h3 className="mb-4 text-lg font-semibold">营养建议</h3>
-                <p className="text-gray-600">基于您的健康数据，我们建议...</p>
-              </div>
-            </div>
-          </div>
-        );
-
-      case "family":
-        return (
-          <div className="space-y-6">
-            <FamilyMembersCard
-              members={familyMembers}
-              currentMemberId={selectedMemberId}
-              onMemberSelect={handleMemberChange}
-            />
-          </div>
-        );
-
-      case "score":
-        return (
-          <div className="space-y-6">
             <HealthScoreCard memberId={selectedMemberId} />
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <HealthScoreDisplay memberId={selectedMemberId} />
-              <div className="rounded-lg bg-white p-6 shadow">
-                <h3 className="mb-4 text-lg font-semibold">健康评分趋势</h3>
-                <p className="text-gray-600">评分变化图表将在这里显示</p>
-              </div>
-            </div>
           </div>
-        );
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <NutritionAnalysisChart memberId={selectedMemberId} />
+            <TrendsSection memberId={selectedMemberId} />
+          </div>
+          <QuickActionsPanel memberId={selectedMemberId} />
+        </div>
+      );
 
-      case "settings":
-        return (
-          <div className="space-y-6">
+    case "health":
+      return (
+        <div className="space-y-6">
+          <WeightTrendChart memberId={selectedMemberId} />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <HealthMetricsChart memberId={selectedMemberId} />
+            <TrendsSection memberId={selectedMemberId} />
+          </div>
+        </div>
+      );
+
+    case "nutrition":
+      return (
+        <div className="space-y-6">
+          <NutritionAnalysisChart memberId={selectedMemberId} />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <NutritionTrendChart memberId={selectedMemberId} />
             <div className="rounded-lg bg-white p-6 shadow">
-              <h3 className="mb-4 text-lg font-semibold">仪表盘设置</h3>
-              <p className="text-gray-600">个性化您的仪表盘显示偏好</p>
+              <h3 className="mb-4 text-lg font-semibold">营养建议</h3>
+              <p className="text-gray-600">基于您的健康数据，我们建议...</p>
             </div>
           </div>
-        );
+        </div>
+      );
 
-      default:
-        return (
-          <div className="space-y-6">
-            <OverviewCards memberId={selectedMemberId} />
-            <InsightsPanel memberId={selectedMemberId} />
+    case "family":
+      return (
+        <div className="space-y-6">
+          <FamilyMembersCard
+            members={familyMembers}
+            currentMemberId={selectedMemberId}
+            onMemberSelect={handleMemberChange}
+          />
+        </div>
+      );
+
+    case "score":
+      return (
+        <div className="space-y-6">
+          <HealthScoreCard memberId={selectedMemberId} />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <HealthScoreDisplay memberId={selectedMemberId} />
+            <div className="rounded-lg bg-white p-6 shadow">
+              <h3 className="mb-4 text-lg font-semibold">健康评分趋势</h3>
+              <p className="text-gray-600">评分变化图表将在这里显示</p>
+            </div>
           </div>
-        );
+        </div>
+      );
+
+    case "settings":
+      return (
+        <div className="space-y-6">
+          <div className="rounded-lg bg-white p-6 shadow">
+            <h3 className="mb-4 text-lg font-semibold">仪表盘设置</h3>
+            <p className="text-gray-600">个性化您的仪表盘显示偏好</p>
+          </div>
+        </div>
+      );
+
+    default:
+      return (
+        <div className="space-y-6">
+          <OverviewCards memberId={selectedMemberId} />
+          <InsightsPanel memberId={selectedMemberId} />
+        </div>
+      );
     }
   };
 

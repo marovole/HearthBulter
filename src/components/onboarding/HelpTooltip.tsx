@@ -45,20 +45,20 @@ export function HelpTooltip({
       let left = buttonRect.left + buttonRect.width / 2 - tooltipRect.width / 2;
 
       switch (position) {
-        case "top":
-          top = buttonRect.top - tooltipRect.height - 10;
-          break;
-        case "bottom":
-          top = buttonRect.bottom + 10;
-          break;
-        case "left":
-          top = buttonRect.top + buttonRect.height / 2 - tooltipRect.height / 2;
-          left = buttonRect.left - tooltipRect.width - 10;
-          break;
-        case "right":
-          top = buttonRect.top + buttonRect.height / 2 - tooltipRect.height / 2;
-          left = buttonRect.right + 10;
-          break;
+      case "top":
+        top = buttonRect.top - tooltipRect.height - 10;
+        break;
+      case "bottom":
+        top = buttonRect.bottom + 10;
+        break;
+      case "left":
+        top = buttonRect.top + buttonRect.height / 2 - tooltipRect.height / 2;
+        left = buttonRect.left - tooltipRect.width - 10;
+        break;
+      case "right":
+        top = buttonRect.top + buttonRect.height / 2 - tooltipRect.height / 2;
+        left = buttonRect.right + 10;
+        break;
       }
 
       // Adjust if tooltip goes off screen
@@ -106,38 +106,38 @@ export function HelpTooltip({
 
   const getTypeStyles = () => {
     switch (type) {
-      case "tip":
-        return "bg-green-50 border-green-200 text-green-800";
-      case "warning":
-        return "bg-yellow-50 border-yellow-200 text-yellow-800";
-      case "tutorial":
-        return "bg-blue-50 border-blue-200 text-blue-800";
-      default:
-        return "bg-gray-50 border-gray-200 text-gray-800";
+    case "tip":
+      return "bg-green-50 border-green-200 text-green-800";
+    case "warning":
+      return "bg-yellow-50 border-yellow-200 text-yellow-800";
+    case "tutorial":
+      return "bg-blue-50 border-blue-200 text-blue-800";
+    default:
+      return "bg-gray-50 border-gray-200 text-gray-800";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case "tip":
-        return <BookOpen className="h-4 w-4 text-green-600" />;
-      case "warning":
-        return <HelpCircle className="h-4 w-4 text-yellow-600" />;
-      case "tutorial":
-        return <BookOpen className="h-4 w-4 text-blue-600" />;
-      default:
-        return <HelpCircle className="h-4 w-4 text-gray-600" />;
+    case "tip":
+      return <BookOpen className="h-4 w-4 text-green-600" />;
+    case "warning":
+      return <HelpCircle className="h-4 w-4 text-yellow-600" />;
+    case "tutorial":
+      return <BookOpen className="h-4 w-4 text-blue-600" />;
+    default:
+      return <HelpCircle className="h-4 w-4 text-gray-600" />;
     }
   };
 
   const getSizeClasses = () => {
     switch (size) {
-      case "sm":
-        return "w-64 max-w-xs";
-      case "lg":
-        return "w-96 max-w-md";
-      default:
-        return "w-80 max-w-sm";
+    case "sm":
+      return "w-64 max-w-xs";
+    case "lg":
+      return "w-96 max-w-md";
+    default:
+      return "w-80 max-w-sm";
     }
   };
 

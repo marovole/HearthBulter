@@ -536,7 +536,7 @@ describe("/api/auth API", () => {
         },
         body: JSON.stringify({
           email: "test@example.com",
-          name: '<script>alert("xss")</script>',
+          name: "<script>alert(\"xss\")</script>",
           password: "password123",
         }),
       });

@@ -36,24 +36,24 @@ export class ShareImageGenerator {
     const finalConfig = { ...SHARE_TEMPLATE_CONFIGS[template], ...config };
 
     switch (template) {
-      case ShareTemplate.HEALTH_REPORT:
-        return this.generateHealthReportImage(data, finalConfig);
-      case ShareTemplate.GOAL_ACHIEVED:
-        return this.generateGoalAchievedImage(data, finalConfig);
-      case ShareTemplate.ACHIEVEMENT_UNLOCKED:
-        return this.generateAchievementUnlockedImage(data, finalConfig);
-      case ShareTemplate.WEIGHT_LOSS:
-        return this.generateWeightLossImage(data, finalConfig);
-      case ShareTemplate.STREAK_CELEBRATION:
-        return this.generateStreakCelebrationImage(data, finalConfig);
-      case ShareTemplate.RECIPE_CARD:
-        return this.generateRecipeCardImage(data, finalConfig);
-      case ShareTemplate.PERSONAL_RECORD:
-        return this.generatePersonalRecordImage(data, finalConfig);
-      case ShareTemplate.COMMUNITY_POST:
-        return this.generateCommunityPostImage(data, finalConfig);
-      default:
-        throw new Error(`不支持的分享模板: ${template}`);
+    case ShareTemplate.HEALTH_REPORT:
+      return this.generateHealthReportImage(data, finalConfig);
+    case ShareTemplate.GOAL_ACHIEVED:
+      return this.generateGoalAchievedImage(data, finalConfig);
+    case ShareTemplate.ACHIEVEMENT_UNLOCKED:
+      return this.generateAchievementUnlockedImage(data, finalConfig);
+    case ShareTemplate.WEIGHT_LOSS:
+      return this.generateWeightLossImage(data, finalConfig);
+    case ShareTemplate.STREAK_CELEBRATION:
+      return this.generateStreakCelebrationImage(data, finalConfig);
+    case ShareTemplate.RECIPE_CARD:
+      return this.generateRecipeCardImage(data, finalConfig);
+    case ShareTemplate.PERSONAL_RECORD:
+      return this.generatePersonalRecordImage(data, finalConfig);
+    case ShareTemplate.COMMUNITY_POST:
+      return this.generateCommunityPostImage(data, finalConfig);
+    default:
+      throw new Error(`不支持的分享模板: ${template}`);
     }
   }
 
@@ -242,8 +242,8 @@ export class ShareImageGenerator {
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       ">
         ${
-          config.branding
-            ? `
+  config.branding
+    ? `
           <div style="
             position: absolute;
             top: 20px;
@@ -253,8 +253,8 @@ export class ShareImageGenerator {
             opacity: 0.7;
           ">Health Butler</div>
         `
-            : ""
-        }
+    : ""
+}
         
         <div style="margin-bottom: 30px;">
           <h1 style="font-size: 32px; font-weight: bold; margin: 0; color: #059669;">
@@ -303,8 +303,8 @@ export class ShareImageGenerator {
         </div>
 
         ${
-          weightChange.lost > 0
-            ? `
+  weightChange.lost > 0
+    ? `
           <div style="
             background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
             padding: 16px 20px;
@@ -317,8 +317,8 @@ export class ShareImageGenerator {
             </span>
           </div>
         `
-            : ""
-        }
+    : ""
+}
       </div>
     `;
   }
@@ -348,8 +348,8 @@ export class ShareImageGenerator {
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       ">
         ${
-          config.branding
-            ? `
+  config.branding
+    ? `
           <div style="
             position: absolute;
             top: 20px;
@@ -359,8 +359,8 @@ export class ShareImageGenerator {
             opacity: 0.7;
           ">Health Butler</div>
         `
-            : ""
-        }
+    : ""
+}
 
         <div style="margin-bottom: 40px;">
           <div style="font-size: 96px; margin-bottom: 20px;">🎯</div>
@@ -452,8 +452,8 @@ export class ShareImageGenerator {
         "></div>
 
         ${
-          config.branding
-            ? `
+  config.branding
+    ? `
           <div style="
             position: absolute;
             top: 20px;
@@ -464,8 +464,8 @@ export class ShareImageGenerator {
             z-index: 10;
           ">Health Butler</div>
         `
-            : ""
-        }
+    : ""
+}
 
         <div style="margin-bottom: 30px; position: relative; z-index: 5;">
           <div style="
@@ -550,8 +550,8 @@ export class ShareImageGenerator {
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       ">
         ${
-          config.branding
-            ? `
+  config.branding
+    ? `
           <div style="
             position: absolute;
             top: 20px;
@@ -561,8 +561,8 @@ export class ShareImageGenerator {
             opacity: 0.7;
           ">Health Butler</div>
         `
-            : ""
-        }
+    : ""
+}
 
         <div style="margin-bottom: 30px;">
           <div style="font-size: 64px; margin-bottom: 16px;">${icon}</div>
@@ -644,8 +644,8 @@ export class ShareImageGenerator {
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       ">
         ${
-          config.branding
-            ? `
+  config.branding
+    ? `
           <div style="
             position: absolute;
             top: 20px;
@@ -655,8 +655,8 @@ export class ShareImageGenerator {
             opacity: 0.7;
           ">Health Butler</div>
         `
-            : ""
-        }
+    : ""
+}
 
         <div style="margin-bottom: 30px;">
           <div style="
@@ -755,8 +755,8 @@ export class ShareImageGenerator {
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       ">
         ${
-          config.branding
-            ? `
+  config.branding
+    ? `
           <div style="
             position: absolute;
             top: 20px;
@@ -766,8 +766,8 @@ export class ShareImageGenerator {
             opacity: 0.7;
           ">Health Butler</div>
         `
-            : ""
-        }
+    : ""
+}
 
         <div style="margin-bottom: 20px;">
           <h1 style="font-size: 28px; font-weight: bold; margin: 0 0 8px 0; color: #c2410c;">
@@ -859,8 +859,8 @@ export class ShareImageGenerator {
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       ">
         ${
-          config.branding
-            ? `
+  config.branding
+    ? `
           <div style="
             position: absolute;
             top: 20px;
@@ -870,8 +870,8 @@ export class ShareImageGenerator {
             opacity: 0.7;
           ">Health Butler</div>
         `
-            : ""
-        }
+    : ""
+}
 
         <div style="margin-bottom: 30px;">
           <div style="
@@ -936,8 +936,8 @@ export class ShareImageGenerator {
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       ">
         ${
-          imageUrl
-            ? `
+  imageUrl
+    ? `
           <div style="
             position: absolute;
             top: 0;
@@ -949,8 +949,8 @@ export class ShareImageGenerator {
           "></div>
           <div style="height: 200px;"></div>
         `
-            : ""
-        }
+    : ""
+}
 
         <div style="${imageUrl ? "margin-top: 30px;" : ""}">
           <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 12px 0; color: #15803d;">

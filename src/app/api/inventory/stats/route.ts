@@ -36,30 +36,30 @@ export async function GET(request: NextRequest) {
     let data: any = {};
 
     switch (type) {
-      case "basic":
-        // 基础统计 - 使用双写框架迁移
-        data = await inventoryRepository.getInventoryStats(memberId);
-        break;
+    case "basic":
+      // 基础统计 - 使用双写框架迁移
+      data = await inventoryRepository.getInventoryStats(memberId);
+      break;
 
-      case "efficiency":
-        // 效率评分
-        data = await inventoryAnalyzer.calculateInventoryEfficiency(memberId);
-        break;
+    case "efficiency":
+      // 效率评分
+      data = await inventoryAnalyzer.calculateInventoryEfficiency(memberId);
+      break;
 
-      case "trends":
-        // 趋势数据
-        const days = parseInt(searchParams.get("days") || "30");
-        data = await inventoryAnalyzer.getInventoryTrends(memberId, days);
-        break;
+    case "trends":
+      // 趋势数据
+      const days = parseInt(searchParams.get("days") || "30");
+      data = await inventoryAnalyzer.getInventoryTrends(memberId, days);
+      break;
 
-      case "expiry":
-        // 保质期趋势
-        const expiryDays = parseInt(searchParams.get("days") || "30");
-        data = await expiryMonitor.getExpiryTrends(memberId, expiryDays);
-        break;
+    case "expiry":
+      // 保质期趋势
+      const expiryDays = parseInt(searchParams.get("days") || "30");
+      data = await expiryMonitor.getExpiryTrends(memberId, expiryDays);
+      break;
 
-      default:
-        return NextResponse.json({ error: "无效的统计类型" }, { status: 400 });
+    default:
+      return NextResponse.json({ error: "无效的统计类型" }, { status: 400 });
     }
 
     return NextResponse.json({

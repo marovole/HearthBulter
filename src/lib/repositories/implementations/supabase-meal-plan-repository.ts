@@ -720,9 +720,9 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
           amount: ing.amount,
           food: ing.food
             ? {
-                id: ing.food.id,
-                name: ing.food.name,
-              }
+              id: ing.food.id,
+              name: ing.food.name,
+            }
             : undefined,
         })),
       })),

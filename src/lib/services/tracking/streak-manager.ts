@@ -133,18 +133,18 @@ export async function getCheckInStats(
   let totalDays = 7;
 
   switch (period) {
-    case "week":
-      startDate.setDate(today.getDate() - 6); // 最近7天
-      totalDays = 7;
-      break;
-    case "month":
-      startDate.setDate(today.getDate() - 29); // 最近30天
-      totalDays = 30;
-      break;
-    case "year":
-      startDate.setDate(today.getDate() - 364); // 最近365天
-      totalDays = 365;
-      break;
+  case "week":
+    startDate.setDate(today.getDate() - 6); // 最近7天
+    totalDays = 7;
+    break;
+  case "month":
+    startDate.setDate(today.getDate() - 29); // 最近30天
+    totalDays = 30;
+    break;
+  case "year":
+    startDate.setDate(today.getDate() - 364); // 最近365天
+    totalDays = 365;
+    break;
   }
 
   // 获取期间的打卡记录
@@ -218,11 +218,11 @@ export async function getCheckInCalendar(memberId: string, year: number, month: 
       isCompleted: target?.isCompleted || false,
       nutrition: target
         ? {
-            calories: target.actualCalories,
-            protein: target.actualProtein,
-            carbs: target.actualCarbs,
-            fat: target.actualFat,
-          }
+          calories: target.actualCalories,
+          protein: target.actualProtein,
+          carbs: target.actualCarbs,
+          fat: target.actualFat,
+        }
         : undefined,
     });
   }

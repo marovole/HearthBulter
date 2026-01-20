@@ -133,10 +133,10 @@ export function WeightTrendChart({ memberId, days = 30 }: WeightTrendChartProps)
               const item = chartData.find((d) => d.date === label);
               return item
                 ? new Date(item.fullDate).toLocaleDateString("zh-CN", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })
                 : label;
             }}
             formatter={(value: number) => [`${value.toFixed(1)} kg`, "体重"]}

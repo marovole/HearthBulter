@@ -473,17 +473,17 @@ function mapFood(food: Doc<"foods"> | null | undefined): InventoryItemDTO["food"
 
 function mapInventoryStatus(status: string): InventoryItemDTO["status"] {
   switch (status) {
-    case "OUT_OF_STOCK":
-      return "DEPLETED";
-    case "LOW_STOCK":
-      return "NORMAL";
-    case "EXPIRING":
-      return "EXPIRING";
-    case "EXPIRED":
-      return "EXPIRED";
-    case "FRESH":
-      return "FRESH";
-    default:
-      return "NORMAL";
+  case "OUT_OF_STOCK":
+    return "DEPLETED";
+  case "LOW_STOCK":
+    return "NORMAL";
+  case "EXPIRING":
+    return "EXPIRING";
+  case "EXPIRED":
+    return "EXPIRED";
+  case "FRESH":
+    return "FRESH";
+  default:
+    return "NORMAL";
   }
 }
