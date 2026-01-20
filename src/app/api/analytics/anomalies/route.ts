@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { neonAdapter } from "@/lib/db/neon-adapter";
 import { auth } from "@/lib/auth";
 import { AnomalyStatus } from "@prisma/client";
 import {
@@ -13,7 +13,7 @@ import { requireMemberDataAccess } from "@/lib/middleware/authorization";
  * GET /api/analytics/anomalies
  * 获取异常记录
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 
 // Force dynamic rendering for auth()
@@ -34,7 +34,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "缺少必要参数：memberId" }, { status: 400 });
     }
 
-    // 验证用户对该成员数据的访问权限
     const accessResult = await requireMemberDataAccess(session.user.id, memberId);
     if (!accessResult.authorized) {
       return NextResponse.json(
@@ -43,27 +42,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 构建查询
-    let query = supabase
-      .from("health_anomalies")
-      .select("*")
-      .eq("memberId", memberId)
-      .is("deletedAt", null)
-      .order("detectedAt", { ascending: false })
-      .limit(limit);
+    const where: Record<string, unknown> = {
+      memberId,
+      deletedAt: null,
+    };
 
     if (status) {
-      query = query.eq("status", status);
+      where.status = status;
     }
 
-    const { data: anomalies, error } = await query;
-
-    if (error) {
-      console.error("查询异常记录失败:", error);
-      return NextResponse.json({ error: "获取异常记录失败" }, { status: 500 });
-    }
+    const anomalies = await neonAdapter.healthAnomaly.findMany({
+      where,
+      orderBy: { detectedAt: "desc" },
+      take: limit,
+    });
 
     return NextResponse.json({
       success: true,
@@ -78,8 +70,6 @@ export async function GET(request: NextRequest) {
 /**
  * PATCH /api/analytics/anomalies
  * 更新异常状态
- *
- * Note: acknowledgeAnomaly, resolveAnomaly, ignoreAnomaly still use Prisma
  */
 export async function PATCH(request: NextRequest) {
   try {
@@ -95,7 +85,6 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "缺少必要参数：anomalyId, action" }, { status: 400 });
     }
 
-    // 如果提供了 memberId，验证访问权限
     if (memberId) {
       const accessResult = await requireMemberDataAccess(session.user.id, memberId);
       if (!accessResult.authorized) {

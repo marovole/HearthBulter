@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { foodRepository } from "@/lib/repositories/food-repository-singleton";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { neonAdapter } from "@/lib/db/neon-adapter";
 import { usdaService } from "@/lib/services/usda-service";
 import { foodCacheService } from "@/lib/services/cache-service";
 import type { FoodRecord } from "@/lib/repositories/interfaces/food-repository";
@@ -9,8 +9,7 @@ import type { FoodRecord } from "@/lib/repositories/interfaces/food-repository";
  * GET /api/foods/:id
  * 获取食物详情
  *
- * 使用双写框架迁移
- * 保留缓存和 USDA fallback 逻辑
+ * Migrated from Supabase to Neon
  */
 
 // Force dynamic rendering
@@ -19,31 +18,24 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params;
 
-    // 1. 尝试从缓存获取
     const cachedFood = await foodCacheService.getFood(id);
     if (cachedFood) {
       return NextResponse.json(parseFoodResponse(cachedFood), { status: 200 });
     }
 
-    // 2. 使用 Repository 从数据库查找
     const food = await foodRepository.findById(id);
 
     if (food) {
-      // 缓存食物数据
       await foodCacheService.setFood(food);
       return NextResponse.json(parseFoodResponse(food), { status: 200 });
     }
 
-    // 3. 如果在数据库中找不到，尝试从 USDA 获取（如果是 USDA ID）
     if (/^\d+$/.test(id)) {
       try {
         const usdaFood = await usdaService.getFoodByFdcIdAndMap(parseInt(id));
 
-        // 保存到数据库（仅 Supabase，避免双写到外部数据源）
-        const supabase = SupabaseClientManager.getInstance();
-        const { data: savedFood, error: insertError } = await supabase
-          .from("foods")
-          .insert({
+        const savedFood = await neonAdapter.food.create<FoodRecord>({
+          data: {
             name: usdaFood.name,
             nameEn: usdaFood.nameEn,
             aliases: JSON.stringify(usdaFood.aliases),
@@ -58,23 +50,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             vitaminC: usdaFood.vitaminC,
             calcium: usdaFood.calcium,
             iron: usdaFood.iron,
-            category: usdaFood.category as any,
+            category: usdaFood.category,
             tags: JSON.stringify(usdaFood.tags),
             source: usdaFood.source,
             usdaId: usdaFood.usdaId,
             verified: usdaFood.verified,
-            cachedAt: new Date().toISOString(),
-          })
-          .select()
-          .single();
+            cachedAt: new Date(),
+          },
+        });
 
-        if (insertError || !savedFood) {
-          console.error("保存USDA食物失败:", insertError);
-          throw insertError ?? new Error("保存USDA食物失败");
-        }
-
-        // 缓存新保存的食物
-        await foodCacheService.setFood(savedFood);
+        await foodCacheService.setFood(savedFood as FoodRecord);
 
         return NextResponse.json(parseFoodResponse(savedFood), { status: 200 });
       } catch (usdaError) {

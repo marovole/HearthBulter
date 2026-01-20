@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { neonAdapter } from "@/lib/db/neon-adapter";
 import { auth } from "@/lib/auth";
 import { ReportType } from "@prisma/client";
 import { createReport } from "@/lib/services/analytics/report-generator";
@@ -9,7 +9,7 @@ import { requireMemberDataAccess } from "@/lib/middleware/authorization";
  * GET /api/analytics/reports
  * 获取报告列表
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 
 // Force dynamic rendering for auth()
@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "缺少必要参数：memberId" }, { status: 400 });
     }
 
-    // 验证用户对该成员数据的访问权限
     const accessResult = await requireMemberDataAccess(session.user.id, memberId);
     if (!accessResult.authorized) {
       return NextResponse.json(
@@ -40,40 +39,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 构建查询
-    let query = supabase
-      .from("health_reports")
-      .select(
-        `
-        id,
-        reportType,
-        startDate,
-        endDate,
-        title,
-        summary,
-        overallScore,
-        status,
-        createdAt
-      `,
-        { count: "exact" }
-      )
-      .eq("memberId", memberId)
-      .is("deletedAt", null)
-      .order("createdAt", { ascending: false })
-      .range((page - 1) * pageSize, page * pageSize - 1);
+    const where: Record<string, unknown> = {
+      memberId,
+      deletedAt: null,
+    };
 
     if (reportType) {
-      query = query.eq("reportType", reportType);
+      where.reportType = reportType;
     }
 
-    const { data: reports, error, count: total } = await query;
-
-    if (error) {
-      console.error("查询报告列表失败:", error);
-      return NextResponse.json({ error: "获取报告列表失败" }, { status: 500 });
-    }
+    const [reports, total] = await Promise.all([
+      neonAdapter.healthReport.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        take: pageSize,
+        skip: (page - 1) * pageSize,
+      }),
+      neonAdapter.healthReport.count({ where }),
+    ]);
 
     return NextResponse.json({
       success: true,
@@ -96,8 +79,6 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/analytics/reports
  * 生成新报告
- *
- * Note: createReport service still uses Prisma
  */
 export async function POST(request: NextRequest) {
   try {
@@ -113,7 +94,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "缺少必要参数：memberId, reportType" }, { status: 400 });
     }
 
-    // 验证用户对该成员数据的访问权限
     const accessResult = await requireMemberDataAccess(session.user.id, memberId);
     if (!accessResult.authorized) {
       return NextResponse.json(

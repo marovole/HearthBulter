@@ -1,12 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { neonAdapter } from "@/lib/db/neon-adapter";
 import { safeParseArray, safeParseObject } from "@/lib/utils/json-helpers";
+
+interface UserPreference {
+  memberId: string;
+  spiceLevel?: string;
+  sweetness?: string;
+  saltiness?: string;
+  preferredCuisines?: unknown;
+  avoidedIngredients?: unknown;
+  preferredIngredients?: unknown;
+  maxCookTime?: number | null;
+  minServings?: number;
+  maxServings?: number;
+  costLevel?: string;
+  maxEstimatedCost?: number | null;
+  dietType?: string;
+  isLowCarb?: boolean;
+  isLowFat?: boolean;
+  isHighProtein?: boolean;
+  isVegetarian?: boolean;
+  isVegan?: boolean;
+  isGlutenFree?: boolean;
+  isDairyFree?: boolean;
+  enableRecommendations?: boolean;
+  learnedPreferences?: unknown;
+  preferenceScore?: number;
+}
 
 /**
  * GET /api/user/preferences
  * 获取用户偏好设置
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 
 // Force dynamic rendering
@@ -20,23 +46,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "memberId is required" }, { status: 400 });
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 获取用户偏好
-    const { data: preferences, error } = await supabase
-      .from("user_preferences")
-      .select("*")
-      .eq("memberId", memberId)
-      .single();
-
-    if (error && error.code !== "PGRST116") {
-      // PGRST116 = no rows returned, which is expected
-      console.error("Error getting user preferences:", error);
-      return NextResponse.json({ error: "Failed to fetch user preferences" }, { status: 500 });
-    }
+    const preferences = await neonAdapter.userPreference.findUnique<UserPreference>({
+      where: { memberId },
+    });
 
     if (!preferences) {
-      // 如果没有设置偏好，返回默认值
       return NextResponse.json({
         success: true,
         preferences: {
@@ -89,7 +103,7 @@ export async function GET(request: NextRequest) {
  * POST /api/user/preferences
  * 创建或更新用户偏好设置
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 export async function POST(request: NextRequest) {
   try {
@@ -100,9 +114,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "memberId is required" }, { status: 400 });
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 准备数据 - Supabase 可以直接存储 JSON 类型
     const data = {
       memberId,
       spiceLevel: preferences.spiceLevel || "MEDIUM",
@@ -125,20 +136,13 @@ export async function POST(request: NextRequest) {
       isGlutenFree: preferences.isGlutenFree || false,
       isDairyFree: preferences.isDairyFree || false,
       enableRecommendations: preferences.enableRecommendations !== false,
-      updatedAt: new Date().toISOString(),
     };
 
-    // 使用 Supabase 的 upsert
-    const { data: userPreference, error } = await supabase
-      .from("user_preferences")
-      .upsert(data, { onConflict: "memberId" })
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error updating user preferences:", error);
-      return NextResponse.json({ error: "Failed to update user preferences" }, { status: 500 });
-    }
+    const userPreference = await neonAdapter.userPreference.upsert<UserPreference>({
+      where: { memberId },
+      create: data,
+      update: data,
+    });
 
     const normalizedPreference = {
       ...userPreference,

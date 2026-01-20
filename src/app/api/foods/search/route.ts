@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { testDatabaseConnection } from "@/lib/db";
 import { foodRepository } from "@/lib/repositories/food-repository-singleton";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { neonAdapter } from "@/lib/db/neon-adapter";
 import { usdaService } from "@/lib/services/usda-service";
 import { CacheService, CacheKeyBuilder, CACHE_CONFIG } from "@/lib/cache/redis-client";
 import { FoodCategory } from "@/lib/types/meal";
@@ -10,8 +10,7 @@ import { FoodCategory } from "@/lib/types/meal";
  * GET /api/foods/search?q=鸡胸肉
  * 搜索食物（支持中英文）
  *
- * 使用双写框架迁移
- * 保留缓存、USDA fallback 和降级逻辑
+ * Migrated from Supabase to Neon
  */
 
 // Force dynamic rendering
@@ -137,51 +136,38 @@ export async function GET(request: NextRequest) {
             }
 
             try {
-              const backgroundSupabase = SupabaseClientManager.getInstance();
+              const existing = await neonAdapter.food.findFirst({
+                where: { usdaId: foodData.usdaId },
+              });
 
-              // 检查是否已存在
-              const { data: existing, error: existingError } = await backgroundSupabase
-                .from("foods")
-                .select("id")
-                .eq("usdaId", foodData.usdaId)
-                .maybeSingle();
-
-              if (existingError) {
-                console.error("检查USDA数据存在性失败:", existingError);
+              if (existing) {
                 return;
               }
 
-              if (existing) {
-                return; // 已存在，跳过
-              }
-
-              // 插入新数据
-              const { error: insertError } = await backgroundSupabase.from("foods").insert({
-                name: foodData.name,
-                nameEn: foodData.nameEn,
-                aliases: JSON.stringify(foodData.aliases),
-                calories: foodData.calories,
-                protein: foodData.protein,
-                carbs: foodData.carbs,
-                fat: foodData.fat,
-                fiber: foodData.fiber,
-                sugar: foodData.sugar,
-                sodium: foodData.sodium,
-                vitaminA: foodData.vitaminA,
-                vitaminC: foodData.vitaminC,
-                calcium: foodData.calcium,
-                iron: foodData.iron,
-                category: foodData.category as FoodCategory,
-                tags: JSON.stringify(foodData.tags),
-                source: foodData.source,
-                usdaId: foodData.usdaId,
-                verified: foodData.verified,
-                cachedAt: new Date().toISOString(),
+              await neonAdapter.food.create({
+                data: {
+                  name: foodData.name,
+                  nameEn: foodData.nameEn,
+                  aliases: JSON.stringify(foodData.aliases),
+                  calories: foodData.calories,
+                  protein: foodData.protein,
+                  carbs: foodData.carbs,
+                  fat: foodData.fat,
+                  fiber: foodData.fiber,
+                  sugar: foodData.sugar,
+                  sodium: foodData.sodium,
+                  vitaminA: foodData.vitaminA,
+                  vitaminC: foodData.vitaminC,
+                  calcium: foodData.calcium,
+                  iron: foodData.iron,
+                  category: foodData.category as FoodCategory,
+                  tags: JSON.stringify(foodData.tags),
+                  source: foodData.source,
+                  usdaId: foodData.usdaId,
+                  verified: foodData.verified,
+                  cachedAt: new Date(),
+                },
               });
-
-              if (insertError) {
-                console.error("保存USDA数据失败:", insertError);
-              }
             } catch (error) {
               console.error("保存USDA数据失败:", error);
             }

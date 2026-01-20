@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { recipeOptimizer } from "@/lib/services/ai/recipe-optimizer";
-import { SupabaseFamilyRepository } from "@/lib/repositories/implementations/supabase-family-repository";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { NeonFamilyRepository } from "@/lib/repositories/implementations/neon-family-repository";
 import { feedbackRepository } from "@/lib/repositories/feedback-repository-singleton";
 import type { FeedbackData } from "@/lib/types/feedback";
 
@@ -10,8 +9,7 @@ import type { FeedbackData } from "@/lib/types/feedback";
 export const dynamic = "force-static";
 export const revalidate = false;
 
-// 创建专门用于权限检查的 FamilyRepository 实例（不需要双写）
-const familyRepo = new SupabaseFamilyRepository(SupabaseClientManager.getInstance());
+const familyRepo = new NeonFamilyRepository();
 
 const DEFAULT_STATS_DAYS = 30;
 

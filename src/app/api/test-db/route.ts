@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { testDatabaseConnection } from "@/lib/db/supabase-adapter";
+import { testDatabaseConnection } from "@/lib/db/neon-adapter";
 import { getCurrentUser } from "@/lib/auth";
 import { requireAdmin } from "@/lib/middleware/authorization";
 
@@ -51,7 +51,7 @@ export async function GET() {
       message: "Database connection is healthy",
       timestamp: new Date().toISOString(),
       connection: {
-        adapter: "Supabase",
+        adapter: "Neon",
         healthy: true,
       },
     });

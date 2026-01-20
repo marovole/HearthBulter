@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { neonAdapter } from "@/lib/db/neon-adapter";
 import { getCurrentUser } from "@/lib/auth";
 import { requireAdmin } from "@/lib/middleware/authorization";
 
 /**
  * GET /api/monitoring - 系统监控端点
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 
 // Force dynamic rendering
@@ -27,24 +27,8 @@ export async function GET() {
       }
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 获取基本统计信息（使用Supabase）
-    const { count: totalUsers, error: countError } = await supabase
-      .from("users")
-      .select("*", { count: "exact", head: true });
-
-    if (countError) {
-      console.error("查询用户统计失败:", countError);
-      return NextResponse.json(
-        {
-          system: "unhealthy",
-          timestamp: new Date().toISOString(),
-          error: "Failed to fetch user statistics",
-        },
-        { status: 500 }
-      );
-    }
+    // 获取基本统计信息（使用Neon）
+    const totalUsers = await neonAdapter.user.count();
 
     return NextResponse.json({
       system: "healthy",

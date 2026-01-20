@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { neonAdapter } from "@/lib/db/neon-adapter";
 import { z } from "zod";
 import { reminderService } from "@/lib/services/tracking/reminder-service";
+
+interface FamilyMember {
+  id: string;
+  userId: string;
+  familyId: string;
+  role?: string;
+}
+
+interface Family {
+  id: string;
+  creatorId: string;
+}
 
 /**
  * 验证用户是否有权限访问成员的追踪数据
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 
 // Force dynamic rendering for auth()
@@ -16,45 +28,30 @@ async function verifyTrackingAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean }> {
-  const supabase = SupabaseClientManager.getInstance();
+  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
+    where: { id: memberId, deletedAt: null },
+  });
 
-  // 查询成员信息
-  const { data: member, error: memberError } = await supabase
-    .from("family_members")
-    .select(
-      `
-      id,
-      userId,
-      familyId,
-      family:families!inner(
-        id,
-        creatorId
-      )
-    `
-    )
-    .eq("id", memberId)
-    .is("deletedAt", null)
-    .maybeSingle();
-
-  if (memberError || !member) {
+  if (!member) {
     return { hasAccess: false };
   }
 
-  const memberData = member as any;
-  const isCreator = memberData.family.creatorId === userId;
-  const isSelf = memberData.userId === userId;
+  const family = await neonAdapter.family.findUnique<Family>({
+    where: { id: member.familyId },
+  });
 
-  // 查询当前用户在该家庭中的角色
-  const { data: userMember } = await supabase
-    .from("family_members")
-    .select("role")
-    .eq("familyId", memberData.family.id)
-    .eq("userId", userId)
-    .is("deletedAt", null)
-    .maybeSingle();
+  if (!family) {
+    return { hasAccess: false };
+  }
 
-  const userMemberData = userMember as any;
-  const isAdmin = userMemberData?.role === "ADMIN" || isCreator;
+  const isCreator = family.creatorId === userId;
+  const isSelf = member.userId === userId;
+
+  const userMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
+    where: { familyId: member.familyId, userId, deletedAt: null },
+  });
+
+  const isAdmin = userMember?.role === "ADMIN" || isCreator;
 
   return {
     hasAccess: isAdmin || isSelf,

@@ -2,25 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { conversationManager } from "@/lib/services/ai/conversation-manager";
 import { healthRepository } from "@/lib/repositories/health-repository-singleton";
-import { SupabaseFamilyRepository } from "@/lib/repositories/implementations/supabase-family-repository";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { NeonFamilyRepository } from "@/lib/repositories/implementations/neon-family-repository";
 import { getDefaultRateLimitConfig, rateLimiter } from "@/lib/services/ai/rate-limiter";
 import { aiFallbackService } from "@/lib/services/ai/fallback-service";
 import { defaultSensitiveFilter } from "@/lib/middleware/ai-sensitive-filter";
 import { consentManager } from "@/lib/services/consent-manager";
 
-// 创建专门用于权限检查的 FamilyRepository 实例
-
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-const familyRepo = new SupabaseFamilyRepository(SupabaseClientManager.getInstance());
+const familyRepo = new NeonFamilyRepository();
 
 /**
  * POST /api/ai/chat
  * AI 对话端点
  *
- * Migrated from Prisma to Supabase (endpoint layer)
- * Note: Service layer (conversationManager, rateLimiter, etc.) still uses Prisma
+ * Migrated from Supabase to Neon
  */
 export async function POST(request: NextRequest) {
   try {
