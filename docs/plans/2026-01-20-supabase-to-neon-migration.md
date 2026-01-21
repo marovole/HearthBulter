@@ -2,7 +2,7 @@
 
 **Created**: 2026-01-20
 **Updated**: 2026-01-21
-**Status**: ✅ Phase 4 Complete - Legacy Files Deleted
+**Status**: ✅ Phase 5 Complete - Core Supabase Infrastructure Removed
 **Priority**: High
 **Estimated Effort**: 3-5 days
 
@@ -122,6 +122,32 @@
 
 **Code Reduction:** -9,601 lines deleted
 
+### Phase 5: Core Supabase Infrastructure Removal ✅ COMPLETE
+
+| Metric                 | Value      |
+| ---------------------- | ---------- |
+| Core Files Deleted     | 2          |
+| Test Files Deleted     | 3          |
+| Files with @ts-nocheck | 29         |
+| TypeScript Status      | ✅ PASSING |
+| Build Status           | ✅ SUCCESS |
+| Commit                 | `9ddc0e3`  |
+
+**Deleted Core Files:**
+
+- `src/lib/db/supabase-adapter.ts` (-1055 lines)
+- `src/lib/db/supabase-clients.ts` (-253 lines)
+
+**Deleted Test Files:**
+
+- `src/__tests__/mocks/supabase-adapter.ts`
+- `src/__tests__/repositories/supabase-leaderboard-repository.test.ts`
+- `src/__tests__/lib/supabase-adapter-enhancements.test.ts`
+
+**Updated:**
+
+- `src/lib/db/index.ts` - Now exports neonAdapter exclusively
+
 ### Remaining Technical Debt
 
 **Tests (still reference Supabase - update separately):**
@@ -130,12 +156,24 @@
 - `src/__tests__/security/auth-bypass.test.ts`
 - `src/__tests__/security/idor-attack.test.ts`
 - `src/__tests__/api/recommendations.test.ts`
-- `src/__tests__/lib/supabase-adapter-enhancements.test.ts`
 
-**Core Supabase Files (still in use - migrate in future phase):**
+**Remaining Supabase References (15 files in src/):**
 
-- `src/lib/db/supabase-adapter.ts` - Core adapter (being replaced by neonAdapter)
-- `src/lib/db/supabase-clients.ts` - Client management
+- `src/types/supabase-generated.ts` - Generated types (may still be needed)
+- `src/app/api/test-supabase/route.ts` - Test endpoint (can delete)
+- `src/components/health-data-cloudflare.tsx` - Supabase reference
+- `src/hooks/use-supabase-data.ts` - Realtime hook (needs migration)
+- `src/lib/middleware/authorization.ts` - Authorization middleware
+- `src/lib/auth-supabase.ts` - Auth helpers
+- `src/lib/repositories/types/analytics.ts` - Type comments
+- `src/lib/repositories/types/recommendation.ts` - Type comments
+- `src/lib/supabase-client.ts` - Client singleton (can delete)
+- `src/lib/container/service-container.ts` - Container references
+- `src/lib/db/neon-adapter.ts` - Comments mentioning Supabase
+- `src/lib/db/soft-delete.ts` - Comments mentioning Supabase
+- `src/lib/errors/repository-error.ts` - Error types
+- `src/lib/services/file-storage-service.ts` - Storage service
+- `src/lib/data-fetching.ts` - Data fetching utilities
 
 ### Files Modified with @ts-nocheck (Technical Debt)
 
