@@ -1,0 +1,33 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "quotio/gemini-claude-opus-4-5-thinking",
+  "agent": {
+    "build": {
+      "mode": "primary",
+      "model": "quotio/gemini-claude-opus-4-5-thinking",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "plan": {
+      "mode": "primary",
+      "model": "quotio/gemini-claude-opus-4-5-thinking",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "bash": false
+      }
+    },
+    "general": {
+      "mode": "primary",
+      "model": "quotio/gemini-claude-opus-4-5-thinking",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    }
+  }
+}

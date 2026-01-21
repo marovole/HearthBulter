@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 interface ReportUploaderProps {
   memberId: string;
+  familyId: string;
   onSuccess?: (reportId: string) => void;
   onCancel?: () => void;
 }
@@ -12,7 +13,7 @@ interface ReportUploaderProps {
 const SUPPORTED_FORMATS = ["application/pdf", "image/jpeg", "image/png"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-export function ReportUploader({ memberId, onSuccess, onCancel }: ReportUploaderProps) {
+export function ReportUploader({ memberId, familyId, onSuccess, onCancel }: ReportUploaderProps) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -135,7 +136,7 @@ export function ReportUploader({ memberId, onSuccess, onCancel }: ReportUploader
         onSuccess(data.reportId);
       } else {
         // 默认跳转到报告详情页
-        router.push(`/dashboard/families/${memberId}/reports/${data.reportId}`);
+        router.push(`/dashboard/families/${familyId}/members/${memberId}/reports/${data.reportId}`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "上传失败，请重试");

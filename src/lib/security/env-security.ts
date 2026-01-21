@@ -4,8 +4,6 @@ import { logger } from "@/lib/logging/structured-logger";
 const SENSITIVE_KEYS = [
   "DATABASE_URL",
   "CLERK_SECRET_KEY",
-  "SUPABASE_SERVICE_KEY",
-  "SUPABASE_JWT_SECRET",
   "GOOGLE_CLIENT_SECRET",
   "USDA_API_KEY",
   "OPENAI_API_KEY",
@@ -57,23 +55,6 @@ const PRODUCTION_ENV_CONFIG: EnvConfig = {
     required: true,
     type: "url",
     description: "应用部署 URL",
-  },
-  NEXT_PUBLIC_SUPABASE_URL: {
-    required: true,
-    type: "url",
-    description: "Supabase 服务URL",
-  },
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: {
-    required: true,
-    type: "string",
-    minLength: 10,
-    description: "Supabase 匿名密钥",
-  },
-  SUPABASE_SERVICE_KEY: {
-    required: true,
-    type: "string",
-    minLength: 10,
-    description: "Supabase 服务密钥",
   },
   USDA_API_KEY: {
     required: false,

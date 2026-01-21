@@ -81,6 +81,7 @@ export default async function NewReportPage({
           {/* 主要内容 */}
           <ReportUploader
             memberId={memberId}
+            familyId={id}
             onSuccess={(reportId) => {
               redirect(`/dashboard/families/${id}/members/${memberId}/reports/${reportId}`);
             }}
