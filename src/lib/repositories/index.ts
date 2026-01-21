@@ -17,8 +17,7 @@ export * from "./interfaces/notification-repository";
 export * from "./interfaces/analytics-repository";
 export * from "./interfaces/budget-repository";
 
-// Supabase 实现
-export * from "./implementations/supabase-recommendation-repository";
-export * from "./implementations/supabase-notification-repository";
-export * from "./implementations/supabase-analytics-repository";
-export * from "./implementations/supabase-budget-repository";
+// Neon 实现
+export * from "./implementations/neon-notification-repository";
+export * from "./implementations/neon-analytics-repository";
+export * from "./implementations/neon-budget-repository";

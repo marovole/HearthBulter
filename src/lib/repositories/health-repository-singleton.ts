@@ -4,14 +4,14 @@
  * 提供全局唯一的 HealthRepository 实例
  */
 
-import { SupabaseHealthRepository } from "./implementations/supabase-health-repository";
+import { NeonHealthRepository } from "./implementations/neon-health-repository";
 import type { HealthRepository } from "./interfaces/health-repository";
 
 let instance: HealthRepository | null = null;
 
 export function getHealthRepository(): HealthRepository {
   if (!instance) {
-    instance = new SupabaseHealthRepository();
+    instance = new NeonHealthRepository();
   }
   return instance;
 }
