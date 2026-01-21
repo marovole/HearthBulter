@@ -16,13 +16,8 @@ export function validateEnvironmentVariables(): void {
   const errors: EnvValidationError[] = [];
   const isProduction = process.env.NODE_ENV === "production";
 
-  // 必需的环境变量（已迁移到 Clerk，移除 NextAuth 依赖）
-  const requiredVars = [
-    "DATABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    "SUPABASE_SERVICE_KEY",
-  ];
+  // 已迁移到 Neon + Clerk，移除 Supabase 依赖
+  const requiredVars = ["DATABASE_URL", "CLERK_SECRET_KEY", "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"];
 
   // 检查必需的环境变量
   for (const varName of requiredVars) {
