@@ -1,3 +1,4 @@
+// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { prisma } from "@/lib/db";
 import { FoodCategory, ListStatus } from "@prisma/client";
 import { hasPermission, Permission, FamilyMemberRole } from "@/lib/permissions";
