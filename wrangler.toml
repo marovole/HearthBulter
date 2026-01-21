@@ -1,12 +1,12 @@
-# Cloudflare Pages + Supabase 混合架构配置文件
-# 适配 Next.js 15 静态导出 + Supabase 后端
+# Cloudflare Pages + Neon 架构配置文件
+# 适配 Next.js 15 + Neon Serverless PostgreSQL
 #
 # ⚠️ 重要: 敏感变量已移至 Cloudflare Dashboard Secrets
 # 参见: docs/deployment/cloudflare-secrets.md
 
 pages_build_output_dir = ".open-next"
 
-name = "hearthbutler-supabase"
+name = "hearthbutler"
 
 # 兼容性设置 - 启用 Node.js 兼容性
 compatibility_date = "2024-09-23"
@@ -14,7 +14,7 @@ compatibility_flags = ["nodejs_compat", "nodejs_als"]
 
 # 生产环境配置
 [env.production]
-name = "hearthbutler-supabase-prod"
+name = "hearthbutler-prod"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat", "nodejs_als"]
 
@@ -25,7 +25,7 @@ id = "dd47f27d131a466db34838dd247df983"
 
 # Preview 环境配置
 [env.preview]
-name = "hearthbutler-supabase-preview"
+name = "hearthbutler-preview"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat", "nodejs_als"]
 
@@ -54,14 +54,11 @@ NEXT_PUBLIC_ALLOWED_ORIGINS = "https://preview.hearthbulter.pages.dev"
 # 以下变量必须通过 Cloudflare Dashboard 或 wrangler secret 设置:
 #
 # 必需 (生产环境):
-# - DATABASE_URL
-# - SUPABASE_SERVICE_KEY
+# - DATABASE_URL (Neon PostgreSQL 连接字符串)
 # - CLERK_SECRET_KEY
-# - UPSTASH_REDIS_REST_TOKEN
-# - NEXTAUTH_SECRET (如果仍需要)
+# - OPENAI_API_KEY (可选，用于 AI 功能)
+# - UPSTASH_REDIS_REST_TOKEN (可选，用于缓存)
 #
 # 公开变量 (也需要设置):
-# - NEXT_PUBLIC_SUPABASE_URL
-# - NEXT_PUBLIC_SUPABASE_ANON_KEY
 # - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 # ============================================================
