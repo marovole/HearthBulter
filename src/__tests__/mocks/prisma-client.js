@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { mockPrisma } = require("./supabase-adapter");
+const { mockPrisma } = require("./neon-adapter");
 
 const PrismaClient = jest.fn().mockImplementation(() => mockPrisma);
 

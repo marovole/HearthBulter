@@ -306,10 +306,11 @@ jest.mock("../../convex/_generated/api", () => ({
 
 jest.mock("@/lib/db", () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { mockPrisma } = require("./mocks/supabase-adapter");
+  const { mockPrisma } = require("./mocks/neon-adapter");
   return {
     prisma: mockPrisma,
     db: mockPrisma,
+    neonAdapter: mockPrisma,
     getDB: jest.fn().mockResolvedValue(mockPrisma),
     getPrismaClient: jest.fn().mockResolvedValue(mockPrisma),
     testDatabaseConnection: jest.fn().mockResolvedValue(true),
@@ -317,14 +318,13 @@ jest.mock("@/lib/db", () => {
   };
 });
 
-jest.mock("@/lib/db/supabase-adapter", () => {
+jest.mock("@/lib/db/neon-adapter", () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { mockPrisma } = require("./mocks/supabase-adapter");
+  const { mockPrisma } = require("./mocks/neon-adapter");
   return {
-    supabaseAdapter: mockPrisma,
-    SupabaseClientManager: {
-      getInstance: jest.fn(),
-    },
+    neonAdapter: mockPrisma,
+    prisma: mockPrisma,
+    db: mockPrisma,
     testDatabaseConnection: jest.fn().mockResolvedValue(true),
     ensureDatabaseConnection: jest.fn().mockResolvedValue(undefined),
   };
