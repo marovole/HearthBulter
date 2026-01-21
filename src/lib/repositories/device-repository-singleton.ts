@@ -1,26 +1,11 @@
-/**
- * 设备连接 Repository 单例
- *
- * 提供全局单例 DeviceRepository 实例
- *
- * @module device-repository-singleton
- */
-
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
-import { SupabaseDeviceRepository } from "./implementations/supabase-device-repository";
+import { NeonDeviceRepository } from "./implementations/neon-device-repository";
 import type { DeviceRepository } from "./interfaces/device-repository";
 
 let instance: DeviceRepository | null = null;
 
-/**
- * 获取 DeviceRepository 单例实例
- *
- * @returns DeviceRepository 实例
- */
 export function getDeviceRepository(): DeviceRepository {
   if (!instance) {
-    const supabaseClient = SupabaseClientManager.getInstance();
-    instance = new SupabaseDeviceRepository(supabaseClient);
+    instance = new NeonDeviceRepository();
   }
   return instance;
 }

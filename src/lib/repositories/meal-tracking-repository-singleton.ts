@@ -1,26 +1,11 @@
-/**
- * 膳食追踪 Repository 单例
- *
- * 提供全局单例 MealTrackingRepository 实例
- *
- * @module meal-tracking-repository-singleton
- */
-
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
-import { SupabaseMealTrackingRepository } from "./implementations/supabase-meal-tracking-repository";
+import { NeonMealTrackingRepository } from "./implementations/neon-meal-tracking-repository";
 import type { MealTrackingRepository } from "./interfaces/meal-tracking-repository";
 
 let instance: MealTrackingRepository | null = null;
 
-/**
- * 获取 MealTrackingRepository 单例实例
- *
- * @returns MealTrackingRepository 实例
- */
 export function getMealTrackingRepository(): MealTrackingRepository {
   if (!instance) {
-    const supabaseClient = SupabaseClientManager.getInstance();
-    instance = new SupabaseMealTrackingRepository(supabaseClient);
+    instance = new NeonMealTrackingRepository();
   }
   return instance;
 }

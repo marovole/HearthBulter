@@ -18,11 +18,7 @@
  */
 
 import { KvCache, type KvResult } from "./cloudflare-kv";
-import {
-  SupabaseTrendCache,
-  type TrendCacheQuery,
-  type TrendCacheData,
-} from "./supabase-trend-cache";
+import { NeonTrendCache, type TrendCacheQuery, type TrendCacheData } from "./neon-trend-cache";
 import { buildCacheKey } from "./edge-cache-helpers";
 
 /**
@@ -95,7 +91,7 @@ export interface TrendCacheKeyParams {
  */
 export class MultiLayerCache {
   private readonly kvCache: KvCache;
-  private readonly trendCache: SupabaseTrendCache;
+  private readonly trendCache: NeonTrendCache;
   private readonly options: Required<MultiLayerCacheOptions>;
 
   constructor(options: MultiLayerCacheOptions = {}) {
@@ -113,7 +109,7 @@ export class MultiLayerCache {
       keyPrefix: "cache:",
     });
 
-    this.trendCache = new SupabaseTrendCache();
+    this.trendCache = new NeonTrendCache();
   }
 
   /**

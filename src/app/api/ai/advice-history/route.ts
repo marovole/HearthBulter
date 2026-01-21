@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { neonAdapter } from "@/lib/db/neon-adapter";
-import { fetchAdviceHistory } from "@/lib/db/supabase-rpc-helpers";
+import { fetchAdviceHistory } from "@/lib/db/neon-rpc-helpers";
 import { addCacheHeaders, EDGE_CACHE_PRESETS } from "@/lib/cache/edge-cache-helpers";
 
 interface FamilyMember {
