@@ -14,83 +14,86 @@ const isProtectedRoute = createRouteMatcher([
   "/shopping-list(.*)",
 ]);
 
-const isPublicApiRoute = createRouteMatcher([
-  "/api/health(.*)",
-  "/api/webhooks(.*)",
-]);
+const isPublicApiRoute = createRouteMatcher(["/api/health(.*)", "/api/webhooks(.*)"]);
 
-export default clerkMiddleware(
-  async (auth: ClerkMiddlewareAuth, req: NextRequest) => {
-    const startTime = Date.now();
-    const { pathname } = req.nextUrl;
-    const method = req.method;
-    const cors = resolveCors(req);
+export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, req: NextRequest) => {
+  const startTime = Date.now();
+  const { pathname } = req.nextUrl;
+  const method = req.method;
+  const cors = resolveCors(req);
 
-    if (shouldSkipMiddleware(pathname)) {
-      return NextResponse.next();
+  if (shouldSkipMiddleware(pathname)) {
+    return NextResponse.next();
+  }
+
+  if (method === "OPTIONS") {
+    if (!cors.allowed) {
+      return NextResponse.json({ error: "Origin not allowed" }, { status: 403 });
     }
 
-    if (method === "OPTIONS") {
-      if (!cors.allowed) {
-        return NextResponse.json(
-          { error: "Origin not allowed" },
-          { status: 403 },
-        );
-      }
+    const preflight = NextResponse.json({}, { status: 200 });
+    applyBasicSecurityHeaders(req, preflight, cors);
+    return preflight;
+  }
 
-      const preflight = NextResponse.json({}, { status: 200 });
-      applyBasicSecurityHeaders(req, preflight, cors);
-      return preflight;
+  try {
+    let response = NextResponse.next();
+    response = applyBasicSecurityHeaders(req, response, cors);
+
+    if (isProtectedRoute(req)) {
+      await auth.protect();
     }
 
-    try {
-      let response = NextResponse.next();
-      response = applyBasicSecurityHeaders(req, response, cors);
-
-      if (isProtectedRoute(req)) {
-        await auth.protect();
+    if (pathname.startsWith("/api/") && !isPublicApiRoute(req)) {
+      const { userId } = await auth();
+      if (!userId) {
+        return NextResponse.json({ error: "未授权访问" }, { status: 401 });
       }
+    }
 
-      if (pathname.startsWith("/api/") && !isPublicApiRoute(req)) {
-        const { userId } = await auth();
-        if (!userId) {
-          return NextResponse.json({ error: "未授权访问" }, { status: 401 });
-        }
-      }
+    const limit = await rateLimiter.checkLimit(req, {
+      windowMs: 60_000,
+      maxRequests: pathname.startsWith("/api/auth") ? 20 : 100,
+      identifier: "ip",
+      storage: "convex",
+      message: "请求过于频繁",
+    });
 
-      const limit = await rateLimiter.checkLimit(req, {
-        windowMs: 60_000,
-        maxRequests: pathname.startsWith("/api/auth") ? 20 : 100,
-        identifier: "ip",
-        storage: "convex",
-        message: "请求过于频繁",
+    if (!limit.allowed) {
+      const retryAfter = limit.retryAfter ?? 60;
+      return new NextResponse(JSON.stringify({ error: "请求过于频繁" }), {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": String(retryAfter),
+        },
       });
-
-      if (!limit.allowed) {
-        const retryAfter = limit.retryAfter ?? 60;
-        return new NextResponse(JSON.stringify({ error: "请求过于频繁" }), {
-          status: 429,
-          headers: {
-            "Content-Type": "application/json",
-            "Retry-After": String(retryAfter),
-          },
-        });
-      }
-
-      response.headers.set("X-Response-Time", `${Date.now() - startTime}ms`);
-      response.headers.set("X-Middleware-Version", "optimized-v2");
-
-      return response;
-    } catch (error) {
-      console.error(
-        "Middleware error:",
-        error instanceof Error ? error.message : "Unknown error",
-      );
-
-      return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
     }
-  },
-);
+
+    response.headers.set("X-Response-Time", `${Date.now() - startTime}ms`);
+    response.headers.set("X-Middleware-Version", "optimized-v2");
+
+    return response;
+  } catch (error) {
+    // Clerk's auth.protect() throws a redirect response for unauthenticated users
+    // We need to let these through instead of catching them as errors
+    if (error instanceof Response) {
+      return error;
+    }
+
+    // Check if this is a Clerk redirect (NEXT_REDIRECT error)
+    if (
+      error instanceof Error &&
+      (error.message.includes("NEXT_REDIRECT") || error.message.includes("redirect"))
+    ) {
+      throw error; // Re-throw to let Next.js handle the redirect
+    }
+
+    console.error("Middleware error:", error instanceof Error ? error.message : "Unknown error");
+
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
+  }
+});
 
 function shouldSkipMiddleware(pathname: string): boolean {
   const skipPatterns = [
@@ -108,7 +111,7 @@ function shouldSkipMiddleware(pathname: string): boolean {
 function applyBasicSecurityHeaders(
   req: NextRequest,
   response: NextResponse,
-  cors: ReturnType<typeof resolveCors>,
+  cors: ReturnType<typeof resolveCors>
 ): NextResponse {
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("X-Content-Type-Options", "nosniff");

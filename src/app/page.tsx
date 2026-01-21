@@ -101,13 +101,13 @@ export default function Home() {
               © 2024 Health Butler. 让健康管理更简单。
             </div>
             <div className="flex gap-6 text-sm text-muted-foreground">
-              <Link href="#" className="transition-colors hover:text-foreground">
+              <Link href="/privacy" className="transition-colors hover:text-foreground">
                 隐私政策
               </Link>
-              <Link href="#" className="transition-colors hover:text-foreground">
+              <Link href="/terms" className="transition-colors hover:text-foreground">
                 服务条款
               </Link>
-              <Link href="#" className="transition-colors hover:text-foreground">
+              <Link href="/contact" className="transition-colors hover:text-foreground">
                 联系我们
               </Link>
             </div>
