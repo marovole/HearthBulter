@@ -1,5 +1,4 @@
-// @ts-nocheck - Service container pending migration to Neon
-import type { Database } from "@/types/supabase-database";
+// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { NeonClientManager } from "@/lib/db/neon-client";
 
 import type { RecommendationRepository } from "@/lib/repositories/interfaces/recommendation-repository";
@@ -25,7 +24,7 @@ import { TrendAnalyzer } from "@/lib/services/analytics/trend-analyzer";
 /**
  * Repository 后端类型
  */
-export type RepositoryBackend = "supabase" | "mock";
+export type RepositoryBackend = "neon" | "mock";
 
 /**
  * Repository 覆盖配置

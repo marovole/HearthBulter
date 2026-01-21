@@ -12,12 +12,17 @@
  */
 
 import { z } from "zod";
-import type { Database, Json } from "@/types/supabase-database";
 import { dateRangeFilterSchema } from "./common";
 
-type RecipeRow = Database["public"]["Tables"]["recipes"]["Row"];
-type MealRecordRow = Database["public"]["Tables"]["meal_records"]["Row"];
-type FamilyMemberRow = Database["public"]["Tables"]["family_members"]["Row"];
+// TODO: Replace with proper Prisma types when neonAdapter type improvements are complete
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Json = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RecipeRow = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type MealRecordRow = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type FamilyMemberRow = any;
 
 /**
  * 食材 Schema

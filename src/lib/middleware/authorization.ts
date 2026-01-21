@@ -5,7 +5,7 @@
 
 // @ts-nocheck - Pending full type safety for neonAdapter migration
 import { auth } from "@/lib/auth";
-import { neonAdapter as supabaseAdapter } from "@/lib/db/neon-adapter";
+import { neonAdapter as db } from "@/lib/db/neon-adapter";
 import { logger } from "@/lib/logger";
 
 export interface AuthorizationResult {
@@ -24,7 +24,7 @@ export async function requireFamilyMembership(
   memberId: string
 ): Promise<AuthorizationResult> {
   try {
-    const member = await supabaseAdapter.familyMember.findUnique({
+    const member = await db.familyMember.findUnique({
       where: { id: memberId },
       select: {
         id: true,
@@ -56,7 +56,7 @@ export async function requireFamilyMembership(
     }
 
     // 检查是否为同一家庭成员
-    const userMembership = await supabaseAdapter.familyMember.findFirst({
+    const userMembership = await db.familyMember.findFirst({
       where: {
         userId,
         familyId: member.familyId,
@@ -89,7 +89,7 @@ export async function requireFamilyMembership(
  */
 export async function requireAdmin(userId: string): Promise<AuthorizationResult> {
   try {
-    const user = await supabaseAdapter.user.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       select: { id: true, role: true },
     });
@@ -152,7 +152,7 @@ export async function requireOwnership(
 
     switch (resourceType) {
       case "inventory_item":
-        resource = await supabaseAdapter.inventoryItem.findUnique({
+        resource = await db.inventoryItem.findUnique({
           where: { id: resourceId },
           select: { memberId: true },
         });
@@ -162,7 +162,7 @@ export async function requireOwnership(
         break;
 
       case "health_report":
-        resource = await supabaseAdapter.healthReport.findUnique({
+        resource = await db.healthReport.findUnique({
           where: { id: resourceId },
           select: { memberId: true },
         });
@@ -172,7 +172,7 @@ export async function requireOwnership(
         break;
 
       case "meal_plan":
-        resource = await supabaseAdapter.mealPlan.findUnique({
+        resource = await db.mealPlan.findUnique({
           where: { id: resourceId },
           select: { memberId: true },
         });
@@ -182,7 +182,7 @@ export async function requireOwnership(
         break;
 
       case "recipe":
-        resource = await supabaseAdapter.recipe.findUnique({
+        resource = await db.recipe.findUnique({
           where: { id: resourceId },
           select: { creatorId: true },
         });
@@ -199,7 +199,7 @@ export async function requireOwnership(
         break;
 
       case "notification":
-        resource = await supabaseAdapter.notification.findUnique({
+        resource = await db.notification.findUnique({
           where: { id: resourceId },
           select: { memberId: true },
         });
@@ -209,12 +209,12 @@ export async function requireOwnership(
         break;
 
       case "budget":
-        resource = await supabaseAdapter.budget.findUnique({
+        resource = await db.budget.findUnique({
           where: { id: resourceId },
           select: { familyId: true },
         });
         if (resource?.familyId) {
-          const membership = await supabaseAdapter.familyMember.findFirst({
+          const membership = await db.familyMember.findFirst({
             where: {
               userId,
               familyId: resource.familyId,
@@ -233,7 +233,7 @@ export async function requireOwnership(
         break;
 
       case "health_goal":
-        resource = await supabaseAdapter.healthGoal.findUnique({
+        resource = await db.healthGoal.findUnique({
           where: { id: resourceId },
           select: { memberId: true },
         });
@@ -243,7 +243,7 @@ export async function requireOwnership(
         break;
 
       case "medical_report":
-        resource = await supabaseAdapter.medicalReport.findUnique({
+        resource = await db.medicalReport.findUnique({
           where: { id: resourceId },
           select: { memberId: true },
         });
@@ -253,7 +253,7 @@ export async function requireOwnership(
         break;
 
       case "ai_conversation":
-        resource = await supabaseAdapter.aiConversation.findUnique({
+        resource = await db.aiConversation.findUnique({
           where: { id: resourceId },
           select: { memberId: true },
         });
@@ -322,7 +322,7 @@ export async function requireFamilyAccess(
   familyId: string
 ): Promise<AuthorizationResult> {
   try {
-    const membership = await supabaseAdapter.familyMember.findFirst({
+    const membership = await db.familyMember.findFirst({
       where: {
         userId,
         familyId,

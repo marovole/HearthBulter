@@ -380,7 +380,6 @@ export class NeonAdapter {
 }
 
 export const neonAdapter = new NeonAdapter();
-export const supabaseAdapter = neonAdapter;
 export const prisma = neonAdapter;
 export const db = neonAdapter;
 

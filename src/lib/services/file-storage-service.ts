@@ -99,9 +99,11 @@ export class FileStorageService {
   static extractPathnameFromUrl(url: string): string | null {
     try {
       const urlObj = new URL(url);
-      const supabaseMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/);
+      const legacyStorageMatch = urlObj.pathname.match(
+        /\/storage\/v1\/object\/public\/[^/]+\/(.+)$/
+      );
 
-      if (supabaseMatch?.[1]) {
+      if (legacyStorageMatch?.[1]) {
         return null;
       }
 

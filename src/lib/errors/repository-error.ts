@@ -75,49 +75,50 @@ export class RepositoryError extends Error {
   }
 
   /**
-   * 从 Supabase 错误创建 RepositoryError
+   * 从数据库错误创建 RepositoryError
    *
    * @param operation - 操作名称
-   * @param error - Supabase 错误
+   * @param error - 数据库错误
    * @param defaultCode - 默认错误代码
    * @returns RepositoryError 实例
    */
-  static fromSupabaseError(
+  static fromDatabaseError(
     operation: string,
     error: unknown,
     defaultCode: RepositoryErrorCode = RepositoryErrorCode.DATABASE_ERROR
   ): RepositoryError {
-    const supabaseError = error as {
+    const dbError = error as {
       code?: string;
       message?: string;
       details?: string;
     };
 
-    // 根据 Supabase 错误代码映射到 RepositoryErrorCode
     let code = defaultCode;
 
-    if (supabaseError?.code === "PGRST116" || supabaseError?.code === "PGRST404") {
-      // PostgREST 未找到错误
+    if (dbError?.code === "PGRST116" || dbError?.code === "PGRST404") {
       code = RepositoryErrorCode.NOT_FOUND;
-    } else if (supabaseError?.code === "23505") {
-      // PostgreSQL 唯一约束冲突
+    } else if (dbError?.code === "23505") {
       code = RepositoryErrorCode.CONFLICT;
-    } else if (supabaseError?.code === "23503") {
-      // PostgreSQL 外键约束错误
+    } else if (dbError?.code === "23503") {
       code = RepositoryErrorCode.VALIDATION_ERROR;
     }
 
     return new RepositoryError({
       code,
-      message: `Repository.${operation} failed: ${supabaseError?.message || "Unknown error"}`,
+      message: `Repository.${operation} failed: ${dbError?.message || "Unknown error"}`,
       operation,
       cause: error,
       metadata: {
-        supabaseCode: supabaseError?.code,
-        details: supabaseError?.details,
+        pgCode: dbError?.code,
+        details: dbError?.details,
       },
     });
   }
+
+  /**
+   * @deprecated Use fromDatabaseError instead
+   */
+  static fromSupabaseError = RepositoryError.fromDatabaseError;
 
   /**
    * 检查是否为此错误代码
