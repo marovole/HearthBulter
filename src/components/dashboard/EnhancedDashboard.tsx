@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { useConvexReady } from "@/components/providers/ConvexClientProvider";
 import { DashboardLayout } from "./DashboardLayout";
 import { OverviewCards } from "./OverviewCards";
 import { TrendsSection } from "./TrendsSection";
@@ -21,7 +22,24 @@ interface EnhancedDashboardProps {
   initialMemberId?: string;
 }
 
-export function EnhancedDashboard({
+export function EnhancedDashboard(props: EnhancedDashboardProps) {
+  const { isReady, isLoading } = useConvexReady();
+
+  if (!isReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
+          <p className="text-gray-600">{isLoading ? "正在连接服务器..." : "正在初始化..."}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <EnhancedDashboardContent {...props} />;
+}
+
+function EnhancedDashboardContent({
   userEmail: _userEmail,
   initialMemberId,
 }: EnhancedDashboardProps) {
