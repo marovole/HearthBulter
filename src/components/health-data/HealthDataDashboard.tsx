@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { useConvexReady } from "@/components/providers/ConvexClientProvider";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { HealthDataForm } from "@/components/health/HealthDataForm";
 import { HealthDataList } from "@/components/health/HealthDataList";
@@ -15,7 +16,24 @@ interface HealthDataDashboardProps {
   initialMemberId?: string;
 }
 
-export function HealthDataDashboard({
+export function HealthDataDashboard(props: HealthDataDashboardProps) {
+  const { isReady, isLoading } = useConvexReady();
+
+  if (!isReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
+          <p className="text-gray-600">{isLoading ? "正在连接服务器..." : "正在初始化..."}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <HealthDataDashboardContent {...props} />;
+}
+
+function HealthDataDashboardContent({
   userEmail: _userEmail,
   initialMemberId,
 }: HealthDataDashboardProps) {
