@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { convexClient, api } from "@/lib/convex-client";
 import { headers } from "next/headers";
 
 // Force dynamic rendering
@@ -15,16 +14,22 @@ export async function GET() {
       }
     }
 
-    // 测试 Convex 连接
     let isConnected = false;
-    try {
-      // 尝试发起一个简单的查询
-      await convexClient.query(api.users.getMe, {
-        email: "health-check@example.com",
-      });
-      isConnected = true;
-    } catch (e) {
-      console.error("Convex 连接测试失败:", e);
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+    if (convexUrl) {
+      try {
+        const res = await fetch(`${convexUrl}/api/query_ts`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Convex-Client": "healthbutler",
+          },
+        });
+        isConnected = res.ok;
+      } catch (e) {
+        console.error("Convex 连接测试失败:", e);
+        isConnected = false;
+      }
     }
 
     return NextResponse.json({
@@ -32,7 +37,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       database: isConnected ? "connected" : "disconnected",
       provider: "convex",
-      uptime: process.uptime(),
+      uptime: typeof performance !== "undefined" ? Math.round(performance.now() / 1000) : null,
       version: "1.1.0-convex",
     });
   } catch (error) {
