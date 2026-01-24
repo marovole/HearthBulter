@@ -99,9 +99,18 @@ export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, req: NextReques
       }
     }
 
-    console.error("Middleware error:", error instanceof Error ? error.message : "Unknown error");
+    console.error("Middleware error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : undefined;
 
-    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "服务器内部错误",
+        message: errorMessage,
+        stack: process.env.NODE_ENV !== "production" ? errorStack : undefined,
+      },
+      { status: 500 }
+    );
   }
 });
 
