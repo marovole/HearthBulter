@@ -55,7 +55,7 @@ export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, req: NextReques
       windowMs: 60_000,
       maxRequests: pathname.startsWith("/api/auth") ? 20 : 100,
       identifier: "ip",
-      storage: "convex",
+      storage: "memory",
       message: "请求过于频繁",
     });
 
