@@ -41,7 +41,12 @@ export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, req: NextReques
     response = applyBasicSecurityHeaders(req, response, cors);
 
     if (isProtectedRoute(req)) {
-      await auth.protect();
+      const { userId } = await auth();
+      if (!userId) {
+        const signInUrl = new URL("/auth/signin", req.url);
+        signInUrl.searchParams.set("redirect_url", req.url);
+        return NextResponse.redirect(signInUrl);
+      }
     }
 
     if (pathname.startsWith("/api/") && !isPublicApiRoute(req)) {
