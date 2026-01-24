@@ -75,18 +75,23 @@ export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, req: NextReques
 
     return response;
   } catch (error) {
-    // Clerk's auth.protect() throws a redirect response for unauthenticated users
-    // We need to let these through instead of catching them as errors
+    // Clerk's auth.protect() throws redirect responses for unauthenticated users
+    // These must be passed through, not caught as errors
     if (error instanceof Response) {
       return error;
     }
 
-    // Check if this is a Clerk redirect (NEXT_REDIRECT error)
-    if (
-      error instanceof Error &&
-      (error.message.includes("NEXT_REDIRECT") || error.message.includes("redirect"))
-    ) {
-      throw error; // Re-throw to let Next.js handle the redirect
+    // Check for Next.js redirect errors (thrown by Clerk and other redirects)
+    // These have digest property containing "NEXT_REDIRECT"
+    if (error && typeof error === "object") {
+      const errObj = error as { digest?: string; message?: string };
+      if (
+        errObj.digest?.includes("NEXT_REDIRECT") ||
+        errObj.message?.includes("NEXT_REDIRECT") ||
+        errObj.message?.includes("redirect")
+      ) {
+        throw error;
+      }
     }
 
     console.error("Middleware error:", error instanceof Error ? error.message : "Unknown error");
