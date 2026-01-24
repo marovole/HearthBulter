@@ -40,31 +40,47 @@ export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, req: NextReques
     let response = NextResponse.next();
     response = applyBasicSecurityHeaders(req, response, cors);
 
-    if (isProtectedRoute(req)) {
-      const { userId } = await auth();
-      if (!userId) {
-        const signInUrl = new URL("/auth/signin", req.url);
-        signInUrl.searchParams.set("redirect_url", req.url);
-        return NextResponse.redirect(signInUrl);
+    const requiresAuth =
+      isProtectedRoute(req) || (pathname.startsWith("/api/") && !isPublicApiRoute(req));
+
+    let userId: string | null = null;
+
+    if (requiresAuth) {
+      try {
+        const authResult = await auth();
+        userId = authResult.userId ?? null;
+      } catch (authError) {
+        console.error("Middleware auth error:", authError);
+        userId = null;
       }
     }
 
-    if (pathname.startsWith("/api/") && !isPublicApiRoute(req)) {
-      const { userId } = await auth();
-      if (!userId) {
-        return NextResponse.json({ error: "未授权访问" }, { status: 401 });
-      }
+    if (isProtectedRoute(req) && !userId) {
+      const signInUrl = new URL("/auth/signin", req.url);
+      signInUrl.searchParams.set("redirect_url", req.url);
+      return NextResponse.redirect(signInUrl);
     }
 
-    const limit = await rateLimiter.checkLimit(req, {
-      windowMs: 60_000,
-      maxRequests: pathname.startsWith("/api/auth") ? 20 : 100,
-      identifier: "ip",
-      storage: "memory",
-      message: "请求过于频繁",
-    });
+    if (pathname.startsWith("/api/") && !isPublicApiRoute(req) && !userId) {
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
+    }
 
-    if (!limit.allowed) {
+    let limit: Awaited<ReturnType<typeof rateLimiter.checkLimit>> | null = null;
+
+    try {
+      limit = await rateLimiter.checkLimit(req, {
+        windowMs: 60_000,
+        maxRequests: pathname.startsWith("/api/auth") ? 20 : 100,
+        identifier: "ip",
+        storage: "memory",
+        message: "请求过于频繁",
+      });
+    } catch (limitError) {
+      console.error("Rate limit check failed:", limitError);
+      limit = null;
+    }
+
+    if (limit && !limit.allowed) {
       const retryAfter = limit.retryAfter ?? 60;
       return new NextResponse(JSON.stringify({ error: "请求过于频繁" }), {
         status: 429,
@@ -128,7 +144,7 @@ function shouldSkipMiddleware(pathname: string): boolean {
 }
 
 function applyBasicSecurityHeaders(
-  req: NextRequest,
+  _req: NextRequest,
   response: NextResponse,
   cors: ReturnType<typeof resolveCors>
 ): NextResponse {

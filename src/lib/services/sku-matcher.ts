@@ -7,6 +7,7 @@ import {
 } from "./ecommerce/types";
 import type { Food } from "@/lib/types/meal";
 import { EcommercePlatform } from "./ecommerce/types";
+import { createPlatformAdapter } from "./ecommerce/adapter-factory";
 import { convexEcommerceRepository } from "@/lib/repositories/implementations/convex-ecommerce-repository";
 
 export interface MatchConfig {
@@ -95,7 +96,6 @@ export class SKUMatcher {
 
   private createPlatformAdapter(platform: EcommercePlatform): IPlatformAdapter | null {
     try {
-      const { createPlatformAdapter } = require("./ecommerce");
       return createPlatformAdapter(platform);
     } catch {
       return null;
