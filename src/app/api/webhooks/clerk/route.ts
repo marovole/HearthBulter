@@ -20,6 +20,13 @@ function base64ToBytes(base64: string): Uint8Array {
   return bytes;
 }
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  if (bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength) {
+    return bytes.buffer as ArrayBuffer;
+  }
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
+
 function bytesToBase64(bytes: Uint8Array): string {
   let bin = "";
   const chunkSize = 0x8000;
@@ -37,6 +44,23 @@ function constantTimeEqual(a: string, b: string): boolean {
     result |= a.charCodeAt(i) ^ b.charCodeAt(i);
   }
   return result === 0;
+}
+
+function getSvixV1Candidates(headerValue: string): string[] {
+  const parts: string[] = [];
+  for (const token of headerValue.split(/\s+/).filter(Boolean)) {
+    for (const piece of token.split(",").filter(Boolean)) {
+      parts.push(piece.trim());
+    }
+  }
+
+  return parts
+    .map((p) => {
+      if (p.startsWith("v1,")) return p.slice("v1,".length);
+      if (p.startsWith("v1=")) return p.slice("v1=".length);
+      return null;
+    })
+    .filter((v): v is string => typeof v === "string" && v.length > 0);
 }
 
 async function verifySvixWebhook(
@@ -65,12 +89,10 @@ async function verifySvixWebhook(
 
   const secretValue = secret.startsWith("whsec_") ? secret.slice("whsec_".length) : secret;
   const keyBytes = base64ToBytes(secretValue);
-  const keyData = new Uint8Array(keyBytes.length);
-  keyData.set(keyBytes);
 
   const key = await crypto.subtle.importKey(
     "raw",
-    keyData,
+    toArrayBuffer(keyBytes),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]
@@ -80,12 +102,7 @@ async function verifySvixWebhook(
   const sigBuffer = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signedContent));
   const expected = bytesToBase64(new Uint8Array(sigBuffer));
 
-  const candidates = svixSignature
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((item) => item.trim())
-    .filter((item) => item.startsWith("v1,"))
-    .map((item) => item.slice("v1,".length));
+  const candidates = getSvixV1Candidates(svixSignature);
 
   const matched = candidates.some((cand) => constantTimeEqual(cand, expected));
   if (!matched) {

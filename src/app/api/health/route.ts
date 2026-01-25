@@ -14,7 +14,7 @@ export async function GET() {
       }
     }
 
-    let isConnected = false;
+    let isReachable = false;
     const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
     if (convexUrl) {
       try {
@@ -25,18 +25,18 @@ export async function GET() {
             "Convex-Client": "healthbutler",
           },
         });
-        isConnected = res.ok;
+        isReachable = res.ok;
       } catch (e) {
         console.error("Convex 连接测试失败:", e);
-        isConnected = false;
+        isReachable = false;
       }
     }
 
     return NextResponse.json({
-      status: isConnected ? "healthy" : "unhealthy",
+      status: isReachable ? "healthy" : "unhealthy",
       timestamp: new Date().toISOString(),
-      database: isConnected ? "connected" : "disconnected",
       provider: "convex",
+      convexHttp: isReachable ? "reachable" : "unreachable",
       uptime: typeof performance !== "undefined" ? Math.round(performance.now() / 1000) : null,
       version: "1.1.0-convex",
     });
@@ -46,7 +46,7 @@ export async function GET() {
         status: "unhealthy",
         timestamp: new Date().toISOString(),
         error: error instanceof Error ? error.message : "Unknown error",
-        database: "disconnected",
+        convexHttp: "unreachable",
       },
       { status: 500 }
     );
