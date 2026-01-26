@@ -28,7 +28,7 @@ export async function GET(
       return NextResponse.json({ error: "无权限访问该成员的健康数据" }, { status: 403 });
     }
 
-    const searchParams = request.nextUrl.searchParams;
+    const searchParams = new URL(request.url).searchParams;
     const days = parseInt(searchParams.get("days") || "30");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");

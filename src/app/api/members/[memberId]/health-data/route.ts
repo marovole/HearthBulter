@@ -30,7 +30,7 @@ export async function GET(
     }
 
     // 解析查询参数
-    const searchParams = request.nextUrl.searchParams;
+    const searchParams = new URL(request.url).searchParams;
     const startDate = searchParams.get("startDate") || undefined;
     const endDate = searchParams.get("endDate") || undefined;
     const limit = parseInt(searchParams.get("limit") || "50");

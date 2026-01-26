@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 解析查询参数
-    const searchParams = request.nextUrl.searchParams;
+    const searchParams = new URL(request.url).searchParams;
     const memberId = searchParams.get("memberId");
 
     if (!memberId) {
