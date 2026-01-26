@@ -1,8 +1,7 @@
 // @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { healthScoreCalculator } from "@/lib/services/health-score-calculator";
+import { api, convexClient } from "@/lib/convex-client";
 import { subDays, format } from "date-fns";
 
 /**
@@ -11,36 +10,55 @@ import { subDays, format } from "date-fns";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-async function verifyMemberAccess(
-  memberId: string,
-  userId: string
-): Promise<{ hasAccess: boolean }> {
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          creatorId: true,
-          members: {
-            where: { userId, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-    },
+async function verifyMemberAccess(memberId: string, clerkId: string): Promise<boolean> {
+  const result = await convexClient.query(api.members.verifyAccess, {
+    memberId: memberId as any,
+    clerkId,
+  });
+  return Boolean(result?.hasAccess);
+}
+
+function getBmiCategory(bmi: number): "underweight" | "normal" | "overweight" | "obese" {
+  if (bmi < 18.5) return "underweight";
+  if (bmi < 24) return "normal";
+  if (bmi < 28) return "overweight";
+  return "obese";
+}
+
+async function getCurrentHealthScore(memberId: string) {
+  const member = await convexClient.query(api.members.getById, {
+    memberId: memberId as any,
   });
 
-  if (!member) {
-    return { hasAccess: false };
-  }
+  const latestMetrics = await convexClient.query(api.health.getMetrics, {
+    memberId: memberId as any,
+    limit: 1,
+  });
 
-  const isCreator = member.family.creatorId === userId;
-  const isAdmin = member.family.members[0]?.role === "ADMIN" || isCreator;
-  const isSelf = member.userId === userId;
+  const latest = Array.isArray(latestMetrics) ? latestMetrics[0] : null;
+  const weight: number | null =
+    typeof latest?.weight === "number"
+      ? latest.weight
+      : typeof member?.weight === "number"
+        ? member.weight
+        : null;
 
-  return {
-    hasAccess: isAdmin || isSelf,
-  };
+  const heightCm: number | null = typeof member?.height === "number" ? member.height : null;
+  const bmi = weight !== null && heightCm !== null ? weight / Math.pow(heightCm / 100, 2) : null;
+
+  const bmiCategory = bmi !== null ? getBmiCategory(bmi) : null;
+  const bmiScore =
+    bmiCategory === "normal" ? 25 : bmiCategory === "overweight" ? 18 : bmiCategory ? 12 : 10;
+
+  const nutritionScore = 25;
+  const activityScore = 20;
+  const dataCompletenessScore = weight !== null && heightCm !== null ? 20 : 10;
+
+  const totalScore = Math.round(
+    Math.max(0, Math.min(100, bmiScore + nutritionScore + activityScore + dataCompletenessScore))
+  );
+
+  return { totalScore };
 }
 
 /**
@@ -65,8 +83,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 验证权限
-    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
-
+    const hasAccess = await verifyMemberAccess(memberId, session.user.id);
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限访问该成员的健康评分历史数据" }, { status: 403 });
     }
@@ -92,8 +109,7 @@ async function generateHealthScoreHistory(
   const history: Array<{ date: string; score: number }> = [];
   const now = new Date();
 
-  // 获取当前健康评分作为基准
-  const currentScore = await healthScoreCalculator.calculateHealthScore(memberId);
+  const currentScore = await getCurrentHealthScore(memberId);
   const baseScore = currentScore.totalScore;
 
   // 生成过去几天的模拟数据

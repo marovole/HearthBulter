@@ -1,70 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { neonAdapter } from "@/lib/db/neon-adapter";
+import { api, convexClient } from "@/lib/convex-client";
 
 export const dynamic = "force-dynamic";
 
-interface FamilyMember {
-  id: string;
-  userId: string | null;
-  familyId: string;
-  role?: string;
-}
-
-interface Family {
-  id: string;
-  creatorId: string;
-}
-
-interface HealthData {
-  id: string;
-  memberId: string;
-  measuredAt: string;
-  weight: number | null;
-  bodyFat: number | null;
-  muscleMass: number | null;
-  bloodPressureSystolic: number | null;
-  bloodPressureDiastolic: number | null;
-  heartRate: number | null;
-}
-
-async function verifyMemberAccess(
-  memberId: string,
-  userId: string
-): Promise<{ hasAccess: boolean }> {
-  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
-    where: { id: memberId, deletedAt: null },
+async function verifyMemberAccess(memberId: string, clerkId: string): Promise<boolean> {
+  const result = await convexClient.query<any>(api.members.verifyAccess, {
+    memberId: memberId as any,
+    clerkId,
   });
-
-  if (!member) {
-    return { hasAccess: false };
-  }
-
-  const family = await neonAdapter.family.findFirst<Family>({
-    where: { id: member.familyId },
-  });
-
-  const isCreator = family?.creatorId === userId;
-
-  let isAdmin = false;
-  if (!isCreator) {
-    const adminMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
-      where: {
-        familyId: member.familyId,
-        userId: userId,
-        role: "ADMIN",
-        deletedAt: null,
-      },
-    });
-
-    isAdmin = !!adminMember;
-  }
-
-  const isSelf = member.userId === userId;
-
-  return {
-    hasAccess: isCreator || isAdmin || isSelf,
-  };
+  return Boolean(result?.hasAccess);
 }
 
 export async function GET(
@@ -79,8 +24,7 @@ export async function GET(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
-
+    const hasAccess = await verifyMemberAccess(memberId, session.user.id);
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限访问该成员的健康数据" }, { status: 403 });
     }
@@ -95,13 +39,13 @@ export async function GET(
       ? new Date(startDate)
       : new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
 
-    const healthData = await neonAdapter.healthData.findMany<HealthData>({
-      where: {
-        memberId,
-        measuredAt: { gte: start.toISOString(), lte: end.toISOString() },
-      },
-      orderBy: { measuredAt: "asc" },
+    const healthData = await convexClient.query<any[]>(api.health.listByMemberDateRange, {
+      memberId: memberId as any,
+      startDate: start.getTime(),
+      endDate: end.getTime(),
     });
+
+    const sorted = (healthData || []).sort((a: any, b: any) => a.measuredAt - b.measuredAt);
 
     const trends: Record<string, unknown> = {
       weight: { data: [], average: null, min: null, max: null, change: null },
@@ -111,20 +55,20 @@ export async function GET(
       heartRate: { data: [], average: null, min: null, max: null, change: null },
     };
 
-    if (!healthData || healthData.length === 0) {
+    if (!sorted || sorted.length === 0) {
       return NextResponse.json({ trends, period: { start, end } }, { status: 200 });
     }
 
-    const weightData = healthData
-      .filter((d) => d.weight !== null)
-      .map((d) => ({ date: d.measuredAt, value: d.weight! }));
+    const weightData = sorted
+      .filter((d: any) => typeof d.weight === "number")
+      .map((d: any) => ({ date: new Date(d.measuredAt).toISOString(), value: d.weight }));
     if (weightData.length > 0) {
-      const values = weightData.map((d) => d.value);
+      const values: number[] = weightData.map((d: any) => Number(d.value));
       const firstWeight = weightData[0];
       const lastWeight = weightData[weightData.length - 1];
       trends.weight = {
         data: weightData,
-        average: values.reduce((a, b) => a + b, 0) / values.length,
+        average: values.reduce((a: number, b: number) => a + b, 0) / values.length,
         min: Math.min(...values),
         max: Math.max(...values),
         change:
@@ -134,16 +78,16 @@ export async function GET(
       };
     }
 
-    const bodyFatData = healthData
-      .filter((d) => d.bodyFat !== null)
-      .map((d) => ({ date: d.measuredAt, value: d.bodyFat! }));
+    const bodyFatData = sorted
+      .filter((d: any) => typeof d.bodyFat === "number")
+      .map((d: any) => ({ date: new Date(d.measuredAt).toISOString(), value: d.bodyFat }));
     if (bodyFatData.length > 0) {
-      const values = bodyFatData.map((d) => d.value);
+      const values: number[] = bodyFatData.map((d: any) => Number(d.value));
       const firstBodyFat = bodyFatData[0];
       const lastBodyFat = bodyFatData[bodyFatData.length - 1];
       trends.bodyFat = {
         data: bodyFatData,
-        average: values.reduce((a, b) => a + b, 0) / values.length,
+        average: values.reduce((a: number, b: number) => a + b, 0) / values.length,
         min: Math.min(...values),
         max: Math.max(...values),
         change:
@@ -153,16 +97,16 @@ export async function GET(
       };
     }
 
-    const muscleMassData = healthData
-      .filter((d) => d.muscleMass !== null)
-      .map((d) => ({ date: d.measuredAt, value: d.muscleMass! }));
+    const muscleMassData = sorted
+      .filter((d: any) => typeof d.muscleMass === "number")
+      .map((d: any) => ({ date: new Date(d.measuredAt).toISOString(), value: d.muscleMass }));
     if (muscleMassData.length > 0) {
-      const values = muscleMassData.map((d) => d.value);
+      const values: number[] = muscleMassData.map((d: any) => Number(d.value));
       const firstMuscleMass = muscleMassData[0];
       const lastMuscleMass = muscleMassData[muscleMassData.length - 1];
       trends.muscleMass = {
         data: muscleMassData,
-        average: values.reduce((a, b) => a + b, 0) / values.length,
+        average: values.reduce((a: number, b: number) => a + b, 0) / values.length,
         min: Math.min(...values),
         max: Math.max(...values),
         change:
@@ -172,23 +116,29 @@ export async function GET(
       };
     }
 
-    const bloodPressureData = healthData
-      .filter((d) => d.bloodPressureSystolic !== null && d.bloodPressureDiastolic !== null)
-      .map((d) => ({
-        date: d.measuredAt,
-        systolic: d.bloodPressureSystolic!,
-        diastolic: d.bloodPressureDiastolic!,
+    const bloodPressureData = sorted
+      .filter(
+        (d: any) =>
+          typeof d.bloodPressureSystolic === "number" &&
+          typeof d.bloodPressureDiastolic === "number"
+      )
+      .map((d: any) => ({
+        date: new Date(d.measuredAt).toISOString(),
+        systolic: d.bloodPressureSystolic,
+        diastolic: d.bloodPressureDiastolic,
       }));
     if (bloodPressureData.length > 0) {
-      const systolicValues = bloodPressureData.map((d) => d.systolic);
-      const diastolicValues = bloodPressureData.map((d) => d.diastolic);
+      const systolicValues: number[] = bloodPressureData.map((d: any) => Number(d.systolic));
+      const diastolicValues: number[] = bloodPressureData.map((d: any) => Number(d.diastolic));
       const firstBloodPressure = bloodPressureData[0];
       const lastBloodPressure = bloodPressureData[bloodPressureData.length - 1];
       trends.bloodPressure = {
         data: bloodPressureData,
         average: {
-          systolic: systolicValues.reduce((a, b) => a + b, 0) / systolicValues.length,
-          diastolic: diastolicValues.reduce((a, b) => a + b, 0) / diastolicValues.length,
+          systolic:
+            systolicValues.reduce((a: number, b: number) => a + b, 0) / systolicValues.length,
+          diastolic:
+            diastolicValues.reduce((a: number, b: number) => a + b, 0) / diastolicValues.length,
         },
         min: {
           systolic: Math.min(...systolicValues),
@@ -208,16 +158,16 @@ export async function GET(
       };
     }
 
-    const heartRateData = healthData
-      .filter((d) => d.heartRate !== null)
-      .map((d) => ({ date: d.measuredAt, value: d.heartRate! }));
+    const heartRateData = sorted
+      .filter((d: any) => typeof d.heartRate === "number")
+      .map((d: any) => ({ date: new Date(d.measuredAt).toISOString(), value: d.heartRate }));
     if (heartRateData.length > 0) {
-      const values = heartRateData.map((d) => d.value);
+      const values: number[] = heartRateData.map((d: any) => Number(d.value));
       const firstHeartRate = heartRateData[0];
       const lastHeartRate = heartRateData[heartRateData.length - 1];
       trends.heartRate = {
         data: heartRateData,
-        average: values.reduce((a, b) => a + b, 0) / values.length,
+        average: values.reduce((a: number, b: number) => a + b, 0) / values.length,
         min: Math.min(...values),
         max: Math.max(...values),
         change:

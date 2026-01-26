@@ -11,7 +11,7 @@ export const getMetrics = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let q = ctx.db
+    const q = ctx.db
       .query("healthData")
       .withIndex("by_member", (q) => q.eq("memberId", args.memberId))
       .filter((q) => q.eq(q.field("deletedAt"), undefined))
@@ -33,6 +33,7 @@ export const addRecord = mutation({
     memberId: v.id("familyMembers"),
     weight: v.optional(v.number()),
     bodyFat: v.optional(v.number()),
+    muscleMass: v.optional(v.number()),
     bloodPressureSystolic: v.optional(v.number()),
     bloodPressureDiastolic: v.optional(v.number()),
     heartRate: v.optional(v.number()),
@@ -213,7 +214,7 @@ export const listHealthData = query({
     let q = ctx.db
       .query("healthData")
       .withIndex("by_member_date", (q) =>
-        q.eq("memberId", args.memberId).gte("measuredAt", startDate),
+        q.eq("memberId", args.memberId).gte("measuredAt", startDate)
       )
       .filter((q) => q.eq(q.field("deletedAt"), undefined));
 
@@ -242,9 +243,7 @@ export const listByDeviceConnection = query({
   handler: async (ctx, args) => {
     const data = await ctx.db
       .query("healthData")
-      .withIndex("by_device", (q) =>
-        q.eq("deviceConnectionId", args.deviceConnectionId),
-      )
+      .withIndex("by_device", (q) => q.eq("deviceConnectionId", args.deviceConnectionId))
       .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .order("desc")
       .collect();
@@ -293,7 +292,7 @@ export const listByMemberDateRange = query({
     let q = ctx.db
       .query("healthData")
       .withIndex("by_member_date", (q) =>
-        q.eq("memberId", args.memberId).gte("measuredAt", args.startDate),
+        q.eq("memberId", args.memberId).gte("measuredAt", args.startDate)
       )
       .filter((q) => q.eq(q.field("deletedAt"), undefined));
 
@@ -310,9 +309,7 @@ export const listByMemberDateRange = query({
 
     const notesContains = args.notesContains;
     if (notesContains) {
-      data = data.filter((record) =>
-        Boolean(record.notes && record.notes.includes(notesContains)),
-      );
+      data = data.filter((record) => Boolean(record.notes && record.notes.includes(notesContains)));
     }
 
     return data;
@@ -377,9 +374,7 @@ export const deleteRecords = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
     await Promise.all(
-      args.recordIds.map((recordId) =>
-        ctx.db.patch(recordId, { deletedAt: now, updatedAt: now }),
-      ),
+      args.recordIds.map((recordId) => ctx.db.patch(recordId, { deletedAt: now, updatedAt: now }))
     );
   },
 });

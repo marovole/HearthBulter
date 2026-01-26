@@ -1,58 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { neonAdapter } from "@/lib/db/neon-adapter";
+import { api, convexClient } from "@/lib/convex-client";
 
 export const dynamic = "force-dynamic";
 
-interface FamilyMember {
-  id: string;
-  userId: string | null;
-  familyId: string;
-  role?: string;
-}
-
-interface Family {
-  id: string;
-  creatorId: string;
-}
-
-async function verifyMemberAccess(
-  memberId: string,
-  userId: string
-): Promise<{ hasAccess: boolean }> {
-  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
-    where: { id: memberId, deletedAt: null },
+async function verifyMemberAccess(memberId: string, clerkId: string): Promise<boolean> {
+  const result = await convexClient.query<any>(api.members.verifyAccess, {
+    memberId: memberId as any,
+    clerkId,
   });
-
-  if (!member) {
-    return { hasAccess: false };
-  }
-
-  const family = await neonAdapter.family.findFirst<Family>({
-    where: { id: member.familyId },
-  });
-
-  const isCreator = family?.creatorId === userId;
-
-  let isAdmin = false;
-  if (!isCreator) {
-    const adminMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
-      where: {
-        familyId: member.familyId,
-        userId: userId,
-        role: "ADMIN",
-        deletedAt: null,
-      },
-    });
-
-    isAdmin = !!adminMember;
-  }
-
-  const isSelf = member.userId === userId;
-
-  return {
-    hasAccess: isCreator || isAdmin || isSelf,
-  };
+  return Boolean(result?.hasAccess);
 }
 
 export async function DELETE(
@@ -67,21 +24,22 @@ export async function DELETE(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
-
+    const hasAccess = await verifyMemberAccess(memberId, session.user.id);
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限删除该成员的健康数据" }, { status: 403 });
     }
 
-    const healthData = await neonAdapter.healthData.findFirst({
-      where: { id: dataId, memberId },
+    const record = await convexClient.query<any>(api.health.getRecordById, {
+      recordId: dataId as any,
     });
 
-    if (!healthData) {
+    if (!record || record.memberId !== memberId) {
       return NextResponse.json({ error: "健康数据记录不存在" }, { status: 404 });
     }
 
-    await neonAdapter.healthData.delete({ where: { id: dataId } });
+    await convexClient.mutation(api.health.deleteRecord, {
+      recordId: dataId as any,
+    });
 
     return NextResponse.json(
       {
