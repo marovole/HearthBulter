@@ -1,4 +1,3 @@
-import type { ConvexHttpClient } from "convex/browser";
 import type { FunctionReference } from "convex/server";
 
 export type ConvexQueryReference = FunctionReference<"query">;
