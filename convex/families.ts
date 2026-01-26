@@ -36,9 +36,7 @@ export const list = query({
       .map((m) => m.familyId)
       .filter((id) => !families.some((f) => f._id === id));
 
-    const otherFamilies = await Promise.all(
-      otherFamilyIds.map((id) => ctx.db.get(id)),
-    );
+    const otherFamilies = await Promise.all(otherFamilyIds.map((id) => ctx.db.get(id)));
 
     const allFamilies = [
       ...families,
@@ -52,7 +50,7 @@ export const list = query({
           .withIndex("by_family", (q) => q.eq("familyId", family._id))
           .collect();
         return { ...family, members };
-      }),
+      })
     );
   },
 });
@@ -140,6 +138,102 @@ export const create = mutation({
     });
 
     return familyId;
+  },
+});
+
+export const ensureDefaultFamily = mutation({
+  args: {
+    clerkId: v.string(),
+    email: v.string(),
+    name: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (identity?.subject && identity.subject !== args.clerkId) {
+      throw new Error("身份不匹配");
+    }
+
+    const now = Date.now();
+    const existingUser = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .unique();
+
+    let userId = existingUser?._id;
+
+    if (existingUser) {
+      await ctx.db.patch(existingUser._id, {
+        email: args.email,
+        name: args.name,
+        updatedAt: now,
+      });
+    } else {
+      userId = await ctx.db.insert("users", {
+        clerkId: args.clerkId,
+        email: args.email,
+        name: args.name,
+        role: "USER",
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    if (!userId) {
+      throw new Error("用户创建失败");
+    }
+
+    const existingMembers = await ctx.db
+      .query("familyMembers")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) => q.eq(q.field("deletedAt"), undefined))
+      .collect();
+
+    const activeMember = existingMembers[0];
+    if (activeMember) {
+      return { familyId: activeMember.familyId, memberId: activeMember._id, created: false };
+    }
+
+    const createdFamilies = await ctx.db
+      .query("families")
+      .withIndex("by_creator", (q) => q.eq("creatorId", userId))
+      .collect();
+
+    const activeFamily = createdFamilies.find((family) => !family.deletedAt);
+    if (activeFamily) {
+      const memberId = await ctx.db.insert("familyMembers", {
+        familyId: activeFamily._id,
+        userId,
+        name: args.name ?? "创建者",
+        gender: "OTHER",
+        birthDate: now,
+        role: "ADMIN",
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      return { familyId: activeFamily._id, memberId, created: false };
+    }
+
+    const familyId = await ctx.db.insert("families", {
+      name: "我的家庭",
+      inviteCode: generateInviteCode(),
+      creatorId: userId,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const memberId = await ctx.db.insert("familyMembers", {
+      familyId,
+      userId,
+      name: args.name ?? "创建者",
+      gender: "OTHER",
+      birthDate: now,
+      role: "ADMIN",
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return { familyId, memberId, created: true };
   },
 });
 

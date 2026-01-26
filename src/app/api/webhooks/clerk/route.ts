@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { clerkClient } from "@clerk/nextjs/server";
 
 export const dynamic = "force-dynamic";
 
@@ -150,6 +151,7 @@ export async function POST(request: Request) {
     const data = typedEvent.data as {
       id?: string;
       email_addresses?: Array<{ email_address: string }>;
+      primary_email_address_id?: string | null;
       first_name?: string | null;
       last_name?: string | null;
       image_url?: string | null;
@@ -160,10 +162,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    const email = data.email_addresses?.[0]?.email_address ?? null;
+    const emailFromEvent =
+      data.email_addresses?.find((e) => e.email_address && e.email_address.length > 0)
+        ?.email_address ?? null;
+
+    let email = emailFromEvent;
     if (!email) {
-      return NextResponse.json({ ok: true });
+      try {
+        const client = await clerkClient();
+        const user = await client.users.getUser(clerkId);
+        const primaryId = user.primaryEmailAddressId;
+        email =
+          (primaryId
+            ? user.emailAddresses.find(
+                (e: { id: string; emailAddress: string }) => e.id === primaryId
+              )?.emailAddress
+            : user.emailAddresses[0]?.emailAddress) ?? null;
+      } catch {
+        // ignore: best-effort email backfill
+      }
     }
+
+    if (!email) return NextResponse.json({ ok: true });
 
     const name = [data.first_name, data.last_name].filter(Boolean).join(" ");
 

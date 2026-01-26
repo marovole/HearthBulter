@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import { useQuery } from "convex/react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useConvexReady } from "@/components/providers/ConvexClientProvider";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { DashboardLayout } from "./DashboardLayout";
 import { OverviewCards } from "./OverviewCards";
 import { TrendsSection } from "./TrendsSection";
@@ -16,6 +17,7 @@ import { QuickActionsPanel } from "./QuickActionsPanel";
 import { WeightTrendChart } from "./WeightTrendChart";
 import { NutritionAnalysisChart } from "./NutritionAnalysisChart";
 import HealthScoreCard from "./HealthScoreCard";
+import { EmptyFamilyState } from "./EmptyFamilyState";
 
 interface EnhancedDashboardProps {
   userEmail: string;
@@ -43,11 +45,18 @@ function EnhancedDashboardContent({
   userEmail: _userEmail,
   initialMemberId,
 }: EnhancedDashboardProps) {
-  void _userEmail;
-  const families = useQuery(api.families.list, {});
+  const { userId } = useAuth();
+  const { user, isLoaded: isUserLoaded } = useUser();
+  const families = useQuery(api.families.list, userId ? { clerkId: userId } : "skip");
+  const ensureDefaultFamily = useMutation(api.families.ensureDefaultFamily);
 
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(initialMemberId || null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+  const [hasTriggeredInit, setHasTriggeredInit] = useState(false);
+  const userEmail = user?.primaryEmailAddress?.emailAddress || _userEmail;
+  const userName = user?.fullName || user?.firstName || undefined;
 
   // 处理成员列表转换
   const familyMembers = useMemo(() => {
@@ -76,7 +85,34 @@ function EnhancedDashboardContent({
 
   const loading = families === undefined;
   const error = null;
-  const isInitializing = false;
+  const isEmptyState = !loading && families && familyMembers.length === 0;
+  const canAutoInit = Boolean(isUserLoaded && userId && userEmail);
+
+  useEffect(() => {
+    if (!canAutoInit || !isEmptyState || hasTriggeredInit) {
+      return;
+    }
+
+    setHasTriggeredInit(true);
+    setIsInitializing(true);
+    setInitError(null);
+
+    void ensureDefaultFamily({ clerkId: userId!, email: userEmail, name: userName })
+      .catch((initErr) => {
+        setInitError(initErr instanceof Error ? initErr.message : "初始化失败");
+      })
+      .finally(() => {
+        setIsInitializing(false);
+      });
+  }, [
+    canAutoInit,
+    ensureDefaultFamily,
+    hasTriggeredInit,
+    isEmptyState,
+    userEmail,
+    userId,
+    userName,
+  ]);
 
   const handleMemberChange = (memberId: string) => {
     setSelectedMemberId(memberId);
@@ -104,6 +140,24 @@ function EnhancedDashboardContent({
           <p className="mb-2 font-medium text-gray-900">正在初始化您的健康档案...</p>
           <p className="text-sm text-gray-600">这只需要几秒钟</p>
         </div>
+      );
+    }
+
+    if (isEmptyState) {
+      return (
+        <EmptyFamilyState
+          onCreate={() =>
+            ensureDefaultFamily({ clerkId: userId!, email: userEmail, name: userName }).catch(
+              (initErr) => {
+                setInitError(initErr instanceof Error ? initErr.message : "初始化失败");
+              }
+            )
+          }
+          isCreating={isInitializing}
+          disabled={!canAutoInit}
+          disabledReason={!canAutoInit ? "请先完成登录并确认邮箱信息后再创建家庭。" : undefined}
+          error={initError}
+        />
       );
     }
 
