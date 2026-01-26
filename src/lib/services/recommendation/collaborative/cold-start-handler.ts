@@ -592,7 +592,7 @@ export class ColdStartHandler {
       ratingCount: number;
       favoriteCount: number;
       viewCount: number;
-    }>(api["recipe-interactions"].getMemberInteractionCounts, {
+    }>(api.recipeInteractions.getMemberInteractionCounts, {
       memberId: memberId as Id<"familyMembers">,
     });
 

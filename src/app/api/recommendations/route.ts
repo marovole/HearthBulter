@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     switch (type) {
       case "rating": {
         const rating = await convexClient.mutation<Record<string, unknown>>(
-          api["recipe-interactions"].addOrUpdateRating,
+          api.recipeInteractions.addOrUpdateRating,
           {
             recipeId: data.recipeId as Id<"recipes">,
             memberId: data.memberId as Id<"familyMembers">,
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
       }
       case "favorite": {
         const favorite = await convexClient.mutation<Record<string, unknown>>(
-          api["recipe-interactions"].addFavorite,
+          api.recipeInteractions.addFavorite,
           {
             recipeId: data.recipeId as Id<"recipes">,
             memberId: data.memberId as Id<"familyMembers">,
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
       }
       case "view": {
         const view = await convexClient.mutation<Record<string, unknown>>(
-          api["recipe-interactions"].addView,
+          api.recipeInteractions.addView,
           {
             recipeId: data.recipeId as Id<"recipes">,
             memberId: data.memberId as Id<"familyMembers">,

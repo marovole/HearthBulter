@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const result = await convexClient.query<{
       data: Array<Record<string, unknown>>;
       total: number;
-    }>(api["notification-templates"].list, {
+    }>(api.notificationTemplates.list, {
       isActive: isActive === null ? undefined : isActive === "true",
       category: category || undefined,
       limit,
@@ -84,13 +84,13 @@ export async function POST(request: NextRequest) {
       category: category || null,
     };
 
-    await convexClient.mutation(api["notification-templates"].upsert, {
+    await convexClient.mutation(api.notificationTemplates.upsert, {
       ...templateData,
       isActive: Boolean(templateData.isActive),
     });
 
     const template = await convexClient.query<Record<string, unknown> | null>(
-      api["notification-templates"].getByType,
+      api.notificationTemplates.getByType,
       { type }
     );
 
@@ -115,7 +115,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const template = await convexClient.query<Record<string, unknown> | null>(
-      api["notification-templates"].getByType,
+      api.notificationTemplates.getByType,
       { type }
     );
 

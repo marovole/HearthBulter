@@ -188,17 +188,17 @@ export class ConvexRecommendationRepository implements RecommendationRepository 
 
     const [ratings, favorites, views] = await Promise.all([
       convexClient.query<Array<Record<string, unknown>>>(
-        api["recipe-interactions"].listRatingsByMember,
+        api.recipeInteractions.listRatingsByMember,
         { memberId: memberId as Id<"familyMembers">, startDate: start }
       ),
       convexClient.query<Array<Record<string, unknown>>>(
-        api["recipe-interactions"].listFavoritesByMemberSimple,
+        api.recipeInteractions.listFavoritesByMemberSimple,
         { memberId: memberId as Id<"familyMembers"> }
       ),
-      convexClient.query<Array<Record<string, unknown>>>(
-        api["recipe-interactions"].listViewsByMember,
-        { memberId: memberId as Id<"familyMembers">, startDate: start }
-      ),
+      convexClient.query<Array<Record<string, unknown>>>(api.recipeInteractions.listViewsByMember, {
+        memberId: memberId as Id<"familyMembers">,
+        startDate: start,
+      }),
     ]);
 
     return {

@@ -7,7 +7,7 @@ const sortByField = (
   field: string,
   direction: "asc" | "desc",
   a: Record<string, unknown>,
-  b: Record<string, unknown>,
+  b: Record<string, unknown>
 ) => {
   const order = direction === "asc" ? 1 : -1;
   const aValue = a[field];
@@ -73,19 +73,15 @@ export const list = query({
 
     const data = await Promise.all(
       pageItems.map(async (list) => {
-        const plan = args.includePlan
-          ? await buildPlan(ctx, list.planId)
-          : undefined;
-        const items = args.includeItems
-          ? await buildItems(ctx, list._id)
-          : undefined;
+        const plan = args.includePlan ? await buildPlan(ctx, list.planId) : undefined;
+        const items = args.includeItems ? await buildItems(ctx, list._id) : undefined;
 
         return {
           ...list,
           plan,
           items,
         };
-      }),
+      })
     );
 
     return {
@@ -107,12 +103,8 @@ export const getById = query({
       return null;
     }
 
-    const plan = args.includePlan
-      ? await buildPlan(ctx, list.planId)
-      : undefined;
-    const items = args.includeItems
-      ? await buildItems(ctx, list._id)
-      : undefined;
+    const plan = args.includePlan ? await buildPlan(ctx, list.planId) : undefined;
+    const items = args.includeItems ? await buildItems(ctx, list._id) : undefined;
 
     return {
       ...list,
@@ -288,7 +280,7 @@ async function buildItems(ctx: any, listId: string) {
             }
           : undefined,
       };
-    }),
+    })
   );
 
   return mapped.sort((a, b) => {

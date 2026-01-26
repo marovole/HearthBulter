@@ -85,7 +85,7 @@ export class UserItemMatrixBuilder {
         rating: number;
         timestamp: number;
       }>
-    >(api["recipe-interactions"].listRatingsForMatrix, {
+    >(api.recipeInteractions.listRatingsForMatrix, {
       minRatingsPerUser,
       minRatingsPerItem,
       maxAge: maxAge ? maxAge.getTime() : undefined,

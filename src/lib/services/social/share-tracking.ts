@@ -83,7 +83,7 @@ export class ShareTrackingService {
 
   async trackShareEvent(event: ShareTrackingEvent): Promise<ShareTrackingRecord> {
     const tracking = await convexClient.mutation<Record<string, unknown>>(
-      api["share-tracking"].trackEvent,
+      api.shareTracking.trackEvent,
       {
         shareToken: event.shareToken,
         eventType: event.eventType,
@@ -114,7 +114,7 @@ export class ShareTrackingService {
   }
 
   async getShareStatistics(shareToken: string): Promise<ShareStatistics> {
-    return await convexClient.query<ShareStatistics>(api["share-tracking"].getStatistics, {
+    return await convexClient.query<ShareStatistics>(api.shareTracking.getStatistics, {
       shareToken,
     });
   }
@@ -123,7 +123,7 @@ export class ShareTrackingService {
     memberId: string,
     period: "7d" | "30d" | "90d" | "1y" = "30d"
   ): Promise<ShareAnalytics> {
-    return await convexClient.query<ShareAnalytics>(api["share-tracking"].getUserAnalytics, {
+    return await convexClient.query<ShareAnalytics>(api.shareTracking.getUserAnalytics, {
       memberId: memberId as Id<"familyMembers">,
       period,
     });
@@ -132,7 +132,7 @@ export class ShareTrackingService {
   async getGlobalShareAnalytics(
     period: "7d" | "30d" | "90d" | "1y" = "30d"
   ): Promise<ShareAnalytics> {
-    return await convexClient.query<ShareAnalytics>(api["share-tracking"].getGlobalAnalytics, {
+    return await convexClient.query<ShareAnalytics>(api.shareTracking.getGlobalAnalytics, {
       period,
     });
   }
@@ -178,7 +178,7 @@ export class ShareTrackingService {
     const cutoffDate = Date.now() - daysToKeep * 24 * 60 * 60 * 1000;
 
     const events = await convexClient.query<Array<Record<string, unknown>>>(
-      api["share-tracking"].getEventsBeforeDate,
+      api.shareTracking.getEventsBeforeDate,
       { cutoffDate }
     );
 
@@ -186,7 +186,7 @@ export class ShareTrackingService {
       return 0;
     }
 
-    await convexClient.mutation(api["share-tracking"].deleteEvents, {
+    await convexClient.mutation(api.shareTracking.deleteEvents, {
       ids: events.map((event) => event._id as Id<"shareTracking">),
     });
 

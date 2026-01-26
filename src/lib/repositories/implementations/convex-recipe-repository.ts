@@ -74,7 +74,7 @@ export class ConvexRecipeRepository implements RecipeRepository {
     const result = await convexClient.query<{
       items: Array<Record<string, unknown>>;
       total: number;
-    }>(api["recipe-interactions"].listFavoritesByMember, {
+    }>(api.recipeInteractions.listFavoritesByMember, {
       memberId: query.memberId as Id<"familyMembers">,
       offset,
       limit,
@@ -111,7 +111,7 @@ export class ConvexRecipeRepository implements RecipeRepository {
 
   async addFavorite(input: AddFavoriteInput): Promise<RecipeFavoriteDTO> {
     const favorite = await convexClient.mutation<Record<string, unknown>>(
-      api["recipe-interactions"].addFavorite,
+      api.recipeInteractions.addFavorite,
       {
         recipeId: input.recipeId as Id<"recipes">,
         memberId: input.memberId as Id<"familyMembers">,
@@ -123,7 +123,7 @@ export class ConvexRecipeRepository implements RecipeRepository {
   }
 
   async removeFavorite(recipeId: string, memberId: string): Promise<void> {
-    await convexClient.mutation(api["recipe-interactions"].removeFavorite, {
+    await convexClient.mutation(api.recipeInteractions.removeFavorite, {
       recipeId: recipeId as Id<"recipes">,
       memberId: memberId as Id<"familyMembers">,
     });
@@ -131,7 +131,7 @@ export class ConvexRecipeRepository implements RecipeRepository {
 
   async checkFavoriteStatus(recipeId: string, memberId: string): Promise<RecipeFavoriteDTO | null> {
     const favorite = await convexClient.query<Record<string, unknown> | null>(
-      api["recipe-interactions"].getFavorite,
+      api.recipeInteractions.getFavorite,
       {
         recipeId: recipeId as Id<"recipes">,
         memberId: memberId as Id<"familyMembers">,
@@ -143,7 +143,7 @@ export class ConvexRecipeRepository implements RecipeRepository {
 
   async addOrUpdateRating(input: AddOrUpdateRatingInput): Promise<RecipeRatingDTO> {
     const rating = await convexClient.mutation<Record<string, unknown>>(
-      api["recipe-interactions"].addOrUpdateRating,
+      api.recipeInteractions.addOrUpdateRating,
       {
         recipeId: input.recipeId as Id<"recipes">,
         memberId: input.memberId as Id<"familyMembers">,
@@ -158,7 +158,7 @@ export class ConvexRecipeRepository implements RecipeRepository {
 
   async getRating(recipeId: string, memberId: string): Promise<RecipeRatingDTO | null> {
     const rating = await convexClient.query<Record<string, unknown> | null>(
-      api["recipe-interactions"].getRating,
+      api.recipeInteractions.getRating,
       {
         recipeId: recipeId as Id<"recipes">,
         memberId: memberId as Id<"familyMembers">,

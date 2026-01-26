@@ -2,8 +2,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { format } from "date-fns";
 
-const getDateKey = (timestamp: number) =>
-  format(new Date(timestamp), "yyyy-MM-dd");
+const getDateKey = (timestamp: number) => format(new Date(timestamp), "yyyy-MM-dd");
 
 export const trackEvent = mutation({
   args: {
@@ -94,9 +93,7 @@ export const getStatistics = query({
 
     const events = await ctx.db
       .query("shareTracking")
-      .withIndex("by_token_occurred", (q) =>
-        q.eq("shareToken", args.shareToken),
-      )
+      .withIndex("by_token_occurred", (q) => q.eq("shareToken", args.shareToken))
       .order("desc")
       .take(1000);
 
@@ -141,9 +138,7 @@ export const getUserAnalytics = query({
       .filter((q) => q.gte(q.field("createdAt"), startDate))
       .collect();
 
-    const shareTokens = new Set(
-      sharedContents.map((content) => content.shareToken),
-    );
+    const shareTokens = new Set(sharedContents.map((content) => content.shareToken));
 
     let events = await ctx.db
       .query("shareTracking")
@@ -152,24 +147,14 @@ export const getUserAnalytics = query({
 
     events = events.filter((event) => shareTokens.has(event.shareToken));
 
-    const totalShares = sharedContents.reduce(
-      (sum, content) => sum + content.shareCount,
-      0,
-    );
-    const totalViews = sharedContents.reduce(
-      (sum, content) => sum + content.viewCount,
-      0,
-    );
-    const totalClicks = sharedContents.reduce(
-      (sum, content) => sum + content.clickCount,
-      0,
-    );
+    const totalShares = sharedContents.reduce((sum, content) => sum + content.shareCount, 0);
+    const totalViews = sharedContents.reduce((sum, content) => sum + content.viewCount, 0);
+    const totalClicks = sharedContents.reduce((sum, content) => sum + content.clickCount, 0);
     const totalConversions = sharedContents.reduce(
       (sum, content) => sum + content.conversionCount,
-      0,
+      0
     );
-    const conversionRate =
-      totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0;
+    const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0;
 
     const topPerformingContent = sharedContents
       .map((content) => ({
@@ -179,9 +164,7 @@ export const getUserAnalytics = query({
         clicks: content.clickCount,
         conversions: content.conversionCount,
         conversionRate:
-          content.clickCount > 0
-            ? (content.conversionCount / content.clickCount) * 100
-            : 0,
+          content.clickCount > 0 ? (content.conversionCount / content.clickCount) * 100 : 0,
       }))
       .sort((a, b) => b.conversions - a.conversions)
       .slice(0, 10);
@@ -233,9 +216,7 @@ export const getGlobalAnalytics = query({
       .filter((q) => q.gte(q.field("createdAt"), startDate))
       .collect();
 
-    const shareTokens = new Set(
-      sharedContents.map((content) => content.shareToken),
-    );
+    const shareTokens = new Set(sharedContents.map((content) => content.shareToken));
 
     let events = await ctx.db
       .query("shareTracking")
@@ -244,24 +225,14 @@ export const getGlobalAnalytics = query({
 
     events = events.filter((event) => shareTokens.has(event.shareToken));
 
-    const totalShares = sharedContents.reduce(
-      (sum, content) => sum + content.shareCount,
-      0,
-    );
-    const totalViews = sharedContents.reduce(
-      (sum, content) => sum + content.viewCount,
-      0,
-    );
-    const totalClicks = sharedContents.reduce(
-      (sum, content) => sum + content.clickCount,
-      0,
-    );
+    const totalShares = sharedContents.reduce((sum, content) => sum + content.shareCount, 0);
+    const totalViews = sharedContents.reduce((sum, content) => sum + content.viewCount, 0);
+    const totalClicks = sharedContents.reduce((sum, content) => sum + content.clickCount, 0);
     const totalConversions = sharedContents.reduce(
       (sum, content) => sum + content.conversionCount,
-      0,
+      0
     );
-    const conversionRate =
-      totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0;
+    const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0;
 
     const topPerformingContent = sharedContents
       .map((content) => ({
@@ -271,9 +242,7 @@ export const getGlobalAnalytics = query({
         clicks: content.clickCount,
         conversions: content.conversionCount,
         conversionRate:
-          content.clickCount > 0
-            ? (content.conversionCount / content.clickCount) * 100
-            : 0,
+          content.clickCount > 0 ? (content.conversionCount / content.clickCount) * 100 : 0,
       }))
       .sort((a, b) => b.conversions - a.conversions)
       .slice(0, 10);
@@ -336,7 +305,7 @@ export const deleteEvents = mutation({
 const calculateDailyTrends = (
   events: Array<{ eventType: string; occurredAt: number }>,
   startDate: number,
-  endDate: number,
+  endDate: number
 ) => {
   const dailyStats = new Map<
     string,

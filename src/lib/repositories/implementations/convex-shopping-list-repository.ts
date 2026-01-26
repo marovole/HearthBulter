@@ -22,7 +22,7 @@ export class ConvexShoppingListRepository implements ShoppingListRepository {
     const result = await convexClient.query<{
       data: Array<Record<string, unknown>>;
       total: number;
-    }>(api["shopping-lists"].list, {
+    }>(api.shoppingLists.list, {
       planId: query.planId as Id<"mealPlans"> | undefined,
       planIds: query.planIds as Id<"mealPlans">[] | undefined,
       statuses: query.statuses,
@@ -51,7 +51,7 @@ export class ConvexShoppingListRepository implements ShoppingListRepository {
     options?: ShoppingListGetOptions
   ): Promise<ShoppingListDTO | null> {
     const list = await convexClient.query<Record<string, unknown> | null>(
-      api["shopping-lists"].getById,
+      api.shoppingLists.getById,
       {
         listId: id as Id<"shoppingLists">,
         includePlan: options?.includePlan,
@@ -63,7 +63,7 @@ export class ConvexShoppingListRepository implements ShoppingListRepository {
   }
 
   async updateShoppingList(id: string, payload: UpdateShoppingListDTO): Promise<ShoppingListDTO> {
-    await convexClient.mutation(api["shopping-lists"].update, {
+    await convexClient.mutation(api.shoppingLists.update, {
       listId: id as Id<"shoppingLists">,
       name: payload.name,
       budget: payload.budget ?? undefined,
@@ -83,7 +83,7 @@ export class ConvexShoppingListRepository implements ShoppingListRepository {
   }
 
   async deleteShoppingList(id: string): Promise<void> {
-    await convexClient.mutation(api["shopping-lists"].deleteList, {
+    await convexClient.mutation(api.shoppingLists.deleteList, {
       listId: id as Id<"shoppingLists">,
     });
   }
@@ -93,7 +93,7 @@ export class ConvexShoppingListRepository implements ShoppingListRepository {
     itemId: string,
     payload: UpdateShoppingListItemDTO
   ): Promise<ShoppingListItemDTO> {
-    await convexClient.mutation(api["shopping-lists"].updateItem, {
+    await convexClient.mutation(api.shoppingLists.updateItem, {
       listId: listId as Id<"shoppingLists">,
       itemId: itemId as Id<"shoppingListItems">,
       purchased: payload.purchased,
@@ -117,7 +117,7 @@ export class ConvexShoppingListRepository implements ShoppingListRepository {
     listId: string,
     payload: CompleteShoppingListDTO
   ): Promise<ShoppingListDTO> {
-    await convexClient.mutation(api["shopping-lists"].complete, {
+    await convexClient.mutation(api.shoppingLists.complete, {
       listId: listId as Id<"shoppingLists">,
       actualCost: payload.actualCost,
     });

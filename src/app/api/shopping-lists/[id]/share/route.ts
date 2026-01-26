@@ -37,7 +37,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const shareExpiry = new Date();
     shareExpiry.setDate(shareExpiry.getDate() + 7);
 
-    await convexClient.mutation(api["shopping-lists"].createShare, {
+    await convexClient.mutation(api.shoppingLists.createShare, {
       listId: listId as Id<"shoppingLists">,
       token: shareToken,
       expiresAt: shareExpiry.getTime(),

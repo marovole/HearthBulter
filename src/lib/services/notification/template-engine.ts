@@ -186,7 +186,7 @@ export class TemplateEngine {
     description?: string;
     category?: string;
   }): Promise<Id<"notificationTemplates">> {
-    return await convexClient.mutation(api["notification-templates"].upsert, {
+    return await convexClient.mutation(api.notificationTemplates.upsert, {
       type: data.type,
       titleTemplate: data.titleTemplate,
       contentTemplate: data.contentTemplate,
@@ -215,7 +215,7 @@ export class TemplateEngine {
     const result = await convexClient.query<{
       data: NotificationTemplate[];
       total: number;
-    }>(api["notification-templates"].list, {
+    }>(api.notificationTemplates.list, {
       isActive: options.isActive,
       category: options.category,
       limit: options.limit ?? 50,
@@ -230,7 +230,7 @@ export class TemplateEngine {
   }
 
   async deleteTemplate(type: NotificationType): Promise<void> {
-    await convexClient.mutation(api["notification-templates"].deleteTemplate, {
+    await convexClient.mutation(api.notificationTemplates.deleteTemplate, {
       type,
     });
   }
@@ -264,7 +264,7 @@ export class TemplateEngine {
         category: string | undefined;
         isActive: boolean;
       }>
-    >(api["notification-templates"].getStats, {
+    >(api.notificationTemplates.getStats, {
       type,
     });
 
@@ -283,7 +283,7 @@ export class TemplateEngine {
     }
 
     const template = await convexClient.query<NotificationTemplate | null>(
-      api["notification-templates"].getByType,
+      api.notificationTemplates.getByType,
       { type }
     );
 
@@ -298,7 +298,7 @@ export class TemplateEngine {
   }
 
   private async updateTemplateStats(type: string): Promise<void> {
-    await convexClient.mutation(api["notification-templates"].incrementUsage, {
+    await convexClient.mutation(api.notificationTemplates.incrementUsage, {
       type,
     });
   }
@@ -333,7 +333,7 @@ export class TemplateEngine {
     const result = await convexClient.query<{
       data: NotificationTemplate[];
       total: number;
-    }>(api["notification-templates"].list, {
+    }>(api.notificationTemplates.list, {
       isActive: true,
     });
 

@@ -19,7 +19,7 @@ export const addFavorite = mutation({
     const existing = await ctx.db
       .query("recipeFavorites")
       .withIndex("by_member_recipe", (q) =>
-        q.eq("memberId", args.memberId).eq("recipeId", args.recipeId),
+        q.eq("memberId", args.memberId).eq("recipeId", args.recipeId)
       )
       .unique();
 
@@ -62,7 +62,7 @@ export const removeFavorite = mutation({
     const existing = await ctx.db
       .query("recipeFavorites")
       .withIndex("by_member_recipe", (q) =>
-        q.eq("memberId", args.memberId).eq("recipeId", args.recipeId),
+        q.eq("memberId", args.memberId).eq("recipeId", args.recipeId)
       )
       .unique();
 
@@ -90,7 +90,7 @@ export const getFavorite = query({
     return await ctx.db
       .query("recipeFavorites")
       .withIndex("by_member_recipe", (q) =>
-        q.eq("memberId", args.memberId).eq("recipeId", args.recipeId),
+        q.eq("memberId", args.memberId).eq("recipeId", args.recipeId)
       )
       .unique();
   },
@@ -134,7 +134,7 @@ export const addOrUpdateRating = mutation({
     const existing = await ctx.db
       .query("recipeRatings")
       .withIndex("by_member_recipe", (q) =>
-        q.eq("memberId", args.memberId).eq("recipeId", args.recipeId),
+        q.eq("memberId", args.memberId).eq("recipeId", args.recipeId)
       )
       .unique();
 
@@ -179,7 +179,7 @@ export const addOrUpdateRating = mutation({
     return await ctx.db
       .query("recipeRatings")
       .withIndex("by_member_recipe", (q) =>
-        q.eq("memberId", args.memberId).eq("recipeId", args.recipeId),
+        q.eq("memberId", args.memberId).eq("recipeId", args.recipeId)
       )
       .unique();
   },
@@ -194,7 +194,7 @@ export const getRating = query({
     return await ctx.db
       .query("recipeRatings")
       .withIndex("by_member_recipe", (q) =>
-        q.eq("memberId", args.memberId).eq("recipeId", args.recipeId),
+        q.eq("memberId", args.memberId).eq("recipeId", args.recipeId)
       )
       .unique();
   },
@@ -318,9 +318,7 @@ export const listRatingsForMatrix = query({
   },
   handler: async (ctx, args) => {
     let ratings = await ctx.db.query("recipeRatings").collect();
-    ratings = ratings.filter(
-      (rating) => rating.rating >= 1 && rating.rating <= 5,
-    );
+    ratings = ratings.filter((rating) => rating.rating >= 1 && rating.rating <= 5);
 
     if (args.maxAge !== undefined) {
       ratings = ratings.filter((rating) => rating.ratedAt >= args.maxAge!);
@@ -328,16 +326,13 @@ export const listRatingsForMatrix = query({
 
     const userCounts = new Map<string, number>();
     ratings.forEach((rating) => {
-      userCounts.set(
-        rating.memberId,
-        (userCounts.get(rating.memberId) ?? 0) + 1,
-      );
+      userCounts.set(rating.memberId, (userCounts.get(rating.memberId) ?? 0) + 1);
     });
 
     const activeUsers = new Set(
       [...userCounts.entries()]
         .filter(([, count]) => count >= args.minRatingsPerUser)
-        .map(([userId]) => userId),
+        .map(([userId]) => userId)
     );
 
     if (activeUsers.size === 0) return [];
@@ -346,25 +341,19 @@ export const listRatingsForMatrix = query({
     ratings
       .filter((rating) => activeUsers.has(rating.memberId))
       .forEach((rating) => {
-        itemCounts.set(
-          rating.recipeId,
-          (itemCounts.get(rating.recipeId) ?? 0) + 1,
-        );
+        itemCounts.set(rating.recipeId, (itemCounts.get(rating.recipeId) ?? 0) + 1);
       });
 
     const activeItems = new Set(
       [...itemCounts.entries()]
         .filter(([, count]) => count >= args.minRatingsPerItem)
-        .map(([itemId]) => itemId),
+        .map(([itemId]) => itemId)
     );
 
     if (activeItems.size === 0) return [];
 
     return ratings
-      .filter(
-        (rating) =>
-          activeUsers.has(rating.memberId) && activeItems.has(rating.recipeId),
-      )
+      .filter((rating) => activeUsers.has(rating.memberId) && activeItems.has(rating.recipeId))
       .map((rating) => ({
         userId: rating.memberId,
         itemId: rating.recipeId,

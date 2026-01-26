@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const startTimestamp = startDate.getTime();
 
     const views = await convexClient.query<Array<Record<string, unknown>>>(
-      api["recipe-interactions"].listViewsByMember,
+      api.recipeInteractions.listViewsByMember,
       {
         memberId: memberId as Id<"familyMembers">,
         startDate: startTimestamp,
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     }
 
     const view = await convexClient.mutation<Record<string, unknown>>(
-      api["recipe-interactions"].addView,
+      api.recipeInteractions.addView,
       {
         recipeId: recipeId as Id<"recipes">,
         memberId: memberId as Id<"familyMembers">,
