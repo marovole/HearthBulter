@@ -1,6 +1,5 @@
 // @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { api, convexClient } from "@/lib/convex-client";
 
 /**
@@ -23,9 +22,8 @@ async function verifyMemberAccess(memberId: string, clerkId: string): Promise<bo
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
+    const clerkId = request.headers.get("x-auth-user-id");
+    if (!clerkId) {
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
@@ -39,7 +37,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 验证权限
-    const hasAccess = await verifyMemberAccess(memberId, session.user.id);
+    const hasAccess = await verifyMemberAccess(memberId, clerkId);
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限访问该成员的营养分析数据" }, { status: 403 });
     }

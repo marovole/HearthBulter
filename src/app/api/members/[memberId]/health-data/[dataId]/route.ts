@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { api, convexClient } from "@/lib/convex-client";
 
 export const dynamic = "force-dynamic";
@@ -18,13 +17,13 @@ export async function DELETE(
 ) {
   try {
     const { memberId, dataId } = await params;
-    const session = await auth();
 
-    if (!session?.user?.id) {
+    const clerkId = request.headers.get("x-auth-user-id");
+    if (!clerkId) {
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    const hasAccess = await verifyMemberAccess(memberId, session.user.id);
+    const hasAccess = await verifyMemberAccess(memberId, clerkId);
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限删除该成员的健康数据" }, { status: 403 });
     }

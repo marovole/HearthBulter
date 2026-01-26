@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { api, convexClient } from "@/lib/convex-client";
 
 // Force dynamic rendering for auth()
@@ -15,15 +14,15 @@ export async function GET(
 ) {
   try {
     const { memberId } = await params;
-    const session = await auth();
 
-    if (!session?.user?.id) {
+    const clerkId = request.headers.get("x-auth-user-id");
+    if (!clerkId) {
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     const access = await convexClient.query<any>(api.members.verifyAccess, {
       memberId: memberId as any,
-      clerkId: session.user.id,
+      clerkId,
     });
 
     if (!access?.hasAccess) {
@@ -86,15 +85,15 @@ export async function POST(
 ) {
   try {
     const { memberId } = await params;
-    const session = await auth();
 
-    if (!session?.user?.id) {
+    const clerkId = request.headers.get("x-auth-user-id");
+    if (!clerkId) {
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     const access = await convexClient.query<any>(api.members.verifyAccess, {
       memberId: memberId as any,
-      clerkId: session.user.id,
+      clerkId,
     });
 
     if (!access?.hasAccess) {
