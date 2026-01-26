@@ -37,9 +37,6 @@ export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, req: NextReques
   }
 
   try {
-    let response = NextResponse.next();
-    response = applyBasicSecurityHeaders(req, response, cors);
-
     const requiresAuth =
       isProtectedRoute(req) || (pathname.startsWith("/api/") && !isPublicApiRoute(req));
 
@@ -55,6 +52,12 @@ export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, req: NextReques
       }
     }
 
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.delete("x-auth-user-id");
+    if (userId) {
+      requestHeaders.set("x-auth-user-id", userId);
+    }
+
     if (isProtectedRoute(req) && !userId) {
       const signInUrl = new URL("/auth/signin", req.url);
       signInUrl.searchParams.set("redirect_url", req.url);
@@ -64,6 +67,13 @@ export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, req: NextReques
     if (pathname.startsWith("/api/") && !isPublicApiRoute(req) && !userId) {
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
+
+    let response = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+    response = applyBasicSecurityHeaders(req, response, cors);
 
     let limit: Awaited<ReturnType<typeof rateLimiter.checkLimit>> | null = null;
 
