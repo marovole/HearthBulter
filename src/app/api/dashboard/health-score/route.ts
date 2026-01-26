@@ -1,6 +1,5 @@
 // @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
-import { api, convexClient } from "@/lib/convex-client";
 
 /**
  * 验证用户是否有权限访问成员的健康数据
@@ -8,7 +7,12 @@ import { api, convexClient } from "@/lib/convex-client";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-async function verifyMemberAccess(memberId: string, clerkId: string): Promise<boolean> {
+async function verifyMemberAccess(
+  memberId: string,
+  clerkId: string,
+  convexClient: any,
+  api: any
+): Promise<boolean> {
   const result = await convexClient.query(api.members.verifyAccess, {
     memberId: memberId as any,
     clerkId,
@@ -42,8 +46,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "缺少成员ID参数" }, { status: 400 });
     }
 
+    const { api, convexClient } = await import("@/lib/convex-client");
+
     // 验证权限
-    const hasAccess = await verifyMemberAccess(memberId, clerkId);
+    const hasAccess = await verifyMemberAccess(memberId, clerkId, convexClient, api);
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限访问该成员的健康评分数据" }, { status: 403 });
     }

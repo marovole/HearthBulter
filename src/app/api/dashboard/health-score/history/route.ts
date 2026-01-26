@@ -1,6 +1,5 @@
 // @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
-import { api, convexClient } from "@/lib/convex-client";
 import { subDays, format } from "date-fns";
 
 /**
@@ -9,7 +8,12 @@ import { subDays, format } from "date-fns";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-async function verifyMemberAccess(memberId: string, clerkId: string): Promise<boolean> {
+async function verifyMemberAccess(
+  memberId: string,
+  clerkId: string,
+  convexClient: any,
+  api: any
+): Promise<boolean> {
   const result = await convexClient.query(api.members.verifyAccess, {
     memberId: memberId as any,
     clerkId,
@@ -24,7 +28,7 @@ function getBmiCategory(bmi: number): "underweight" | "normal" | "overweight" | 
   return "obese";
 }
 
-async function getCurrentHealthScore(memberId: string) {
+async function getCurrentHealthScore(memberId: string, convexClient: any, api: any) {
   const member = await convexClient.query(api.members.getById, {
     memberId: memberId as any,
   });
@@ -80,14 +84,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "缺少成员ID参数" }, { status: 400 });
     }
 
+    const { api, convexClient } = await import("@/lib/convex-client");
+
     // 验证权限
-    const hasAccess = await verifyMemberAccess(memberId, clerkId);
+    const hasAccess = await verifyMemberAccess(memberId, clerkId, convexClient, api);
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限访问该成员的健康评分历史数据" }, { status: 403 });
     }
 
     // 生成历史数据（模拟）
-    const historyData = await generateHealthScoreHistory(memberId, days);
+    const historyData = await generateHealthScoreHistory(memberId, days, convexClient, api);
 
     return NextResponse.json({ data: historyData }, { status: 200 });
   } catch (error) {
@@ -102,12 +108,14 @@ export async function GET(request: NextRequest) {
  */
 async function generateHealthScoreHistory(
   memberId: string,
-  days: number
+  days: number,
+  convexClient: any,
+  api: any
 ): Promise<Array<{ date: string; score: number }>> {
   const history: Array<{ date: string; score: number }> = [];
   const now = new Date();
 
-  const currentScore = await getCurrentHealthScore(memberId);
+  const currentScore = await getCurrentHealthScore(memberId, convexClient, api);
   const baseScore = currentScore.totalScore;
 
   // 生成过去几天的模拟数据

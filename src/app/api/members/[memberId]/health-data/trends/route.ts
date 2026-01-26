@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { api, convexClient } from "@/lib/convex-client";
 
 export const dynamic = "force-dynamic";
 
-async function verifyMemberAccess(memberId: string, clerkId: string): Promise<boolean> {
-  const result = await convexClient.query<any>(api.members.verifyAccess, {
+async function verifyMemberAccess(
+  memberId: string,
+  clerkId: string,
+  convexClient: any,
+  api: any
+): Promise<boolean> {
+  const result = await convexClient.query(api.members.verifyAccess, {
     memberId: memberId as any,
     clerkId,
   });
@@ -23,7 +27,9 @@ export async function GET(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    const hasAccess = await verifyMemberAccess(memberId, clerkId);
+    const { api, convexClient } = await import("@/lib/convex-client");
+
+    const hasAccess = await verifyMemberAccess(memberId, clerkId, convexClient, api);
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限访问该成员的健康数据" }, { status: 403 });
     }
