@@ -36,6 +36,8 @@ export async function GET() {
       status: isReachable ? "healthy" : "unhealthy",
       timestamp: new Date().toISOString(),
       provider: "convex",
+      convexUrlPresent: Boolean(convexUrl),
+      convexUrlHost: convexUrl ? new URL(convexUrl).host : null,
       convexHttp: isReachable ? "reachable" : "unreachable",
       uptime: typeof performance !== "undefined" ? Math.round(performance.now() / 1000) : null,
       version: "1.1.0-convex",
