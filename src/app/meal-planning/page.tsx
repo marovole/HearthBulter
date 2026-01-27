@@ -24,6 +24,7 @@ import {
   Settings,
 } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { ProfileIncompleteAlert } from "@/components/meal-planning/ProfileIncompleteAlert";
 
 type ViewMode = "day" | "week" | "month" | "list";
 
@@ -77,6 +78,7 @@ export default function MealPlanningPage() {
   const [activeTab, setActiveTab] = useState("plan");
   const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
   const [loadingPlan, setLoadingPlan] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   const normalizeMealPlan = (plan: MealPlanApi | null): MealPlan | null => {
     if (!plan) return null;
@@ -167,6 +169,8 @@ export default function MealPlanningPage() {
   };
 
   const handleGenerateNewPlan = async () => {
+    setProfileError(null);
+
     try {
       const response = await fetch("/api/meal-plans/generate", {
         method: "POST",
@@ -177,15 +181,32 @@ export default function MealPlanningPage() {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("生成食谱计划失败");
+        // 处理资料不完整错误 - 显示引导提示
+        if (data.code === "MEMBER_PROFILE_INCOMPLETE") {
+          setProfileError(data.error);
+          toast.error(data.error);
+          return;
+        }
+
+        // 处理成员未找到错误
+        if (data.code === "MEMBER_NOT_FOUND") {
+          setProfileError("请先创建家庭成员后再生成食谱计划");
+          toast.error("未找到关联的成员");
+          return;
+        }
+
+        toast.error(data.error || "生成食谱计划失败");
+        return;
       }
 
       await loadMealPlan();
       toast.success("食谱计划生成成功！");
     } catch (error) {
       console.error("生成食谱计划失败:", error);
-      toast.error("生成食谱计划失败，请重试");
+      toast.error("网络错误，请检查网络连接后重试");
     }
   };
 
@@ -380,16 +401,28 @@ export default function MealPlanningPage() {
                     )}
                   </>
                 ) : (
-                  <div className="py-12 text-center">
-                    <Utensils className="mx-auto mb-4 h-16 w-16 text-gray-300" />
-                    <h3 className="mb-2 text-lg font-medium text-gray-900">暂无食谱计划</h3>
-                    <p className="mb-6 text-gray-500">
-                      点击&quot;生成新计划&quot;开始您的个性化食谱规划
-                    </p>
-                    <Button onClick={handleGenerateNewPlan}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      生成新计划
-                    </Button>
+                  <div className="space-y-4 py-12">
+                    {/* 资料不完整提示 */}
+                    {profileError && (
+                      <div className="mx-auto max-w-md">
+                        <ProfileIncompleteAlert
+                          message={profileError}
+                          onDismiss={() => setProfileError(null)}
+                        />
+                      </div>
+                    )}
+
+                    <div className="text-center">
+                      <Utensils className="mx-auto mb-4 h-16 w-16 text-gray-300" />
+                      <h3 className="mb-2 text-lg font-medium text-gray-900">暂无食谱计划</h3>
+                      <p className="mb-6 text-gray-500">
+                        点击&quot;生成新计划&quot;开始您的个性化食谱规划
+                      </p>
+                      <Button onClick={handleGenerateNewPlan}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        生成新计划
+                      </Button>
+                    </div>
                   </div>
                 )}
               </CardContent>

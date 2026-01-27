@@ -43,6 +43,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(plan, { status: 201 });
   } catch (error) {
     console.error("生成食谱计划失败:", error);
-    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
+
+    const message = error instanceof Error ? error.message : "服务器内部错误";
+
+    // 资料不完整相关错误返回 400 + 错误码
+    if (
+      message.includes("成员体重或身高信息不完整") ||
+      message.includes("成员没有活跃的健康目标")
+    ) {
+      return NextResponse.json(
+        { error: message, code: "MEMBER_PROFILE_INCOMPLETE" },
+        { status: 400 }
+      );
+    }
+
+    // 成员未找到返回 404
+    if (message.includes("未找到关联的成员")) {
+      return NextResponse.json({ error: message, code: "MEMBER_NOT_FOUND" }, { status: 404 });
+    }
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

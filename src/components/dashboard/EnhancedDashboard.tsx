@@ -58,6 +58,12 @@ function EnhancedDashboardContent({
   const userEmail = user?.primaryEmailAddress?.emailAddress || _userEmail;
   const userName = user?.fullName || user?.firstName || undefined;
 
+  // 获取主家庭 ID
+  const primaryFamilyId = useMemo(() => {
+    if (!families || families.length === 0) return undefined;
+    return families[0]?._id;
+  }, [families]);
+
   // 处理成员列表转换
   const familyMembers = useMemo(() => {
     if (!families) return [];
@@ -72,6 +78,11 @@ function EnhancedDashboardContent({
         lastActive: new Date(m.updatedAt),
       }));
   }, [families]);
+
+  // 成员刷新回调 - 添加成员后 Convex 实时订阅会自动更新
+  const handleMemberAdded = () => {
+    // Convex useQuery 会自动响应数据变化，无需手动刷新
+  };
 
   // 自动选择第一个成员
   useEffect(() => {
@@ -236,6 +247,8 @@ function EnhancedDashboardContent({
               members={familyMembers}
               currentMemberId={selectedMemberId}
               onMemberSelect={handleMemberChange}
+              familyId={primaryFamilyId}
+              onMemberAdded={handleMemberAdded}
             />
           </div>
         );

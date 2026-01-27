@@ -14,6 +14,7 @@ import {
   Crown,
   User,
 } from "lucide-react";
+import { AddMemberDialog } from "./AddMemberDialog";
 
 interface FamilyMember {
   id: string;
@@ -36,15 +37,20 @@ interface FamilyMembersCardProps {
   members: FamilyMember[];
   currentMemberId: string;
   onMemberSelect: (memberId: string) => void;
+  familyId?: string;
+  onMemberAdded?: () => void;
 }
 
 export function FamilyMembersCard({
   members,
   currentMemberId,
   onMemberSelect,
+  familyId,
+  onMemberAdded,
 }: FamilyMembersCardProps) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   const getHealthScoreColor = (score: number) => {
     if (score >= 90) return "text-green-600 bg-green-100";
@@ -208,12 +214,26 @@ export function FamilyMembersCard({
           </div>
 
           {/* 添加成员按钮 */}
-          <button className="flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700">
+          <button
+            className="flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => setAddDialogOpen(true)}
+            disabled={!familyId}
+          >
             <UserPlus className="h-4 w-4" />
             <span>添加成员</span>
           </button>
         </div>
       </div>
+
+      {/* 添加成员对话框 */}
+      {familyId && (
+        <AddMemberDialog
+          open={addDialogOpen}
+          onOpenChange={setAddDialogOpen}
+          familyId={familyId}
+          onSuccess={onMemberAdded}
+        />
+      )}
 
       {/* 成员列表 */}
       {viewMode === "grid" ? (
