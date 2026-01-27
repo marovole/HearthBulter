@@ -54,7 +54,7 @@ export function ProfileIncompleteAlert({ message, onDismiss }: ProfileIncomplete
 
           <div className="mt-4 flex items-center gap-3">
             <Button asChild size="sm">
-              <Link href="/settings/profile">
+              <Link href="/onboarding/setup">
                 完善资料
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
