@@ -518,9 +518,36 @@ chore: 构建过程或辅助工具变动
 
 ### 活跃提案
 
-| 提案                                                                          | 优先级 | 状态      | 预计工作量 |
-| ----------------------------------------------------------------------------- | ------ | --------- | ---------- |
-| [cleanup-prisma-residue](openspec/changes/cleanup-prisma-residue/proposal.md) | P2     | 🟡 待处理 | 2-3 天     |
+| 提案                                                                                      | 优先级 | 状态      | 预计工作量 |
+| ----------------------------------------------------------------------------------------- | ------ | --------- | ---------- |
+| [add-instacart-smart-ordering](openspec/changes/add-instacart-smart-ordering/proposal.md) | P0     | 🟡 待实施 | 4 周       |
+| [cleanup-prisma-residue](openspec/changes/cleanup-prisma-residue/proposal.md)             | P2     | 🟡 待处理 | 2-3 天     |
+
+### 🇺🇸 美国市场功能规划 (add-instacart-smart-ordering)
+
+**核心价值**: AI 主动规划 → 一键购物
+
+```
+智能时机触发 → AI 生成周计划 → 邮件通知 → 用户对话调整 → 跳转 Instacart 下单
+```
+
+**功能模块**:
+
+| 模块               | 描述                                      | 状态      |
+| ------------------ | ----------------------------------------- | --------- |
+| Instacart API 集成 | OAuth 授权、购物车 API、商品搜索          | 🔴 待开发 |
+| 智能时机触发引擎   | 日历事件 + 消费周期 + 库存状态 + 行为习惯 | 🔴 待开发 |
+| 周计划邮件通知     | 智能时机触发后发送周计划摘要              | 🔴 待开发 |
+| 全局悬浮 AI 助手   | 任意页面可呼出的对话式计划调整            | 🔴 待开发 |
+| 食材→商品匹配      | 菜谱食材映射到 Instacart 商品             | 🔴 待开发 |
+
+**技术决策**:
+
+- 单一平台深度集成 (Instacart Connect API)
+- 跳转平台结算 (非应用内支付)
+- MVP 先用样品数据验证流程
+
+详见 [完整提案](openspec/changes/add-instacart-smart-ordering/proposal.md) | [技术设计](openspec/changes/add-instacart-smart-ordering/design.md) | [任务清单](openspec/changes/add-instacart-smart-ordering/tasks.md)
 
 ### 最近完成的提案
 
@@ -568,6 +595,7 @@ chore: 构建过程或辅助工具变动
 
 ### 阶段 2 (进行中)
 
+- [ ] 🇺🇸 **美国市场智能购物** (Instacart 集成 + 智能时机触发)
 - [ ] 电商 API 深度集成（山姆/盒马/叮咚买菜）
 - [ ] 高级营养分析报告
 - [ ] 家庭健康趋势预测
