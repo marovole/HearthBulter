@@ -61,7 +61,7 @@
 | ------------ | --------- | -------------------------------------------------------- | ------------------------------ |
 | **生产环境** | ✅ 运行中 | [hearthbulter.pages.dev](https://hearthbulter.pages.dev) | 主站点，自动从 `main` 分支部署 |
 | **预览环境** | ✅ 可用   | `*.hearthbulter.pages.dev`                               | 每个 PR 自动生成预览链接       |
-| **数据库**   | ✅ 在线   | Neon Serverless PostgreSQL                               | 71 张数据表，0.5GB 免费配额    |
+| **数据库**   | ✅ 在线   | Neon Serverless PostgreSQL                               | 72 张数据表，0.5GB 免费配额    |
 | **CI/CD**    | ✅ 激活   | GitHub Actions                                           | 7 个 Job 自动化流水线          |
 
 ### CI/CD 流水线
@@ -192,12 +192,12 @@ Push to main → 代码质量检查 → TypeScript 类型检查 → 单元测试
 ┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐
 │  Neon Database   │   │  Upstash Redis   │   │  第三方 API 服务  │
 │                  │   │                  │   │                  │
-│ ┌──────────────┐ │   │ ┌──────────────┐ │   │ • OpenAI GPT-4  │
+│ ┌──────────────┐ │   │ ┌──────────────┐ │   │ • OpenRouter AI │
 │ │ PostgreSQL   │ │   │ │ Session/Cache │ │   │ • USDA FoodData │
-│ │ (71 张数据表) │ │   │ │ Rate Limit   │ │   │ • Tesseract OCR │
+│ │ (72 张数据表) │ │   │ │ Rate Limit   │ │   │ • Tesseract OCR │
 │ │ Serverless   │ │   │ └──────────────┘ │   │ • Clerk Auth    │
-│ │ 自动扩展     │ │   └──────────────────┘   └──────────────────┘
-│ └──────────────┘ │
+│ │ 自动扩展     │ │   └──────────────────┘   │ • Instacart API │
+│ └──────────────┘ │                          └──────────────────┘
 └──────────────────┘
 ```
 
@@ -209,18 +209,24 @@ Push to main → 代码质量检查 → TypeScript 类型检查 → 单元测试
 
 #### 🎨 前端技术
 
-| 技术                | 版本    | 用途                  |
-| ------------------- | ------- | --------------------- |
-| **Next.js**         | 14.2.32 | React 框架 + 静态导出 |
-| **React**           | 18.3.1  | UI 渲染库             |
-| **TypeScript**      | 5.6+    | 类型安全              |
-| **Tailwind CSS**    | 3.4.18  | 原子化 CSS            |
-| **shadcn/ui**       | Latest  | Radix UI 组件库       |
-| **Zustand**         | 5.0+    | 轻量状态管理          |
-| **React Hook Form** | 7.53+   | 表单处理              |
-| **Zod**             | 3.23+   | Schema 验证           |
-| **Framer Motion**   | 12.23+  | 动画效果              |
-| **Recharts**        | 3.3+    | 数据可视化            |
+| 技术                 | 版本     | 用途                  |
+| -------------------- | -------- | --------------------- |
+| **Next.js**          | 14.2.32  | React 框架 + 静态导出 |
+| **React**            | 18.3.1   | UI 渲染库             |
+| **TypeScript**       | 5.6+     | 类型安全              |
+| **Tailwind CSS**     | 3.4.18   | 原子化 CSS            |
+| **shadcn/ui**        | Latest   | Radix UI 组件库       |
+| **Zustand**          | 5.0.0    | 轻量状态管理          |
+| **React Hook Form**  | 7.53.0   | 表单处理              |
+| **Zod**              | 3.23.8   | Schema 验证           |
+| **Framer Motion**    | 12.23.24 | 高级动画系统          |
+| **Recharts**         | 3.3.0    | 数据可视化            |
+| **date-fns**         | 4.1.0    | 日期处理              |
+| **lucide-react**     | 0.460.0  | 图标库                |
+| **embla-carousel**   | 8.6.0    | 轮播组件              |
+| **react-day-picker** | 9.11.1   | 日历选择器            |
+| **sonner**           | 2.0.7    | Toast 通知            |
+| **next-themes**      | 0.4.6    | 主题切换              |
 
 </td>
 <td valign="top" width="50%">
@@ -230,34 +236,65 @@ Push to main → 代码质量检查 → TypeScript 类型检查 → 单元测试
 | 技术                     | 版本   | 用途           |
 | ------------------------ | ------ | -------------- |
 | **Cloudflare Functions** | Latest | Serverless API |
-| **Prisma**               | 6.0+   | ORM + 类型生成 |
-| **Clerk**                | 6.0+   | 认证授权       |
-| **Neon**                 | Latest | Serverless PG  |
+| **Prisma**               | 6.19.0 | ORM + 类型生成 |
+| **Clerk**                | 6.36.8 | 认证授权       |
+| **Neon**                 | 1.0.2  | Serverless PG  |
 | **PostgreSQL**           | 16     | 关系型数据库   |
-| **Upstash Redis**        | 1.35+  | 边缘缓存       |
-| **OpenAI**               | 6.7+   | AI 服务        |
-| **Tesseract.js**         | 6.0+   | OCR 识别       |
-| **Jose**                 | 6.1+   | JWT 处理       |
-| **Nodemailer**           | 7.0+   | 邮件服务       |
+| **Upstash Redis**        | 1.35.6 | 边缘缓存       |
+| **OpenAI SDK**           | 6.7.0  | AI 服务 SDK    |
+| **Tesseract.js**         | 6.0.1  | OCR 识别       |
+| **Jose**                 | 6.1.3  | JWT 处理       |
+| **Nodemailer**           | 7.0.11 | 邮件服务       |
+| **sharp**                | 0.34.4 | 图片处理       |
+| **qrcode**               | 1.5.3  | 二维码生成     |
+| **html2canvas**          | 1.4.1  | 截图生成       |
 
 </td>
 </tr>
 </table>
 
+### 🔌 外部 API 服务
+
+| 服务                      | 用途             | 环境变量                       |
+| ------------------------- | ---------------- | ------------------------------ |
+| **OpenRouter**            | AI 服务（主要）  | `OPENROUTER_API_KEY`           |
+| **OpenAI**                | AI 服务（备用）  | `OPENAI_API_KEY`               |
+| **USDA FoodData Central** | 营养数据库       | `USDA_API_KEY`                 |
+| **Instacart Connect**     | 美国市场电商集成 | `INSTACART_CLIENT_ID/SECRET`   |
+| **Clerk**                 | 用户认证         | `CLERK_SECRET_KEY`             |
+| **Upstash Redis**         | 边缘缓存         | `UPSTASH_REDIS_REST_URL/TOKEN` |
+| **Sentry**                | 错误监控         | `SENTRY_DSN`                   |
+| **SMTP**                  | 邮件发送         | `SMTP_HOST/USER/PASS`          |
+
+### 📦 业务服务模块 (117+ 文件)
+
+| 分类         | 文件数 | 核心服务                                                   |
+| ------------ | ------ | ---------------------------------------------------------- |
+| **AI 服务**  | 11     | `openai-client`, `health-analyzer`, `recipe-optimizer`     |
+| **分析服务** | 4      | `analytics-service`, `cache-stats-service`                 |
+| **预算服务** | 7      | `budget-tracker`, `cost-analyzer`, `spending-report`       |
+| **电商服务** | 12     | `instacart-adapter`, `hema-adapter`, `ingredient-matcher`  |
+| **通知服务** | 9      | `email-service`, `notification-manager`, `template-engine` |
+| **推荐服务** | 6      | `recipe-recommender`, `food-recommender`                   |
+| **社交服务** | 10     | `achievement-service`, `leaderboard-service`               |
+| **追踪服务** | 8      | `health-tracker`, `meal-tracker`, `weight-tracker`         |
+| **调度服务** | 6      | `scheduler`, `smart-trigger`, `cron-jobs`                  |
+| **其他服务** | 44     | `meal-planner`, `sku-matcher`, `report-generator` 等       |
+
 ### 数据库架构
 
-项目使用 **71 张 PostgreSQL 数据表**，按功能域组织：
+项目使用 **72 张 PostgreSQL 数据表**，按功能域组织：
 
 | 功能域         | 表数量 | 核心表                                                                               |
 | -------------- | ------ | ------------------------------------------------------------------------------------ |
 | **用户和认证** | 5      | `users`, `families`, `family_members`, `family_invitations`, `user_consents`         |
 | **健康数据**   | 15     | `health_data`, `health_goals`, `health_reports`, `health_scores`, `health_anomalies` |
 | **营养和食谱** | 20     | `foods`, `meals`, `meal_plans`, `meal_logs`, `recipes`, `daily_nutrition_targets`    |
-| **购物和预算** | 10     | `shopping_lists`, `shopping_items`, `budgets`, `price_histories`                     |
+| **购物和预算** | 11     | `shopping_lists`, `shopping_items`, `budgets`, `price_histories`, `instacart_carts`  |
 | **库存管理**   | 4      | `inventory_items`, `inventory_usages`, `waste_logs`, `orders`                        |
 | **协作和社区** | 12     | `tasks`, `activities`, `community_posts`, `achievements`, `leaderboard_entries`      |
 | **通知系统**   | 4      | `notifications`, `notification_preferences`, `notification_logs`                     |
-| **AI 和分析**  | 3      | `ai_conversations`, `ai_advice`, `prompt_templates`                                  |
+| **AI 和分析**  | 4      | `ai_conversations`, `ai_advice`, `prompt_templates`, `smart_trigger_logs`            |
 
 ---
 
@@ -288,14 +325,14 @@ Push to main → 代码质量检查 → TypeScript 类型检查 → 单元测试
 
 ### 代码统计
 
-| 指标            | 数量     | 说明                |
-| --------------- | -------- | ------------------- |
-| **API 端点**    | 154+     | 完整的后端 API 覆盖 |
-| **服务模块**    | 40+      | 核心业务逻辑服务    |
-| **数据表**      | 71       | PostgreSQL 数据库表 |
-| **Schema 代码** | 2400+ 行 | Prisma 数据模型定义 |
-| **React 组件**  | 180+     | UI 组件 + 业务组件  |
-| **代码模块**    | 260+     | 工具函数与库模块    |
+| 指标            | 数量    | 说明                |
+| --------------- | ------- | ------------------- |
+| **API 端点**    | 198+    | 完整的后端 API 覆盖 |
+| **服务模块**    | 117+    | 核心业务逻辑服务    |
+| **数据表**      | 72      | PostgreSQL 数据库表 |
+| **Schema 代码** | 2522 行 | Prisma 数据模型定义 |
+| **React 组件**  | 180+    | UI 组件 + 业务组件  |
+| **代码模块**    | 260+    | 工具函数与库模块    |
 
 ---
 
@@ -406,7 +443,7 @@ HearthBulter/
 │       ├── ci.yml          # 主 CI 流水线
 │       └── code-review.yml # 代码审查
 ├── prisma/
-│   ├── schema.prisma       # 数据库 Schema (71 张表, 2400+ 行)
+│   ├── schema.prisma       # 数据库 Schema (72 张表, 2522 行)
 │   ├── seed.ts             # 种子数据脚本
 │   └── migrations/         # 数据库迁移
 ├── public/                 # 静态资源
@@ -426,7 +463,7 @@ HearthBulter/
 │   ├── hooks/              # 自定义 Hooks
 │   ├── lib/                # 核心库 (260+ 模块)
 │   │   ├── db/             # Prisma Client
-│   │   ├── services/       # 业务逻辑服务
+│   │   ├── services/       # 业务逻辑服务 (117+ 文件)
 │   │   └── utils/          # 工具函数
 │   ├── schemas/            # Zod 验证 Schema
 │   ├── services/           # 服务层
