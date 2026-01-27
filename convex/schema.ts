@@ -110,6 +110,10 @@ export default defineSchema({
     bloodPressureSystolic: v.optional(v.number()),
     bloodPressureDiastolic: v.optional(v.number()),
     heartRate: v.optional(v.number()),
+    bloodSugar: v.optional(v.number()),
+    sleep: v.optional(v.number()),
+    exercise: v.optional(v.number()),
+    steps: v.optional(v.number()),
     measuredAt: v.number(),
     source: v.string(),
     notes: v.optional(v.string()),
@@ -164,11 +168,7 @@ export default defineSchema({
     fiber: v.optional(v.number()),
     category: v.string(),
     tags: v.array(v.string()),
-    source: v.union(
-      v.literal("USDA"),
-      v.literal("LOCAL"),
-      v.literal("USER_SUBMITTED"),
-    ),
+    source: v.union(v.literal("USDA"), v.literal("LOCAL"), v.literal("USER_SUBMITTED")),
     verified: v.boolean(),
     ...timestamps,
   })
@@ -427,7 +427,7 @@ export default defineSchema({
       v.literal("BREAKFAST"),
       v.literal("LUNCH"),
       v.literal("DINNER"),
-      v.literal("SNACK"),
+      v.literal("SNACK")
     ),
     recipeId: v.optional(v.id("recipes")),
     calories: v.number(),
@@ -587,22 +587,14 @@ export default defineSchema({
     .index("by_rank", ["rank"])
     .index("by_score", ["score"])
     .index("by_calculated", ["calculatedAt"])
-    .index("by_member_type_created", [
-      "memberId",
-      "leaderboardType",
-      "createdAt",
-    ]),
+    .index("by_member_type_created", ["memberId", "leaderboardType", "createdAt"]),
 
   // ==================== Recipes ====================
   recipes: defineTable({
     name: v.string(),
     description: v.optional(v.string()),
     cuisine: v.optional(v.string()),
-    difficulty: v.union(
-      v.literal("EASY"),
-      v.literal("MEDIUM"),
-      v.literal("HARD"),
-    ),
+    difficulty: v.union(v.literal("EASY"), v.literal("MEDIUM"), v.literal("HARD")),
     prepTime: v.number(),
     cookTime: v.number(),
     totalTime: v.optional(v.number()),
@@ -762,13 +754,13 @@ export default defineSchema({
       v.literal("IN_PROGRESS"),
       v.literal("DONE"),
       v.literal("COMPLETED"),
-      v.literal("CANCELLED"),
+      v.literal("CANCELLED")
     ),
     priority: v.union(
       v.literal("LOW"),
       v.literal("MEDIUM"),
       v.literal("HIGH"),
-      v.literal("URGENT"),
+      v.literal("URGENT")
     ),
     dueDate: v.optional(v.number()),
     startedAt: v.optional(v.number()),

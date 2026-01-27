@@ -130,6 +130,11 @@ export async function POST(
           ? (body as any).bloodPressureDiastolic
           : undefined,
       heartRate: typeof (body as any).heartRate === "number" ? (body as any).heartRate : undefined,
+      bloodSugar:
+        typeof (body as any).bloodSugar === "number" ? (body as any).bloodSugar : undefined,
+      sleep: typeof (body as any).sleep === "number" ? (body as any).sleep : undefined,
+      exercise: typeof (body as any).exercise === "number" ? (body as any).exercise : undefined,
+      steps: typeof (body as any).steps === "number" ? (body as any).steps : undefined,
       source: typeof (body as any).source === "string" ? (body as any).source : "MANUAL",
       measuredAt: measuredAt.getTime(),
       notes: typeof (body as any).notes === "string" ? (body as any).notes : undefined,
@@ -141,6 +146,7 @@ export async function POST(
     );
   } catch (error) {
     console.error("录入健康数据失败:", error);
-    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "服务器内部错误";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
