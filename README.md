@@ -512,6 +512,43 @@ chore: 构建过程或辅助工具变动
 
 ---
 
+## 📋 变更管理 (OpenSpec)
+
+本项目采用 **规范驱动开发 (Spec-Driven Development)** 流程，所有重大变更通过 OpenSpec 提案管理。
+
+### 活跃提案
+
+| 提案                                                                          | 优先级 | 状态      | 预计工作量 |
+| ----------------------------------------------------------------------------- | ------ | --------- | ---------- |
+| [cleanup-prisma-residue](openspec/changes/cleanup-prisma-residue/proposal.md) | P2     | 🟡 待处理 | 2-3 天     |
+
+### 最近完成的提案
+
+| 提案                                                                                                                | 完成日期   | 核心变更                               |
+| ------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------- |
+| [update-product-readiness](openspec/changes/archive/2026-01-27-update-product-readiness/)                           | 2026-01-27 | 补齐预算分析、食谱收藏、报告导出等功能 |
+| [migrate-auth-data-to-clerk-convex](openspec/changes/archive/2026-01-27-migrate-auth-data-to-clerk-convex-partial/) | 2026-01-27 | 认证系统迁移到 Clerk + Convex          |
+| [refactor-database-layer-to-supabase](openspec/changes/archive/2026-01-18-refactor-database-layer-to-supabase/)     | 2026-01-18 | 数据库层从 Prisma 迁移到 Supabase      |
+| [migrate-to-cloudflare-pages](openspec/changes/archive/2025-11-10-migrate-to-cloudflare-pages/)                     | 2025-11-10 | 从 Vercel 迁移到 Cloudflare Pages      |
+
+### 架构演进历史
+
+查看完整的 [42 个已归档提案](openspec/changes/archive/) 了解项目架构演进路径。
+
+**关键里程碑**：
+
+- **2025-10-30**: MVP 核心功能开发（家庭档案、健康数据、食谱规划等 20 个提案）
+- **2025-11-02**: 代码质量提升（自动化审查、测试覆盖率等 9 个提案）
+- **2025-11-10**: 部署平台迁移（Vercel → Cloudflare Pages）
+- **2026-01-18**: 数据库重构（Prisma → Supabase）
+- **2026-01-27**: 认证系统现代化（NextAuth → Clerk + Convex）
+
+### 如何创建提案
+
+参考 [OpenSpec 指南](openspec/AGENTS.md) 了解如何创建和管理变更提案。
+
+---
+
 ## 🛣️ Roadmap
 
 ### MVP 阶段 ✅ (已完成)
