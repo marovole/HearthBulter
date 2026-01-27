@@ -6,6 +6,7 @@ export { SMSService } from "./sms-service";
 export { WeChatService } from "./wechat-service";
 export { TemplateEngine } from "./template-engine";
 export { NotificationUtils } from "./notification-utils";
+export { WeeklyPlanEmailService, weeklyPlanEmailService } from "./weekly-plan-email-service";
 
 // 类型导出
 export type {

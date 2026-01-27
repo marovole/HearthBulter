@@ -10,6 +10,11 @@ const Providers = dynamicImport(() => import("./providers"), {
   loading: () => null,
 });
 
+const FloatingAIAssistant = dynamicImport(
+  () => import("@/components/features/ai-assistant/FloatingAIAssistant"),
+  { ssr: false }
+);
+
 export const metadata = {
   title: "Health Butler - 健康管家",
   description: "基于健康数据与电商库存的动态饮食引擎",
@@ -21,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <html lang="zh-CN" suppressHydrationWarning>
         <body className="bg-background font-body text-foreground antialiased">
           <Providers>{children}</Providers>
+          <FloatingAIAssistant />
         </body>
       </html>
     </ClerkProvider>

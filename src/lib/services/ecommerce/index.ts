@@ -6,6 +6,17 @@ export { BasePlatformAdapter } from "./base-adapter";
 export { SamsClubAdapter } from "./sams-adapter";
 export { HemaAdapter } from "./hema-adapter";
 export { DingdongAdapter } from "./dingdong-adapter";
+export { InstacartAdapter } from "./instacart-adapter";
+export type { InstacartCart, InstacartCartItem, InstacartRetailer } from "./instacart-adapter";
+
+// 导出食材匹配服务
+export { IngredientMatcher, ingredientMatcher } from "./ingredient-matcher";
+export type {
+  IngredientMatchRequest,
+  IngredientMatchResult,
+  ProductMatch,
+  BatchMatchResult,
+} from "./ingredient-matcher";
 
 // 导出工厂类和便捷函数
 export {
@@ -22,6 +33,7 @@ export const ECOMMERCE_PLATFORMS = {
   SAMS_CLUB: "SAMS_CLUB" as const,
   HEMA: "HEMA" as const,
   DINGDONG: "DINGDONG" as const,
+  INSTACART: "INSTACART" as const,
 } as const;
 
 export const DEFAULT_PAGE_SIZE = 20;
@@ -34,4 +46,5 @@ export const SHIPPING_FEE_DEFAULTS = {
   SAMS_CLUB: 6,
   HEMA: 0,
   DINGDONG: 3,
+  INSTACART: 5.99,
 } as const;

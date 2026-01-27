@@ -8,20 +8,23 @@ datasource db {
 }
 
 model User {
-  id               String            @id @default(cuid())
-  email            String            @unique
-  emailVerified    DateTime?
-  name             String?
-  image            String?
-  password         String?
-  role             UserRole          @default(USER)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  deletedAt        DateTime?
-  createdFamilies  Family[]          @relation("FamilyCreator")
-  familyMembers    FamilyMember?
-  orders           Order[]           @relation("UserOrders")
-  platformAccounts PlatformAccount[] @relation("PlatformAccounts")
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  emailVerified       DateTime?
+  name                String?
+  image               String?
+  password            String?
+  role                UserRole             @default(USER)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  deletedAt           DateTime?
+  createdFamilies     Family[]             @relation("FamilyCreator")
+  familyMembers       FamilyMember?
+  orders              Order[]              @relation("UserOrders")
+  platformAccounts    PlatformAccount[]    @relation("PlatformAccounts")
+  instacartCarts      InstacartCart[]      @relation("InstacartCarts")
+  smartTriggerLogs    SmartTriggerLog[]    @relation("SmartTriggerLogs")
+  behaviorPattern     UserBehaviorPattern? @relation("UserBehaviorPattern")
 
   @@map("users")
 }
@@ -276,7 +279,7 @@ model HealthReminder {
 }
 
 model MealPlan {
-  id             String         @id @default(cuid())
+  id             String          @id @default(cuid())
   memberId       String
   startDate      DateTime
   endDate        DateTime
@@ -285,13 +288,14 @@ model MealPlan {
   targetProtein  Float
   targetCarbs    Float
   targetFat      Float
-  status         PlanStatus     @default(ACTIVE)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  status         PlanStatus      @default(ACTIVE)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   deletedAt      DateTime?
-  member         FamilyMember   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  member         FamilyMember    @relation(fields: [memberId], references: [id], onDelete: Cascade)
   meals          Meal[]
   shoppingLists  ShoppingList[]
+  instacartCarts InstacartCart[] @relation("InstacartCarts")
 
   @@index([memberId])
   @@index([startDate, endDate])
@@ -2105,6 +2109,7 @@ enum EcommercePlatform {
   SAMS_CLUB
   HEMA
   DINGDONG
+  INSTACART
 }
 
 enum PlatformAccountStatus {
@@ -2430,4 +2435,88 @@ enum HealthDataType {
   RESTING_HEART_RATE
   FLOORS_CLIMBED
   STANDING_HOURS
+}
+
+// ============================================================================
+// Instacart 集成相关表
+// ============================================================================
+
+model OAuthState {
+  id          String            @id @default(cuid())
+  state       String            @unique
+  userId      String
+  platform    EcommercePlatform
+  redirectUri String
+  expiresAt   DateTime
+  createdAt   DateTime          @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("oauth_states")
+}
+
+model InstacartCart {
+  id          String    @id @default(cuid())
+  userId      String
+  cartId      String    @unique
+  retailerId  String
+  checkoutUrl String
+  deepLink    String
+  itemsJson   String    @db.Text
+  mealPlanId  String?
+  status      String    @default("PENDING")
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user     User      @relation("InstacartCarts", fields: [userId], references: [id], onDelete: Cascade)
+  mealPlan MealPlan? @relation("InstacartCarts", fields: [mealPlanId], references: [id])
+
+  @@index([userId])
+  @@index([mealPlanId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("instacart_carts")
+}
+
+// ============================================================================
+// 智能触发引擎相关表
+// ============================================================================
+
+model SmartTriggerLog {
+  id            String   @id @default(cuid())
+  userId        String
+  triggerType   String
+  triggerScore  Float
+  factors       Json
+  triggered     Boolean
+  mealPlanId    String?
+  emailSent     Boolean  @default(false)
+  cooldownUntil DateTime?
+  createdAt     DateTime @default(now())
+
+  user User @relation("SmartTriggerLogs", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([triggerType])
+  @@index([createdAt])
+  @@map("smart_trigger_logs")
+}
+
+model UserBehaviorPattern {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  preferredShoppingDay  Int?
+  averageOrderInterval  Int?
+  lastOrderDate         DateTime?
+  typicalOrderSize      Int?
+  preferredRetailers    Json?
+  dietaryPatterns       Json?
+  updatedAt             DateTime @updatedAt
+  createdAt             DateTime @default(now())
+
+  user User @relation("UserBehaviorPattern", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_behavior_patterns")
 }

@@ -3,11 +3,12 @@ import {
   IPlatformAdapterFactory,
   PlatformError,
   PlatformErrorType,
+  EcommercePlatform,
 } from "./types";
-import { EcommercePlatform } from "./types";
 import { SamsClubAdapter } from "./sams-adapter";
 import { HemaAdapter } from "./hema-adapter";
 import { DingdongAdapter } from "./dingdong-adapter";
+import { InstacartAdapter } from "./instacart-adapter";
 
 export class PlatformAdapterFactory implements IPlatformAdapterFactory {
   private static instance: PlatformAdapterFactory;
@@ -28,6 +29,7 @@ export class PlatformAdapterFactory implements IPlatformAdapterFactory {
     this.adapters.set(EcommercePlatform.SAMS_CLUB, new SamsClubAdapter());
     this.adapters.set(EcommercePlatform.HEMA, new HemaAdapter());
     this.adapters.set(EcommercePlatform.DINGDONG, new DingdongAdapter());
+    this.adapters.set(EcommercePlatform.INSTACART, new InstacartAdapter());
   }
 
   createAdapter(platform: EcommercePlatform): IPlatformAdapter {

@@ -2,6 +2,7 @@ export const EcommercePlatform = {
   SAMS_CLUB: "SAMS_CLUB",
   HEMA: "HEMA",
   DINGDONG: "DINGDONG",
+  INSTACART: "INSTACART",
 } as const;
 
 export type EcommercePlatform = (typeof EcommercePlatform)[keyof typeof EcommercePlatform];
