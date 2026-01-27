@@ -94,11 +94,7 @@ node scripts/split-bundle.js
 // open-next.config.ts
 export default defineCloudflareConfig({
   build: {
-    external: [
-      "next/dist/server/capsize-font-metrics.json",
-      "**/*.map",
-      "**/*.wasm-base64.js",
-    ],
+    external: ["next/dist/server/capsize-font-metrics.json", "**/*.map", "**/*.wasm-base64.js"],
     splitChunks: {
       chunks: "all",
       maxSize: 2000000, // 2MB chunks
@@ -147,7 +143,7 @@ export CLOUDFLARE_API_TOKEN='your-token'
 
 ```
 DATABASE_URL=postgresql://...
-NEXTAUTH_SECRET=your-secret
+NEXTAUTH_SECRET=<REDACTED>-secret
 NEXTAUTH_URL=https://your-worker.workers.dev
 ```
 

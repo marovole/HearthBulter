@@ -110,7 +110,7 @@ Worker地址：https://hearthbulter-optimized.your-subdomain.workers.dev
 
 ```
 DATABASE_URL=postgresql://neondb_owner:npg_PoBYp7z0fOjC@ep-snowy-silence-ad5majbd-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require
-NEXTAUTH_SECRET=ntZl8q4ZA3c2LIWf+rpJKTDBYJzYeUpjCEY/X0Jy5Ho=
+NEXTAUTH_SECRET=<REDACTED>
 NEXTAUTH_URL=https://hearthbulter-optimized.your-subdomain.workers.dev
 NEXT_PUBLIC_ALLOWED_ORIGINS=https://hearthbulter-optimized.your-subdomain.workers.dev
 NODE_ENV=production

@@ -64,6 +64,11 @@ next-env.d.ts
 *.launch
 .settings/
 *.sublime-workspace
+.cursor/
+.windsurf/
+.factory/
+.sisyphus/
+.opencode/
 
 # OS
 .DS_Store
@@ -119,3 +124,6 @@ coverage/
 .wrangler/
 .secrets.json
 .secrets.*
+
+# Temporary directory (cleanup artifacts)
+/temp/

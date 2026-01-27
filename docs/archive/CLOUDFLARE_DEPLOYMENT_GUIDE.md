@@ -74,7 +74,7 @@
 DATABASE_URL="postgresql://neondb_owner:npg_PoBYp7z0fOjC@ep-snowy-silence-ad5majbd-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
 
 # NextAuth 配置
-NEXTAUTH_SECRET="U97nNxOcByJp3BS5IIf+FGbxv5PWRBXd0WFF8YHTRxk="
+NEXTAUTH_SECRET=<REDACTED>"U97nNxOcByJp3BS5IIf+FGbxv5PWRBXd0WFF8YHTRxk="
 NEXTAUTH_URL="https://your-app.pages.dev"
 
 # CORS 配置

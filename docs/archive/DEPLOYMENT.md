@@ -56,14 +56,14 @@ DATABASE_URL=postgresql://postgres.ppmliptjvzurewsiwswb:gNXLh3QTXVAX58yy@aws-1-a
 # Supabase API
 NEXT_PUBLIC_SUPABASE_URL=https://ppmliptjvzurewsiwswb.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_KEY=<REDACTED>
 ```
 
 #### NextAuth 认证
 
 ```env
 # 生成密钥: openssl rand -base64 32
-NEXTAUTH_SECRET=your-generated-secret-here
+NEXTAUTH_SECRET=<REDACTED>-generated-secret-here
 NEXTAUTH_URL=https://hearthbulter.pages.dev
 ```
 
@@ -83,13 +83,13 @@ UPSTASH_REDIS_REST_URL=https://teaching-eagle-34132.upstash.io
 UPSTASH_REDIS_REST_TOKEN=your-token-here
 
 # USDA 营养数据 API
-USDA_API_KEY=your-usda-api-key
+USDA_API_KEY=<REDACTED>
 
 # OpenAI API
-OPENAI_API_KEY=sk-your-key-here
+OPENAI_API_KEY=<REDACTED>
 
 # OpenRouter API (Claude)
-OPENROUTER_API_KEY=your-key-here
+OPENROUTER_API_KEY=<REDACTED>
 ```
 
 **环境选择**:

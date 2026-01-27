@@ -59,7 +59,7 @@ pnpm install
 # Supabase 配置
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxx...
-SUPABASE_SERVICE_KEY=eyJxxx...
+SUPABASE_SERVICE_KEY=<REDACTED>
 
 # Cloudflare 配置
 CLOUDFLARE_ACCOUNT_ID=your-account-id
@@ -70,9 +70,9 @@ NEXT_PUBLIC_SITE_URL=https://your-domain.pages.dev
 BUILD_TARGET=cloudflare
 
 # 第三方 API（保持不变）
-OPENAI_API_KEY=sk-xxx
-OPENROUTER_API_KEY=xxx
-USDA_API_KEY=xxx
+OPENAI_API_KEY=<REDACTED>
+OPENROUTER_API_KEY=<REDACTED>
+USDA_API_KEY=<REDACTED>
 ```
 
 ---

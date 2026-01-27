@@ -80,7 +80,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=[已配置]
 SUPABASE_SERVICE_KEY=[已配置]
 
 # NextAuth
-NEXTAUTH_SECRET=[已生成]
+NEXTAUTH_SECRET=<REDACTED>[已生成]
 NEXTAUTH_URL=http://localhost:3000
 
 # 应用配置
@@ -258,7 +258,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://ppmliptjvzurewsiwswb.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=[您的 Anon Key]
 SUPABASE_SERVICE_KEY=[您的 Service Role Key]
 
-NEXTAUTH_SECRET=[生成的密钥]
+NEXTAUTH_SECRET=<REDACTED>[生成的密钥]
 NEXTAUTH_URL=https://hearth-bulter.vercel.app
 ```
 

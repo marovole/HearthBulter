@@ -79,9 +79,9 @@ NEXT_PUBLIC_SITE_URL=https://your-domain.pages.dev
 
 ```bash
 # 第三方 API
-OPENAI_API_KEY=your-openai-api-key
-OPENROUTER_API_KEY=your-openrouter-api-key
-USDA_API_KEY=your-usda-api-key
+OPENAI_API_KEY=<REDACTED>
+OPENROUTER_API_KEY=<REDACTED>
+USDA_API_KEY=<REDACTED>
 
 # 邮件服务
 SMTP_HOST=smtp.gmail.com
@@ -161,7 +161,7 @@ export const onRequestGet = withErrorHandler(
     const data = { message: "Hello World", user };
 
     return createSuccessResponse(data);
-  }),
+  })
 );
 ```
 
@@ -175,10 +175,7 @@ import { createSupabaseClient } from "../utils/supabase.js";
 const supabase = createSupabaseClient(env);
 
 // 查询数据
-const { data, error } = await supabase
-  .from("health_data")
-  .select("*")
-  .eq("user_id", user.id);
+const { data, error } = await supabase.from("health_data").select("*").eq("user_id", user.id);
 
 // 插入数据
 const { data, error } = await supabase.from("health_data").insert({
