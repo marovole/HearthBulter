@@ -156,7 +156,12 @@ export class MealPlanToCartService {
   // --------------------------------------------------------------------------
 
   private async getUserToken(userId: string): Promise<string | null> {
-    const account = await prisma.platformAccount.findFirst({
+    const account = await prisma.platformAccount.findFirst<{
+      id: string;
+      accessToken?: string;
+      expiresAt?: Date;
+      refreshToken?: string;
+    }>({
       where: {
         userId,
         platform: EcommercePlatform.INSTACART,

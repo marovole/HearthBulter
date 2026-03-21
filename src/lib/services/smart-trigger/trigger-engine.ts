@@ -78,7 +78,7 @@ export class SmartTriggerEngine {
   // --------------------------------------------------------------------------
 
   async processAllUsers(): Promise<TriggerResult[]> {
-    const users = await prisma.user.findMany({
+    const users = await prisma.user.findMany<{ id: string }>({
       where: { deletedAt: null },
       select: { id: true },
     });
@@ -125,7 +125,7 @@ export class SmartTriggerEngine {
   private async checkCooldown(
     userId: string
   ): Promise<{ inCooldown: boolean; cooldownUntil?: Date }> {
-    const lastTrigger = await prisma.smartTriggerLog.findFirst({
+    const lastTrigger = await prisma.smartTriggerLog.findFirst<{ cooldownUntil?: Date }>({
       where: {
         userId,
         triggered: true,
@@ -146,7 +146,7 @@ export class SmartTriggerEngine {
   }
 
   private async getConsumptionData(userId: string): Promise<ConsumptionData> {
-    const orders = await prisma.order.findMany({
+    const orders = await prisma.order.findMany<{ id: string; createdAt: Date }>({
       where: {
         platformAccount: { userId },
         status: "DELIVERED",
@@ -162,7 +162,7 @@ export class SmartTriggerEngine {
       };
     }
 
-    const lastOrderDate = orders[0].createdAt;
+    const lastOrderDate = orders[0]!.createdAt;
     const daysSinceLastOrder = Math.floor(
       (Date.now() - lastOrderDate.getTime()) / (24 * 60 * 60 * 1000)
     );
@@ -172,7 +172,7 @@ export class SmartTriggerEngine {
       const intervals: number[] = [];
       for (let i = 0; i < orders.length - 1; i++) {
         const interval = Math.floor(
-          (orders[i].createdAt.getTime() - orders[i + 1].createdAt.getTime()) /
+          (orders[i]!.createdAt.getTime() - orders[i + 1]!.createdAt.getTime()) /
             (24 * 60 * 60 * 1000)
         );
         intervals.push(interval);
@@ -188,7 +188,7 @@ export class SmartTriggerEngine {
   }
 
   private async getInventoryData(userId: string): Promise<InventoryStatus> {
-    const member = await prisma.familyMember.findFirst({
+    const member = await prisma.familyMember.findFirst<{ id: string }>({
       where: { userId },
     });
 
@@ -204,7 +204,12 @@ export class SmartTriggerEngine {
     const now = new Date();
     const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    const inventory = await prisma.inventoryItem.findMany({
+    const inventory = await prisma.inventoryItem.findMany<{
+      id: string;
+      name: string;
+      status: string;
+      expiryDate?: Date;
+    }>({
       where: {
         memberId: member.id,
         deletedAt: null,
@@ -230,7 +235,10 @@ export class SmartTriggerEngine {
   }
 
   private async getBehaviorData(userId: string): Promise<BehaviorPattern> {
-    const pattern = await prisma.userBehaviorPattern.findUnique({
+    const pattern = await prisma.userBehaviorPattern.findUnique<{
+      preferredShoppingDay?: number;
+      typicalOrderSize?: number;
+    }>({
       where: { userId },
     });
 

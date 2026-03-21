@@ -31,7 +31,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Cart ID required" }, { status: 400 });
     }
 
-    const cart = await prisma.instacartCart.findFirst({
+    const cart = await prisma.instacartCart.findFirst<{
+      cartId: string;
+      userId: string;
+      expiresAt: Date;
+      checkoutUrl: string;
+      deepLink: string;
+    }>({
       where: {
         cartId,
         userId: session.user.id,
@@ -70,7 +76,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const account = await prisma.platformAccount.findFirst({
+    const account = await prisma.platformAccount.findFirst<{
+      accessToken?: string;
+    }>({
       where: {
         userId: session.user.id,
         platform: EcommercePlatform.INSTACART,
@@ -89,7 +97,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Meal plan ID required" }, { status: 400 });
     }
 
-    const mealPlan = await prisma.mealPlan.findUnique({
+    const mealPlan = await prisma.mealPlan.findUnique<{
+      id: string;
+      meals: Array<{
+        ingredients: Array<{
+          name: string;
+          quantity?: number;
+        }>;
+      }>;
+    }>({
       where: { id: mealPlanId },
       include: {
         meals: {

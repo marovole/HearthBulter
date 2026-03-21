@@ -41,7 +41,7 @@ interface CartData {
 
 export default function InstacartCartPage() {
   const searchParams = useSearchParams();
-  const planId = searchParams.get("planId");
+  const planId = searchParams?.get("planId");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

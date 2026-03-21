@@ -28,7 +28,11 @@ export async function GET(request: NextRequest) {
     const action = searchParams.get("action");
 
     if (action === "status") {
-      const account = await prisma.platformAccount.findFirst({
+      const account = await prisma.platformAccount.findFirst<{
+        id: string;
+        status: string;
+        expiresAt?: Date;
+      }>({
         where: {
           userId: session.user.id,
           platform: EcommercePlatform.INSTACART,
@@ -93,7 +97,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing code or state" }, { status: 400 });
     }
 
-    const oauthState = await prisma.oAuthState.findUnique({
+    const oauthState = await prisma.oAuthState.findUnique<{
+      state: string;
+      userId: string;
+      expiresAt: Date;
+      redirectUri: string;
+    }>({
       where: { state },
     });
 

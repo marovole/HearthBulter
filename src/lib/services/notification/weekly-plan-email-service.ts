@@ -56,7 +56,10 @@ export class WeeklyPlanEmailService {
 
   async sendWeeklyPlanEmail(userId: string, mealPlanId: string): Promise<boolean> {
     try {
-      const user = await prisma.user.findUnique({
+      const user = await prisma.user.findUnique<{
+        email?: string;
+        familyMembers: Array<{ id: string }>;
+      }>({
         where: { id: userId },
         include: { familyMembers: true },
       });
@@ -66,7 +69,13 @@ export class WeeklyPlanEmailService {
         return false;
       }
 
-      const mealPlan = await prisma.mealPlan.findUnique({
+      const mealPlan = await prisma.mealPlan.findUnique<{
+        id: string;
+        meals: Array<{
+          date: Date;
+          ingredients: Array<{ name: string }>;
+        }>;
+      }>({
         where: { id: mealPlanId },
         include: {
           meals: {
@@ -84,7 +93,7 @@ export class WeeklyPlanEmailService {
       const emailData = this.buildEmailData(user, mealPlan);
       const html = this.generateEmailHtml(emailData);
 
-      const member = user.familyMembers;
+      const member = user.familyMembers[0];
       if (!member) {
         console.error(`[WeeklyPlanEmail] No family member for user ${userId}`);
         return false;

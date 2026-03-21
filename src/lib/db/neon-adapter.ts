@@ -361,6 +361,10 @@ export class NeonAdapter {
   inventoryUsage = new NeonModelAdapter("inventory_usages");
   wasteLog = new NeonModelAdapter("waste_logs");
   deviceConnection = new NeonModelAdapter("device_connections");
+  smartTriggerLog = new NeonModelAdapter("smart_trigger_logs");
+  userBehaviorPattern = new NeonModelAdapter("user_behavior_patterns");
+  oAuthState = new NeonModelAdapter("o_auth_states");
+  instacartCart = new NeonModelAdapter("instacart_carts");
 
   async $queryRaw<T>(query: string, params?: unknown[]): Promise<T[]> {
     return NeonClientManager.query<T>(query, params);

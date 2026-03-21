@@ -40,6 +40,7 @@ export class CartAggregator {
     [EcommercePlatform.SAMS_CLUB]: 1440,
     [EcommercePlatform.HEMA]: 30,
     [EcommercePlatform.DINGDONG]: 29,
+    [EcommercePlatform.INSTACART]: 60,
   };
 
   constructor() {
@@ -384,6 +385,11 @@ export class CartAggregator {
         baseFee: 3,
         freeThreshold: 39,
         itemFee: 1,
+      },
+      [EcommercePlatform.INSTACART]: {
+        baseFee: 0,
+        freeThreshold: 0,
+        itemFee: 0,
       },
     };
 

@@ -43,12 +43,14 @@ export class PriceComparator {
     [EcommercePlatform.SAMS_CLUB]: 0.8,
     [EcommercePlatform.HEMA]: 0.9,
     [EcommercePlatform.DINGDONG]: 0.7,
+    [EcommercePlatform.INSTACART]: 0.75,
   };
 
   private shippingFees: Record<EcommercePlatform, number> = {
     [EcommercePlatform.SAMS_CLUB]: 6,
     [EcommercePlatform.HEMA]: 0,
     [EcommercePlatform.DINGDONG]: 3,
+    [EcommercePlatform.INSTACART]: 0,
   };
 
   constructor() {
@@ -344,6 +346,7 @@ export class PriceComparator {
       EcommercePlatform.SAMS_CLUB,
       EcommercePlatform.HEMA,
       EcommercePlatform.DINGDONG,
+      EcommercePlatform.INSTACART,
     ];
     const results = new Map<EcommercePlatform, PriceAnalysis>();
 
@@ -384,6 +387,7 @@ export class PriceComparator {
             [EcommercePlatform.SAMS_CLUB]: null,
             [EcommercePlatform.HEMA]: null,
             [EcommercePlatform.DINGDONG]: null,
+            [EcommercePlatform.INSTACART]: null,
           };
           dailyPrices.set(dateKey, platforms);
         }

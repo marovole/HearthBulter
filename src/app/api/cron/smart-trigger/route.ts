@@ -67,7 +67,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const recentLogs = await prisma.smartTriggerLog.findMany({
+    const recentLogs = await prisma.smartTriggerLog.findMany<{
+      id: string;
+      userId: string;
+      triggerType: string;
+      triggerScore: number;
+      triggered: boolean;
+      emailSent: boolean;
+      createdAt: Date;
+    }>({
       orderBy: { createdAt: "desc" },
       take: 100,
       select: {
@@ -106,14 +114,16 @@ export async function GET(request: NextRequest) {
 // --------------------------------------------------------------------------
 
 async function generateAndNotifyMealPlan(userId: string): Promise<void> {
-  const user = await prisma.user.findUnique({
+  const user = await prisma.user.findUnique<{
+    familyMembers: Array<unknown>;
+  }>({
     where: { id: userId },
     include: {
       familyMembers: true,
     },
   });
 
-  if (!user || !user.familyMembers) {
+  if (!user || !user.familyMembers || user.familyMembers.length === 0) {
     console.log(`[SmartTrigger] No family member found for user ${userId}`);
     return;
   }
