@@ -38,13 +38,13 @@ summary: 记录 HearthBulter 数据层统一到 Convex 的完整迁移成果、�
 
 #### Service 迁移
 
-| 文件                   | 状态    | 说明                                |
-| ---------------------- | ------- | ----------------------------------- |
-| `auxiliary-tracker.ts` | ✅ 完成 | 扩展 schema（5 个新字段），完整迁移 |
-| `streak-manager.ts`    | ✅ 完成 | 完整迁移 + 新增单元测试             |
-| `shopping-list.ts`     | ⏸️ 暂停 | 884 行，需设计 Convex 读模型后迁移  |
-| `task-management.ts`   | ⏸️ 暂停 | 825 行，死代码（未被引用）          |
-| `role-management.ts`   | ⏸️ 暂停 | 死代码（未被引用）                  |
+| 文件                   | 状态      | 说明                                |
+| ---------------------- | --------- | ----------------------------------- |
+| `auxiliary-tracker.ts` | ✅ 完成   | 扩展 schema（5 个新字段），完整迁移 |
+| `streak-manager.ts`    | ✅ 完成   | 完整迁移 + 新增单元测试             |
+| `shopping-list.ts`     | ✅ 完成   | 已迁移到 Convex（327 行）           |
+| `task-management.ts`   | ✅ 已删除 | 825 行死代码                        |
+| `role-management.ts`   | ✅ 已删除 | 449 行死代码                        |
 
 #### Lib 层清理
 
@@ -106,7 +106,7 @@ summary: 记录 HearthBulter 数据层统一到 Convex 的完整迁移成果、�
 | `neon-adapter.ts`                 | ⚠️ 仍有依赖 | `db/index.ts` 等                            |
 | `neon-client.ts`                  | ⚠️ 仍有依赖 | `cache/neon-trend-cache.ts` 等              |
 | `prisma/` 目录                    | ⏸️ 待删除   | 需确认无依赖后删除                          |
-| `shopping-list.ts`                | ⏸️ 待迁移   | 被 6 个 API 路由使用                        |
+| `shopping-list.ts`                | ✅ 已完成   | 已迁移到 Convex                             |
 
 ---
 
@@ -147,14 +147,16 @@ f7516f1 refactor(dashboard): migrate 6 dashboard pages from prisma to convexClie
 
 ### 高优先级（建议下周完成）
 
-1. **迁移 shopping-list.ts**
-   - 被 6 个 API 路由使用（`/api/families/[familyId]/shopping/*`）
-   - 需先补齐 Convex `shoppingLists.ts` 的读模型（items 关联查询）
-   - 估计工作量：2-3 天
+1. ~~**迁移 shopping-list.ts**~~ ✅ **已完成**
+   - ~~被 6 个 API 路由使用（`/api/families/[familyId]/shopping/*`）~~
+   - ~~需先补齐 Convex `shoppingLists.ts` 的读模型（items 关联查询）~~
+   - ~~估计工作量：2-3 天~~
+   - **实际完成：2026-04-12，提交 e816832**
 
-2. **清理死代码**
-   - `task-management.ts` - 确认未被引用后删除
-   - `role-management.ts` - 确认未被引用后删除
+2. ~~**清理死代码**~~ ✅ **已完成**
+   - ~~`task-management.ts` - 确认未被引用后删除~~
+   - ~~`role-management.ts` - 确认未被引用后删除~~
+   - **实际完成：2026-04-12，提交 e816832**
 
 3. **完成 Neon Repository 迁移**
    - `neon-analytics-repository.ts` → `ConvexAnalyticsRepository`
