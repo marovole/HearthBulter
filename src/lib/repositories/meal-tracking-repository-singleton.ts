@@ -1,11 +1,11 @@
-import { NeonMealTrackingRepository } from "./implementations/neon-meal-tracking-repository";
+import { ConvexMealTrackingRepository } from "./implementations/convex-meal-tracking-repository";
 import type { MealTrackingRepository } from "./interfaces/meal-tracking-repository";
 
 let instance: MealTrackingRepository | null = null;
 
 export function getMealTrackingRepository(): MealTrackingRepository {
   if (!instance) {
-    instance = new NeonMealTrackingRepository();
+    instance = new ConvexMealTrackingRepository();
   }
   return instance;
 }
