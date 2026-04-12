@@ -1,10 +1,12 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { auth } from "@/lib/auth";
+import { convexClient, api } from "@/lib/convex-client";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ReportUploader } from "@/components/reports/ReportUploader";
+
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 export default async function NewReportPage({
   params,
@@ -12,41 +14,34 @@ export default async function NewReportPage({
   params: Promise<{ id: string; memberId: string }>;
 }) {
   const { id, memberId } = await params;
+  const typedMemberId = memberId as Id<"familyMembers">;
   const session = await auth();
 
   if (!session) {
     redirect("/auth/signin");
   }
 
-  // 获取成员信息
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          id: true,
-          name: true,
-          creatorId: true,
-          members: {
-            where: { userId: session.user.id, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-    },
-  });
+  const access = await memberRepository.verifyMemberAccess(typedMemberId, session.user.id);
 
-  if (!member || member.family.id !== id) {
+  if (!access.member) {
     notFound();
   }
 
-  // 验证权限
-  const isCreator = member.family.creatorId === session.user.id;
-  const isAdmin = member.family.members[0]?.role === "ADMIN" || isCreator;
-  const isSelf = member.userId === session.user.id;
+  if (access.member.familyId !== id) {
+    notFound();
+  }
 
-  if (!isAdmin && !isSelf) {
+  if (!access.hasAccess) {
     redirect(`/dashboard/families/${id}/members/${memberId}`);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+  const member = (await convexClient.query(api.members.getById, {
+    memberId: typedMemberId,
+  })) as any;
+
+  if (!member) {
+    notFound();
   }
 
   return (
@@ -80,7 +75,7 @@ export default async function NewReportPage({
 
           {/* 主要内容 */}
           <ReportUploader
-            memberId={memberId}
+            memberId={typedMemberId}
             familyId={id}
             onSuccess={(reportId) => {
               redirect(`/dashboard/families/${id}/members/${memberId}/reports/${reportId}`);

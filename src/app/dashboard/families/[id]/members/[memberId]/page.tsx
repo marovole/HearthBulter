@@ -1,9 +1,11 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { auth } from "@/lib/auth";
+import { convexClient, api } from "@/lib/convex-client";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 type HealthGoal = {
   id: string;
@@ -33,6 +35,53 @@ type Allergy = {
   description?: string | null;
 };
 
+type MemberDetailView = {
+  id: string;
+  name: string;
+  gender: string;
+  ageGroup: string;
+  birthDate: Date;
+  weight?: number | null;
+  height?: number | null;
+  bmi?: number | null;
+  role: string;
+  userId?: string;
+  user?: { name?: string | null; email?: string | null } | null;
+  healthGoals: HealthGoal[];
+  allergies: Allergy[];
+  medicalReports: Array<{
+    id: string;
+    ocrStatus?: string;
+    reportDate?: Date | null;
+    institution?: string | null;
+    indicators: MedicalIndicator[];
+  }>;
+};
+
+function getAgeGroup(birthDate: Date): string {
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age -= 1;
+  }
+
+  if (age < 13) return "CHILD";
+  if (age < 18) return "TEENAGER";
+  if (age < 60) return "ADULT";
+  return "ELDERLY";
+}
+
+function calculateBmi(weight?: number | null, height?: number | null): number | null {
+  if (!weight || !height) {
+    return null;
+  }
+
+  const heightInMeters = height / 100;
+  return weight / (heightInMeters * heightInMeters);
+}
+
 export default async function MemberDetailPage({
   params,
 }: {
@@ -45,64 +94,138 @@ export default async function MemberDetailPage({
     redirect("/auth/signin");
   }
 
-  // 获取成员详细信息
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          id: true,
-          name: true,
-          creatorId: true,
-          members: {
-            where: { userId: session.user.id, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-      user: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-      healthGoals: {
-        where: { deletedAt: null },
-        orderBy: { createdAt: "desc" },
-      },
-      allergies: {
-        where: { deletedAt: null },
-        orderBy: { createdAt: "desc" },
-      },
-      medicalReports: {
-        where: { deletedAt: null },
-        orderBy: { createdAt: "desc" },
-        take: 1, // 只取最近一次报告
-        include: {
-          indicators: {
-            where: { isAbnormal: true },
-            take: 3, // 只取前3个异常指标用于显示
-          },
-        },
-      },
-    },
-  });
+  const access = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
-  if (!member || member.family.id !== id) {
+  if (!access.member) {
     notFound();
   }
 
-  // 验证权限
-  const isCreator = member.family.creatorId === session.user.id;
-  const isAdmin = member.family.members[0]?.role === "ADMIN" || isCreator;
-  const isSelf = member.userId === session.user.id;
+  if (access.member.familyId !== id) {
+    notFound();
+  }
 
-  if (!isAdmin && !isSelf) {
+  if (!access.hasAccess) {
     redirect("/dashboard");
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+  const currentUserMember = (await convexClient.query(api.members.getByClerkInFamily, {
+    familyId: id as Id<"families">,
+    clerkId: session.user.id,
+  })) as any;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+  const memberDoc = (await convexClient.query(api.members.getById, {
+    memberId: memberId as Id<"familyMembers">,
+  })) as any;
+
+  if (!memberDoc) {
+    notFound();
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+  const goals = (await convexClient.query(api.health.listGoals, {
+    memberId: memberId as Id<"familyMembers">,
+    includeInactive: true,
+  })) as any[];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+  const allergies = (await convexClient.query(api.health.listAllergies, {
+    memberId: memberId as Id<"familyMembers">,
+  })) as any[];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+  const medicalReports = (await convexClient.query(api.health.listMedicalReportsByMember, {
+    memberId: memberId as Id<"familyMembers">,
+    limit: 1,
+  })) as any[];
+
+  const latestReport = medicalReports[0]
+    ? {
+        ...medicalReports[0],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+        indicators: (
+          ((await convexClient.query(api.health.listIndicatorsByReport, {
+            reportId: medicalReports[0]._id as Id<"medicalReports">,
+          })) as any[]) ?? []
+        )
+          .filter((indicator) => indicator.isAbnormal)
+          .slice(0, 3)
+          .map((indicator) => ({
+            id: indicator._id,
+            name: indicator.name,
+            value: indicator.value,
+            unit: indicator.unit ?? null,
+            isAbnormal: indicator.isAbnormal,
+          })),
+      }
+    : null;
+
+  const user = memberDoc.userId
+    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+      ((await convexClient.query(api.users.getById, {
+        userId: memberDoc.userId as Id<"users">,
+      })) as any)
+    : null;
+
+  const birthDate = new Date(memberDoc.birthDate);
+  const member: MemberDetailView = {
+    id: memberDoc._id,
+    name: memberDoc.name,
+    gender: memberDoc.gender,
+    ageGroup: getAgeGroup(birthDate),
+    birthDate,
+    weight: memberDoc.weight ?? null,
+    height: memberDoc.height ?? null,
+    bmi: calculateBmi(memberDoc.weight, memberDoc.height),
+    role: memberDoc.role,
+    userId: memberDoc.userId,
+    user: user
+      ? {
+          name: user.name ?? null,
+          email: user.email ?? null,
+        }
+      : null,
+    healthGoals: goals.map((goal) => ({
+      id: goal._id,
+      goalType: goal.goalType,
+      status: goal.status,
+      startWeight: goal.startWeight ?? null,
+      currentWeight: goal.currentValue ?? null,
+      targetWeight: goal.targetValue ?? null,
+      targetWeeks: goal.targetWeeks ?? null,
+      progress: goal.progress ?? 0,
+      tdee: goal.tdee ?? null,
+    })),
+    allergies: allergies.map((allergy) => ({
+      id: allergy._id,
+      allergenName: allergy.allergenName,
+      allergenType: allergy.allergenType,
+      severity: allergy.severity,
+      description: allergy.description ?? null,
+    })),
+    medicalReports: latestReport
+      ? [
+          {
+            id: latestReport._id,
+            ocrStatus: latestReport.ocrStatus,
+            reportDate: latestReport.reportDate ? new Date(latestReport.reportDate) : null,
+            institution: latestReport.institution ?? null,
+            indicators: latestReport.indicators,
+          },
+        ]
+      : [],
+  };
+
+  const isSelf = Boolean(
+    currentUserMember?.userId && memberDoc.userId && currentUserMember.userId === memberDoc.userId
+  );
+  const isCreator = Boolean(
+    currentUserMember?.userId && access.member.family.creatorId === currentUserMember.userId
+  );
+  const isAdmin = currentUserMember?.role === "ADMIN" || isCreator;
+
   // 计算年龄
-  const birthDate = new Date(member.birthDate);
   const today = new Date();
   const age = today.getFullYear() - birthDate.getFullYear();
 

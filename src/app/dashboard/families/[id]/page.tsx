@@ -1,9 +1,10 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { auth } from "@/lib/auth";
+import { convexClient, api } from "@/lib/convex-client";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 type MemberGoal = {
   goalType: string;
@@ -20,7 +21,7 @@ type MemberAllergy = {
 
 type FamilyMemberSummary = {
   id: string;
-  userId: string;
+  userId?: string;
   role: string;
   name: string;
   gender: string;
@@ -33,6 +34,37 @@ type FamilyMemberSummary = {
   allergies: MemberAllergy[];
 };
 
+type FamilyDetailView = {
+  id: string;
+  name: string;
+  creatorId: string;
+  members: FamilyMemberSummary[];
+};
+
+function getAgeGroup(birthDate: Date): string {
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age -= 1;
+  }
+
+  if (age < 13) return "CHILD";
+  if (age < 18) return "TEENAGER";
+  if (age < 60) return "ADULT";
+  return "ELDERLY";
+}
+
+function calculateBmi(weight?: number | null, height?: number | null): number | null {
+  if (!weight || !height) {
+    return null;
+  }
+
+  const heightInMeters = height / 100;
+  return weight / (heightInMeters * heightInMeters);
+}
+
 export default async function FamilyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth();
@@ -41,43 +73,102 @@ export default async function FamilyDetailPage({ params }: { params: Promise<{ i
     redirect("/auth/signin");
   }
 
-  // 获取家庭详细信息
-  const family = await prisma.family.findUnique({
-    where: { id, deletedAt: null },
-    include: {
-      members: {
-        where: { deletedAt: null },
-        include: {
-          user: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
-          healthGoals: {
-            where: { deletedAt: null },
-            orderBy: { createdAt: "desc" },
-            take: 1,
-          },
-          allergies: {
-            where: { deletedAt: null },
-          },
-        },
-      },
-    },
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+  const familyDoc = (await convexClient.query(api.families.getById, {
+    familyId: id as Id<"families">,
+  })) as any;
 
-  if (!family) {
+  if (!familyDoc) {
     notFound();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+  const currentUserMember = (await convexClient.query(api.members.getByClerkInFamily, {
+    familyId: id as Id<"families">,
+    clerkId: session.user.id,
+  })) as any;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+  const members = (await convexClient.query(api.families.listMembers, {
+    familyId: id as Id<"families">,
+  })) as any[];
+
+  const memberSummaries = await Promise.all(
+    members.map(async (member) => {
+      const [user, healthGoals, allergies] = await Promise.all([
+        member.userId
+          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+            convexClient.query(api.users.getById, {
+              userId: member.userId as Id<"users">,
+            })
+          : Promise.resolve(null),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+        convexClient.query(api.health.listGoals, {
+          memberId: member._id as Id<"familyMembers">,
+          includeInactive: true,
+        }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+        convexClient.query(api.health.listAllergies, {
+          memberId: member._id as Id<"familyMembers">,
+        }),
+      ]);
+
+      const birthDate = new Date(member.birthDate);
+
+      return {
+        id: member._id,
+        userId: member.userId,
+        role: member.role,
+        name: member.name,
+        gender: member.gender,
+        ageGroup: getAgeGroup(birthDate),
+        weight: member.weight ?? null,
+        height: member.height ?? null,
+        bmi: calculateBmi(member.weight, member.height),
+        user: user
+          ? {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+              name: (user as any).name ?? null,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+              email: (user as any).email ?? null,
+            }
+          : null,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+        healthGoals: ((healthGoals as any[]) ?? []).slice(0, 1).map((goal) => ({
+          goalType: goal.goalType,
+          targetWeight: goal.targetValue ?? null,
+          progress: goal.progress ?? 0,
+          tdee: goal.tdee ?? null,
+        })),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+        allergies: ((allergies as any[]) ?? []).map((allergy) => ({
+          id: allergy._id,
+          allergenName: allergy.allergenName,
+          severity: allergy.severity,
+        })),
+      } satisfies FamilyMemberSummary;
+    })
+  );
+
+  const family: FamilyDetailView = {
+    id: familyDoc._id,
+    name: familyDoc.name,
+    creatorId: familyDoc.creatorId,
+    members: memberSummaries,
+  };
+
   // 验证用户是否属于该家庭
-  const userMember = family.members.find((m: FamilyMemberSummary) => m.userId === session.user.id);
+  const userMember = currentUserMember
+    ? family.members.find((m: FamilyMemberSummary) => m.id === currentUserMember._id)
+    : undefined;
+
   if (!userMember) {
     redirect("/dashboard");
   }
 
-  const isCreator = family.creatorId === session.user.id;
+  const isCreator = Boolean(
+    currentUserMember?.userId && family.creatorId === currentUserMember.userId
+  );
   const isAdmin = userMember.role === "ADMIN" || isCreator;
 
   return (

@@ -1,16 +1,18 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { auth } from "@/lib/auth";
+import { convexClient, api } from "@/lib/convex-client";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MealPlanGenerator } from "@/components/meal-planning/MealPlanGenerator";
+
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 type HealthGoal = {
   id: string;
   goalType: string;
   targetWeight: number | null;
-  targetDate: Date | null;
+  targetDate: string | null;
 };
 
 export default async function NewMealPlanPage({
@@ -25,40 +27,41 @@ export default async function NewMealPlanPage({
     redirect("/auth/signin");
   }
 
-  // 获取成员信息
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          id: true,
-          name: true,
-          creatorId: true,
-          members: {
-            where: { userId: session.user.id, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-      healthGoals: {
-        where: { deletedAt: null },
-        orderBy: { createdAt: "desc" },
-      },
-    },
-  });
+  const access = await memberRepository.verifyMemberAccess(memberId, session.user.id);
+
+  if (!access.member) {
+    notFound();
+  }
+
+  if (access.member.familyId !== id) {
+    notFound();
+  }
+
+  if (!access.hasAccess) {
+    redirect(`/dashboard/families/${id}/members/${memberId}`);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+  const member = (await convexClient.query(api.members.getById, {
+    memberId: memberId as Id<"familyMembers">,
+  })) as any;
 
   if (!member) {
     notFound();
   }
 
-  // 验证权限
-  const isCreator = member.family.creatorId === session.user.id;
-  const isAdmin = member.family.members[0]?.role === "ADMIN" || isCreator;
-  const isSelf = member.userId === session.user.id;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+  const goals = (await convexClient.query(api.health.listGoals, {
+    memberId: memberId as Id<"familyMembers">,
+    includeInactive: true,
+  })) as any[];
 
-  if (!isAdmin && !isSelf) {
-    redirect(`/dashboard/families/${id}/members/${memberId}`);
-  }
+  const healthGoals: HealthGoal[] = goals.map((goal) => ({
+    id: goal._id,
+    goalType: goal.goalType,
+    targetWeight: goal.targetValue ?? null,
+    targetDate: goal.endDate ? new Date(goal.endDate).toISOString() : null,
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -93,13 +96,13 @@ export default async function NewMealPlanPage({
           <MealPlanGenerator
             memberId={memberId}
             memberInfo={{
-              id: member.id,
+              id: member._id,
               name: member.name || "成员",
-              goals: member.healthGoals.map((goal: HealthGoal) => ({
+              goals: healthGoals.map((goal: HealthGoal) => ({
                 id: goal.id,
                 goalType: goal.goalType,
-                targetWeight: goal.targetWeight,
-                targetDate: goal.targetDate?.toISOString(),
+                targetWeight: goal.targetWeight ?? undefined,
+                targetDate: goal.targetDate ?? undefined,
               })),
             }}
             onSuccess={(planId) => {
