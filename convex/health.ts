@@ -406,3 +406,32 @@ export const deleteAllergy = mutation({
     await ctx.db.patch(args.allergyId, { deletedAt: now, updatedAt: now });
   },
 });
+
+// === Medical Reports & Indicators =============================================
+
+export const listMedicalReportsByMember = query({
+  args: {
+    memberId: v.id("familyMembers"),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const reports = await ctx.db
+      .query("medicalReports")
+      .withIndex("by_member", (q) => q.eq("memberId", args.memberId))
+      .filter((q) => q.eq(q.field("deletedAt"), undefined))
+      .order("desc")
+      .collect();
+
+    return reports.slice(0, args.limit ?? 50);
+  },
+});
+
+export const listIndicatorsByReport = query({
+  args: { reportId: v.id("medicalReports") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("medicalIndicators")
+      .withIndex("by_report", (q) => q.eq("reportId", args.reportId))
+      .collect();
+  },
+});

@@ -4,17 +4,16 @@
  * 提供全局唯一的 HealthRepository 实例
  */
 
-import { NeonHealthRepository } from "./implementations/neon-health-repository";
+import { ConvexHealthRepository } from "./implementations/convex-health-repository";
 import type { HealthRepository } from "./interfaces/health-repository";
 
 let instance: HealthRepository | null = null;
 
 export function getHealthRepository(): HealthRepository {
   if (!instance) {
-    instance = new NeonHealthRepository();
+    instance = new ConvexHealthRepository();
   }
   return instance;
 }
 
-// 导出默认实例以便导入使用
 export const healthRepository = getHealthRepository();
