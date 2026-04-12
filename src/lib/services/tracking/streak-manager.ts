@@ -1,10 +1,53 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 /**
  * 连续打卡管理服务
  * 负责追踪用户的连续打卡天数、徽章管理和激励机制
  */
 
-import { db } from "@/lib/db";
+import { convexClient, api } from "@/lib/convex-client";
+
+type Id<TableName extends string> = string & { __tableName: TableName };
+
+type TrackingStreakRecord = {
+  memberId: Id<"familyMembers">;
+  currentStreak: number;
+  longestStreak: number;
+  totalDays: number;
+  lastCheckIn?: number;
+  badges: string;
+};
+
+type DailyNutritionTargetRecord = {
+  date: number;
+  isCompleted?: boolean;
+  actualCalories?: number;
+  actualProtein?: number;
+  actualCarbs?: number;
+  actualFat?: number;
+};
+
+type FamilyMemberRecord = {
+  _id: Id<"familyMembers">;
+  id?: string;
+  name: string;
+  avatar?: string;
+};
+
+function toMemberId(memberId: string): Id<"familyMembers"> {
+  return memberId as Id<"familyMembers">;
+}
+
+function toFamilyId(familyId: string): Id<"families"> {
+  return familyId as Id<"families">;
+}
+
+function parseBadgeIds(badges: string): string[] {
+  try {
+    const parsed = JSON.parse(badges);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 export interface Badge {
   id: string;
@@ -50,27 +93,34 @@ export const BADGES: Badge[] = [
  * 获取成员的连续打卡记录
  */
 export async function getTrackingStreak(memberId: string) {
-  let streak = await db.trackingStreak.findUnique({
-    where: { memberId },
-  });
+  const memberIdRef = toMemberId(memberId);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let streak = (await convexClient.query(api.analytics.getTrackingStreak, {
+    memberId: memberIdRef,
+  })) as any as TrackingStreakRecord | null;
 
   if (!streak) {
-    // 如果不存在，创建初始记录
-    streak = await db.trackingStreak.create({
-      data: {
-        memberId,
-        currentStreak: 0,
-        longestStreak: 0,
-        totalDays: 0,
-        badges: "[]",
-      },
+    await convexClient.mutation(api.analytics.upsertTrackingStreak, {
+      memberId: memberIdRef,
+      currentStreak: 0,
+      longestStreak: 0,
+      totalDays: 0,
+      badges: "[]",
     });
+
+    streak = {
+      memberId: memberIdRef,
+      currentStreak: 0,
+      longestStreak: 0,
+      totalDays: 0,
+      badges: "[]",
+    };
   }
 
-  // 解析徽章
-  const badges = JSON.parse(streak.badges) as string[];
-  const earnedBadges = BADGES.filter((b) => badges.includes(b.id));
-  const nextBadge = BADGES.find((b) => !badges.includes(b.id));
+  const badgeIds = parseBadgeIds(streak.badges);
+  const earnedBadges = BADGES.filter((b) => badgeIds.includes(b.id));
+  const nextBadge = BADGES.find((b) => !badgeIds.includes(b.id));
 
   return {
     ...streak,
@@ -91,32 +141,32 @@ export function getAllBadges() {
  * 检查是否需要发送断连提醒
  */
 export async function checkStreakReminder(memberId: string): Promise<boolean> {
-  const streak = await db.trackingStreak.findUnique({
-    where: { memberId },
-  });
+  const memberIdRef = toMemberId(memberId);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const streak = (await convexClient.query(api.analytics.getTrackingStreak, {
+    memberId: memberIdRef,
+  })) as any as TrackingStreakRecord | null;
 
   if (!streak || !streak.lastCheckIn || streak.currentStreak < 7) {
-    return false; // 连续打卡少于7天，不需要提醒
+    return false;
   }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
   const lastCheckIn = new Date(streak.lastCheckIn);
   lastCheckIn.setHours(0, 0, 0, 0);
 
-  // 检查今天是否已经打卡
-  const todayLogs = await db.mealLog.count({
-    where: {
-      memberId,
-      date: {
-        gte: today,
-      },
-      deletedAt: null,
-    },
+  const todayLogs = await convexClient.query(api.analytics.countMealLogs, {
+    memberId: memberIdRef,
+    startDate: today.getTime(),
+    endDate: tomorrow.getTime(),
   });
 
-  // 如果今天还没打卡，且连续打卡天数>=7天，需要提醒
   return todayLogs === 0 && lastCheckIn.getTime() < today.getTime();
 }
 
@@ -127,6 +177,7 @@ export async function getCheckInStats(
   memberId: string,
   period: "week" | "month" | "year" = "week"
 ) {
+  const memberIdRef = toMemberId(memberId);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -148,26 +199,22 @@ export async function getCheckInStats(
       break;
   }
 
-  // 获取期间的打卡记录
-  const targets = await db.dailyNutritionTarget.findMany({
-    where: {
-      memberId,
-      date: {
-        gte: startDate,
-        lte: today,
-      },
-      isCompleted: true,
-    },
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const targets = (await convexClient.query(api.analytics.listDailyNutritionTargets, {
+    memberId: memberIdRef,
+    startDate: startDate.getTime(),
+    endDate: today.getTime(),
+  })) as any as DailyNutritionTargetRecord[];
 
-  const checkInDays = targets.length;
+  const completedTargets = targets.filter((target) => target.isCompleted === true);
+  const checkInDays = completedTargets.length;
   const checkInRate = (checkInDays / totalDays) * 100;
 
   return {
     period,
     totalDays,
     checkInDays,
-    checkInRate: Math.round(checkInRate * 10) / 10, // 保留一位小数
+    checkInRate: Math.round(checkInRate * 10) / 10,
     missedDays: totalDays - checkInDays,
   };
 }
@@ -176,26 +223,21 @@ export async function getCheckInStats(
  * 获取打卡日历（某月的打卡情况）
  */
 export async function getCheckInCalendar(memberId: string, year: number, month: number) {
-  // 获取月份的第一天和最后一天
+  const memberIdRef = toMemberId(memberId);
+
   const startDate = new Date(year, month - 1, 1);
+  startDate.setHours(0, 0, 0, 0);
+
   const endDate = new Date(year, month, 0);
   endDate.setHours(23, 59, 59, 999);
 
-  // 获取该月的所有打卡记录
-  const targets = await db.dailyNutritionTarget.findMany({
-    where: {
-      memberId,
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
-    orderBy: {
-      date: "asc",
-    },
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const targets = (await convexClient.query(api.analytics.listDailyNutritionTargets, {
+    memberId: memberIdRef,
+    startDate: startDate.getTime(),
+    endDate: endDate.getTime(),
+  })) as any as DailyNutritionTargetRecord[];
 
-  // 创建日历数据结构
   const calendar: Array<{
     date: Date;
     isChecked: boolean;
@@ -211,18 +253,21 @@ export async function getCheckInCalendar(memberId: string, year: number, month: 
   const daysInMonth = endDate.getDate();
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month - 1, day);
-    const target = targets.find((t) => t.date.getDate() === day && t.date.getMonth() === month - 1);
+    const target = targets.find((item) => {
+      const itemDate = new Date(item.date);
+      return itemDate.getDate() === day && itemDate.getMonth() === month - 1;
+    });
 
     calendar.push({
       date,
       isChecked: !!target,
-      isCompleted: target?.isCompleted || false,
+      isCompleted: target?.isCompleted === true,
       nutrition: target
         ? {
-            calories: target.actualCalories,
-            protein: target.actualProtein,
-            carbs: target.actualCarbs,
-            fat: target.actualFat,
+            calories: target.actualCalories ?? 0,
+            protein: target.actualProtein ?? 0,
+            carbs: target.actualCarbs ?? 0,
+            fat: target.actualFat ?? 0,
           }
         : undefined,
     });
@@ -239,50 +284,52 @@ export async function getCheckInCalendar(memberId: string, year: number, month: 
  * 获取打卡排行榜（家庭成员间的对比）
  */
 export async function getFamilyStreakLeaderboard(familyId: string) {
-  // 获取家庭所有成员
-  const members = await db.familyMember.findMany({
-    where: {
-      familyId,
-      deletedAt: null,
-    },
-    include: {
-      trackingStreak: true,
-    },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const members = (await convexClient.query(api.families.listMembers, {
+    familyId: toFamilyId(familyId),
+  })) as any as FamilyMemberRecord[];
+
+  const leaderboard = await Promise.all(
+    members.map(async (member) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const streak = (await convexClient.query(api.analytics.getTrackingStreak, {
+        memberId: member._id,
+      })) as any as TrackingStreakRecord | null;
+
+      return {
+        memberId: member.id ?? (member._id as string),
+        name: member.name,
+        avatar: member.avatar,
+        currentStreak: streak?.currentStreak ?? 0,
+        longestStreak: streak?.longestStreak ?? 0,
+        totalDays: streak?.totalDays ?? 0,
+        badges: streak ? parseBadgeIds(streak.badges) : [],
+      };
+    })
+  );
+
+  return leaderboard.sort((a, b) => {
+    if (b.currentStreak !== a.currentStreak) {
+      return b.currentStreak - a.currentStreak;
+    }
+    return b.totalDays - a.totalDays;
   });
-
-  // 按当前连续打卡天数排序
-  const leaderboard = members
-    .map((member) => ({
-      memberId: member.id,
-      name: member.name,
-      avatar: member.avatar,
-      currentStreak: member.trackingStreak?.currentStreak || 0,
-      longestStreak: member.trackingStreak?.longestStreak || 0,
-      totalDays: member.trackingStreak?.totalDays || 0,
-      badges: member.trackingStreak ? (JSON.parse(member.trackingStreak.badges) as string[]) : [],
-    }))
-    .sort((a, b) => {
-      // 先按当前连续天数排序，如果相同则按总天数排序
-      if (b.currentStreak !== a.currentStreak) {
-        return b.currentStreak - a.currentStreak;
-      }
-      return b.totalDays - a.totalDays;
-    });
-
-  return leaderboard;
 }
 
 /**
  * 检查并解锁新徽章
  */
 export async function checkAndUnlockBadges(memberId: string) {
-  const streak = await db.trackingStreak.findUnique({
-    where: { memberId },
-  });
+  const memberIdRef = toMemberId(memberId);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const streak = (await convexClient.query(api.analytics.getTrackingStreak, {
+    memberId: memberIdRef,
+  })) as any as TrackingStreakRecord | null;
 
   if (!streak) return [];
 
-  const currentBadges = JSON.parse(streak.badges) as string[];
+  const currentBadges = parseBadgeIds(streak.badges);
   const newBadges: Badge[] = [];
 
   // 检查每个徽章是否符合条件
@@ -295,11 +342,13 @@ export async function checkAndUnlockBadges(memberId: string) {
 
   // 如果有新徽章，更新数据库
   if (newBadges.length > 0) {
-    await db.trackingStreak.update({
-      where: { memberId },
-      data: {
-        badges: JSON.stringify(currentBadges),
-      },
+    await convexClient.mutation(api.analytics.upsertTrackingStreak, {
+      memberId: memberIdRef,
+      currentStreak: streak.currentStreak,
+      longestStreak: streak.longestStreak,
+      totalDays: streak.totalDays,
+      lastCheckIn: streak.lastCheckIn,
+      badges: JSON.stringify(currentBadges),
     });
   }
 
