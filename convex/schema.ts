@@ -470,6 +470,11 @@ export default defineSchema({
     unit: v.string(),
     purchased: v.boolean(),
     notes: v.optional(v.string()),
+    estimatedPrice: v.optional(v.number()),
+    assigneeId: v.optional(v.id("familyMembers")),
+    addedBy: v.id("familyMembers"),
+    purchasedBy: v.optional(v.id("familyMembers")),
+    purchasedAt: v.optional(v.number()),
     ...timestamps,
   })
     .index("by_list", ["shoppingListId"])
