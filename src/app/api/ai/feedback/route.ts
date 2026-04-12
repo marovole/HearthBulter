@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { recipeOptimizer } from "@/lib/services/ai/recipe-optimizer";
-import { NeonFamilyRepository } from "@/lib/repositories/implementations/neon-family-repository";
+import { ConvexFamilyRepository } from "@/lib/repositories/implementations/convex-family-repository";
 import { feedbackRepository } from "@/lib/repositories/feedback-repository-singleton";
 import type { FeedbackData } from "@/lib/types/feedback";
 
@@ -9,7 +9,7 @@ import type { FeedbackData } from "@/lib/types/feedback";
 export const dynamic = "force-static";
 export const revalidate = false;
 
-const familyRepo = new NeonFamilyRepository();
+const familyRepo = new ConvexFamilyRepository();
 
 const DEFAULT_STATS_DAYS = 30;
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { conversationManager } from "@/lib/services/ai/conversation-manager";
 import { healthRepository } from "@/lib/repositories/health-repository-singleton";
-import { NeonFamilyRepository } from "@/lib/repositories/implementations/neon-family-repository";
+import { ConvexFamilyRepository } from "@/lib/repositories/implementations/convex-family-repository";
 import { getDefaultRateLimitConfig, rateLimiter } from "@/lib/services/ai/rate-limiter";
 import { aiFallbackService } from "@/lib/services/ai/fallback-service";
 import { defaultSensitiveFilter } from "@/lib/middleware/ai-sensitive-filter";
@@ -10,7 +10,7 @@ import { consentManager } from "@/lib/services/consent-manager";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-const familyRepo = new NeonFamilyRepository();
+const familyRepo = new ConvexFamilyRepository();
 
 /**
  * POST /api/ai/chat
