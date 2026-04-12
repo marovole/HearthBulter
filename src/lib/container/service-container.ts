@@ -1,6 +1,3 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
-import { NeonClientManager } from "@/lib/db/neon-client";
-
 import type { RecommendationRepository } from "@/lib/repositories/interfaces/recommendation-repository";
 import type { NotificationRepository } from "@/lib/repositories/interfaces/notification-repository";
 import type { AnalyticsRepository } from "@/lib/repositories/interfaces/analytics-repository";
@@ -8,10 +5,10 @@ import type { BudgetRepository } from "@/lib/repositories/interfaces/budget-repo
 import type { FamilyRepository } from "@/lib/repositories/interfaces/family-repository";
 
 import { ConvexRecommendationRepository } from "@/lib/repositories/implementations/convex-recommendation-repository";
-import { NeonNotificationRepository } from "@/lib/repositories/implementations/neon-notification-repository";
+import { ConvexNotificationRepository } from "@/lib/repositories/implementations/convex-notification-repository";
 import { NeonAnalyticsRepository } from "@/lib/repositories/implementations/neon-analytics-repository";
-import { NeonBudgetRepository } from "@/lib/repositories/implementations/neon-budget-repository";
-import { NeonFamilyRepository } from "@/lib/repositories/implementations/neon-family-repository";
+import { ConvexBudgetRepository } from "@/lib/repositories/implementations/convex-budget-repository";
+import { ConvexFamilyRepository } from "@/lib/repositories/implementations/convex-family-repository";
 
 // Service层导入（暂时使用现有实现，后续重构为Repository模式）
 import { RecommendationEngine } from "@/lib/services/recommendation/recommendation-engine";
@@ -131,7 +128,7 @@ export class ServiceContainer {
       if (this.config.repositoryType === "mock") {
         throw new Error("Mock repositories not yet implemented");
       }
-      this.notificationRepository = new NeonNotificationRepository();
+      this.notificationRepository = new ConvexNotificationRepository();
     }
 
     return this.notificationRepository!;
@@ -167,7 +164,7 @@ export class ServiceContainer {
       if (this.config.repositoryType === "mock") {
         throw new Error("Mock repositories not yet implemented");
       }
-      this.budgetRepository = new NeonBudgetRepository();
+      this.budgetRepository = new ConvexBudgetRepository();
     }
 
     return this.budgetRepository;
@@ -182,7 +179,7 @@ export class ServiceContainer {
       if (this.config.repositoryType === "mock") {
         throw new Error("Mock repositories not yet implemented");
       }
-      this.familyRepository = new NeonFamilyRepository();
+      this.familyRepository = new ConvexFamilyRepository();
     }
 
     return this.familyRepository;

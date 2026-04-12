@@ -3,10 +3,67 @@
  * 提供统一的 API 授权验证函数
  */
 
-// @ts-nocheck - Pending full type safety for neonAdapter migration
 import { auth } from "@/lib/auth";
-import { neonAdapter as db } from "@/lib/db/neon-adapter";
+import { convexClient, api } from "@/lib/convex-client";
+import { asConvexQueryReference } from "@/lib/convex-reference";
 import { logger } from "@/lib/logger";
+
+type Id<TableName extends string> = string & { __tableName: TableName };
+
+type MemberDoc = {
+  _id: string;
+  userId?: string;
+  familyId: string;
+  deletedAt?: number;
+  role?: string;
+};
+
+type FamilyDoc = {
+  _id: string;
+  creatorId: string;
+  deletedAt?: number;
+};
+
+type UserDoc = {
+  _id: string;
+  role: string;
+};
+
+type InventoryItemDoc = {
+  memberId: string;
+} | null;
+
+type HealthReportDoc = {
+  memberId: string;
+} | null;
+
+type MealPlanDoc = {
+  memberId: string;
+} | null;
+
+type RecipeDoc = {
+  creatorId?: string;
+} | null;
+
+type NotificationDoc = {
+  memberId: string;
+} | null;
+
+type BudgetDoc = {
+  memberId: string;
+} | null;
+
+type HealthGoalDoc = {
+  memberId: string;
+} | null;
+
+type MedicalReportDoc = {
+  memberId: string;
+} | null;
+
+type AiConversationDoc = {
+  memberId: string;
+} | null;
 
 export interface AuthorizationResult {
   authorized: boolean;
@@ -14,9 +71,21 @@ export interface AuthorizationResult {
   reason?: string;
 }
 
+async function getMemberById(memberId: string): Promise<MemberDoc | null> {
+  return (await convexClient.query(api.members.getById, {
+    memberId: memberId as Id<"familyMembers">,
+  })) as MemberDoc | null;
+}
+
+async function getFamilyById(familyId: string): Promise<FamilyDoc | null> {
+  return (await convexClient.query(api.families.getById, {
+    familyId: familyId as Id<"families">,
+  })) as FamilyDoc | null;
+}
+
 /**
  * 验证用户是否为指定家庭成员的所有者或有权访问
- * @param userId 当前用户 ID
+ * @param userId 当前用户 ID（Clerk ID）
  * @param memberId 家庭成员 ID
  */
 export async function requireFamilyMembership(
@@ -24,15 +93,7 @@ export async function requireFamilyMembership(
   memberId: string
 ): Promise<AuthorizationResult> {
   try {
-    const member = await db.familyMember.findUnique({
-      where: { id: memberId },
-      select: {
-        id: true,
-        userId: true,
-        familyId: true,
-        deletedAt: true,
-      },
-    });
+    const member = await getMemberById(memberId);
 
     if (!member) {
       return {
@@ -50,21 +111,35 @@ export async function requireFamilyMembership(
       };
     }
 
-    // 检查是否为成员本人
-    if (member.userId === userId) {
-      return { authorized: true, userId };
+    const family = await getFamilyById(member.familyId);
+    if (!family || family.deletedAt) {
+      return {
+        authorized: false,
+        userId,
+        reason: "家庭成员不存在",
+      };
     }
 
-    // 检查是否为同一家庭成员
-    const userMembership = await db.familyMember.findFirst({
-      where: {
-        userId,
-        familyId: member.familyId,
-        deletedAt: null,
-      },
-    });
+    const userMembership = (await convexClient.query(api.members.getByClerkInFamily, {
+      familyId: member.familyId as Id<"families">,
+      clerkId: userId,
+    })) as MemberDoc | null;
 
-    if (userMembership) {
+    if (!userMembership) {
+      return {
+        authorized: false,
+        userId,
+        reason: "无权访问此家庭成员数据",
+      };
+    }
+
+    const isSelf = Boolean(
+      member.userId && userMembership.userId && member.userId === userMembership.userId
+    );
+    const isCreator = family.creatorId === userMembership.userId;
+    const isFamilyMember = userMembership.familyId === member.familyId;
+
+    if (isSelf || isCreator || isFamilyMember) {
       return { authorized: true, userId };
     }
 
@@ -85,16 +160,15 @@ export async function requireFamilyMembership(
 
 /**
  * 验证用户是否为管理员
- * @param userId 用户 ID
+ * @param userId 用户 ID（Clerk ID）
  */
 export async function requireAdmin(userId: string): Promise<AuthorizationResult> {
   try {
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { id: true, role: true },
-    });
+    const members = (await convexClient.query(api.members.listByClerkId, {
+      clerkId: userId,
+    })) as MemberDoc[];
 
-    if (!user) {
+    if (!members || members.length === 0) {
       return {
         authorized: false,
         userId,
@@ -102,15 +176,27 @@ export async function requireAdmin(userId: string): Promise<AuthorizationResult>
       };
     }
 
-    if (user.role !== "ADMIN") {
-      return {
-        authorized: false,
-        userId,
-        reason: "需要管理员权限",
-      };
+    const hasAdminMemberRole = members.some((member) => member.role === "ADMIN");
+    if (hasAdminMemberRole) {
+      return { authorized: true, userId };
     }
 
-    return { authorized: true, userId };
+    const firstUserId = members.find((member) => member.userId)?.userId;
+    if (firstUserId) {
+      const user = (await convexClient.query(api.users.getById, {
+        userId: firstUserId as Id<"users">,
+      })) as UserDoc | null;
+
+      if (user?.role === "ADMIN") {
+        return { authorized: true, userId };
+      }
+    }
+
+    return {
+      authorized: false,
+      userId,
+      reason: "需要管理员权限",
+    };
   } catch (error) {
     logger.error("检查管理员权限失败", { userId, error });
     return {
@@ -144,52 +230,52 @@ export async function requireOwnership(
   resourceId: string
 ): Promise<AuthorizationResult> {
   try {
-    let resource: {
-      userId?: string;
-      memberId?: string;
-      familyId?: string;
-    } | null = null;
-
     switch (resourceType) {
-      case "inventory_item":
-        resource = await db.inventoryItem.findUnique({
-          where: { id: resourceId },
-          select: { memberId: true },
+      case "inventory_item": {
+        const resource = await convexClient.query<InventoryItemDoc>(api.inventory.getById, {
+          itemId: resourceId as Id<"inventoryItems">,
         });
         if (resource?.memberId) {
           return requireFamilyMembership(userId, resource.memberId);
         }
         break;
+      }
 
-      case "health_report":
-        resource = await db.healthReport.findUnique({
-          where: { id: resourceId },
-          select: { memberId: true },
+      case "health_report": {
+        const resource = await convexClient.query<HealthReportDoc>(
+          asConvexQueryReference("analytics:getHealthReportById"),
+          { reportId: resourceId as Id<"healthReports"> }
+        );
+        if (resource?.memberId) {
+          return requireFamilyMembership(userId, resource.memberId);
+        }
+        break;
+      }
+
+      case "meal_plan": {
+        const resource = await convexClient.query<MealPlanDoc>(api.meals.getPlanById, {
+          planId: resourceId as Id<"mealPlans">,
         });
         if (resource?.memberId) {
           return requireFamilyMembership(userId, resource.memberId);
         }
         break;
+      }
 
-      case "meal_plan":
-        resource = await db.mealPlan.findUnique({
-          where: { id: resourceId },
-          select: { memberId: true },
+      case "recipe": {
+        const resource = await convexClient.query<RecipeDoc>(api.recipes.getById, {
+          recipeId: resourceId as Id<"recipes">,
         });
-        if (resource?.memberId) {
-          return requireFamilyMembership(userId, resource.memberId);
-        }
-        break;
+        if (resource?.creatorId) {
+          const members = (await convexClient.query(api.members.listByClerkId, {
+            clerkId: userId,
+          })) as MemberDoc[];
 
-      case "recipe":
-        resource = await db.recipe.findUnique({
-          where: { id: resourceId },
-          select: { creatorId: true },
-        });
-        if (resource && "creatorId" in resource) {
-          if (resource.creatorId === userId) {
+          const userIdInDb = members.find((member) => member.userId)?.userId;
+          if (userIdInDb && resource.creatorId === userIdInDb) {
             return { authorized: true, userId };
           }
+
           return {
             authorized: false,
             userId,
@@ -197,31 +283,25 @@ export async function requireOwnership(
           };
         }
         break;
+      }
 
-      case "notification":
-        resource = await db.notification.findUnique({
-          where: { id: resourceId },
-          select: { memberId: true },
+      case "notification": {
+        const resource = await convexClient.query<NotificationDoc>(api.notifications.getById, {
+          id: resourceId as Id<"notifications">,
         });
         if (resource?.memberId) {
           return requireFamilyMembership(userId, resource.memberId);
         }
         break;
+      }
 
-      case "budget":
-        resource = await db.budget.findUnique({
-          where: { id: resourceId },
-          select: { familyId: true },
+      case "budget": {
+        const resource = await convexClient.query<BudgetDoc>(api.budget.getBudgetById, {
+          budgetId: resourceId as Id<"budgets">,
         });
-        if (resource?.familyId) {
-          const membership = await db.familyMember.findFirst({
-            where: {
-              userId,
-              familyId: resource.familyId,
-              deletedAt: null,
-            },
-          });
-          if (membership) {
+        if (resource?.memberId) {
+          const familyMembership = await requireFamilyMembership(userId, resource.memberId);
+          if (familyMembership.authorized) {
             return { authorized: true, userId };
           }
           return {
@@ -231,36 +311,40 @@ export async function requireOwnership(
           };
         }
         break;
+      }
 
-      case "health_goal":
-        resource = await db.healthGoal.findUnique({
-          where: { id: resourceId },
-          select: { memberId: true },
+      case "health_goal": {
+        const resource = await convexClient.query<HealthGoalDoc>(api.health.getGoalById, {
+          goalId: resourceId as Id<"healthGoals">,
         });
         if (resource?.memberId) {
           return requireFamilyMembership(userId, resource.memberId);
         }
         break;
+      }
 
-      case "medical_report":
-        resource = await db.medicalReport.findUnique({
-          where: { id: resourceId },
-          select: { memberId: true },
+      case "medical_report": {
+        const resource = await convexClient.query<MedicalReportDoc>(
+          api.health.getMedicalReportById,
+          {
+            reportId: resourceId as Id<"medicalReports">,
+          }
+        );
+        if (resource?.memberId) {
+          return requireFamilyMembership(userId, resource.memberId);
+        }
+        break;
+      }
+
+      case "ai_conversation": {
+        const resource = await convexClient.query<AiConversationDoc>(api.ai.getConversationById, {
+          id: resourceId as Id<"aiConversations">,
         });
         if (resource?.memberId) {
           return requireFamilyMembership(userId, resource.memberId);
         }
         break;
-
-      case "ai_conversation":
-        resource = await db.aiConversation.findUnique({
-          where: { id: resourceId },
-          select: { memberId: true },
-        });
-        if (resource?.memberId) {
-          return requireFamilyMembership(userId, resource.memberId);
-        }
-        break;
+      }
 
       default:
         return {
@@ -270,18 +354,10 @@ export async function requireOwnership(
         };
     }
 
-    if (!resource) {
-      return {
-        authorized: false,
-        userId,
-        reason: "资源不存在",
-      };
-    }
-
     return {
       authorized: false,
       userId,
-      reason: "无法验证资源所有权",
+      reason: "资源不存在",
     };
   } catch (error) {
     logger.error("检查资源所有权失败", {
@@ -322,12 +398,9 @@ export async function requireFamilyAccess(
   familyId: string
 ): Promise<AuthorizationResult> {
   try {
-    const membership = await db.familyMember.findFirst({
-      where: {
-        userId,
-        familyId,
-        deletedAt: null,
-      },
+    const membership = await convexClient.query(api.members.getByClerkInFamily, {
+      familyId: familyId as Id<"families">,
+      clerkId: userId,
     });
 
     if (membership) {

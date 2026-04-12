@@ -1,4 +1,6 @@
-import { neonAdapter } from "@/lib/db";
+import { convexClient, api } from "@/lib/convex-client";
+
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 interface FamilyMemberRow {
   id: string;
@@ -11,11 +13,13 @@ interface FamilyMemberRow {
 }
 
 interface FamilyRow {
-  id: string;
+  _id: string;
   creatorId: string;
+  deletedAt?: number;
 }
 
 interface FamilyMemberRoleRow {
+  userId?: string;
   role: string;
 }
 
@@ -28,29 +32,43 @@ export async function verifyMemberAccess(
   memberId: string,
   userId: string
 ): Promise<MemberAccessResult> {
-  const member = (await neonAdapter.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-  })) as FamilyMemberRow | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const memberDoc = (await convexClient.query(api.members.getById, {
+    memberId: memberId as Id<"familyMembers">,
+  })) as any;
 
-  if (!member) {
+  if (!memberDoc || memberDoc.deletedAt) {
     return { hasAccess: false, member: null };
   }
 
-  const family = (await neonAdapter.family.findUnique({
-    where: { id: member.familyId },
+  const member: FamilyMemberRow = {
+    id: memberDoc._id,
+    userId: memberDoc.userId ?? "",
+    familyId: memberDoc.familyId,
+    name: memberDoc.name,
+    gender: memberDoc.gender ?? null,
+    birthDate: memberDoc.birthDate ? new Date(memberDoc.birthDate) : null,
+    relationship: null,
+  };
+
+  const family = (await convexClient.query(api.families.getById, {
+    familyId: member.familyId as Id<"families">,
   })) as FamilyRow | null;
 
-  if (!family) {
+  if (!family || family.deletedAt) {
     return { hasAccess: false, member: null };
   }
 
-  const userMembership = (await neonAdapter.familyMember.findFirst({
-    where: { familyId: member.familyId, userId, deletedAt: null },
+  const userMembership = (await convexClient.query(api.members.getByClerkInFamily, {
+    familyId: member.familyId as Id<"families">,
+    clerkId: userId,
   })) as FamilyMemberRoleRow | null;
 
-  const isCreator = family.creatorId === userId;
+  const isCreator = family.creatorId === userMembership?.userId;
   const isAdmin = userMembership?.role === "ADMIN" || isCreator;
-  const isSelf = member.userId === userId;
+  const isSelf = Boolean(
+    member.userId && userMembership?.userId && member.userId === userMembership.userId
+  );
 
   return {
     hasAccess: isAdmin || isSelf,

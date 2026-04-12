@@ -435,3 +435,230 @@ export const listIndicatorsByReport = query({
       .collect();
   },
 });
+
+export const getMedicalIndicatorById = query({
+  args: { indicatorId: v.id("medicalIndicators") },
+  handler: async (ctx, args) => {
+    const indicator = await ctx.db.get(args.indicatorId);
+    if (!indicator) return null;
+    return indicator;
+  },
+});
+
+// --- Medical Reports Write ---
+
+export const getMedicalReportById = query({
+  args: { reportId: v.id("medicalReports") },
+  handler: async (ctx, args) => {
+    const report = await ctx.db.get(args.reportId);
+    if (!report || report.deletedAt) return null;
+    return report;
+  },
+});
+
+export const createMedicalReport = mutation({
+  args: {
+    memberId: v.id("familyMembers"),
+    fileUrl: v.string(),
+    fileName: v.string(),
+    fileSize: v.number(),
+    mimeType: v.string(),
+    ocrStatus: v.string(),
+    ocrText: v.optional(v.union(v.string(), v.null())),
+    ocrError: v.optional(v.union(v.string(), v.null())),
+    reportDate: v.optional(v.union(v.number(), v.null())),
+    institution: v.optional(v.union(v.string(), v.null())),
+    reportType: v.optional(v.union(v.string(), v.null())),
+    isCorrected: v.optional(v.boolean()),
+    correctedAt: v.optional(v.union(v.number(), v.null())),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const reportId = await ctx.db.insert("medicalReports", {
+      ...args,
+      createdAt: now,
+      updatedAt: now,
+    });
+    return reportId;
+  },
+});
+
+export const updateMedicalReport = mutation({
+  args: {
+    reportId: v.id("medicalReports"),
+    ocrStatus: v.optional(v.string()),
+    ocrText: v.optional(v.union(v.string(), v.null())),
+    ocrError: v.optional(v.union(v.string(), v.null())),
+    reportDate: v.optional(v.union(v.number(), v.null())),
+    institution: v.optional(v.union(v.string(), v.null())),
+    reportType: v.optional(v.union(v.string(), v.null())),
+    isCorrected: v.optional(v.boolean()),
+    correctedAt: v.optional(v.union(v.number(), v.null())),
+  },
+  handler: async (ctx, args) => {
+    const { reportId, ...updates } = args;
+    const now = Date.now();
+    await ctx.db.patch(reportId, { ...updates, updatedAt: now });
+    return reportId;
+  },
+});
+
+export const deleteMedicalReport = mutation({
+  args: { reportId: v.id("medicalReports") },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    await ctx.db.patch(args.reportId, { deletedAt: now, updatedAt: now });
+  },
+});
+
+// --- Medical Indicators Write ---
+
+export const createMedicalIndicator = mutation({
+  args: {
+    reportId: v.id("medicalReports"),
+    indicatorType: v.string(),
+    name: v.string(),
+    value: v.number(),
+    unit: v.string(),
+    referenceRange: v.optional(v.union(v.string(), v.null())),
+    isAbnormal: v.boolean(),
+    status: v.string(),
+    isCorrected: v.optional(v.boolean()),
+    originalValue: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const indicatorId = await ctx.db.insert("medicalIndicators", {
+      ...args,
+      createdAt: now,
+      updatedAt: now,
+    });
+    return indicatorId;
+  },
+});
+
+export const updateMedicalIndicator = mutation({
+  args: {
+    indicatorId: v.id("medicalIndicators"),
+    name: v.optional(v.string()),
+    value: v.optional(v.number()),
+    unit: v.optional(v.string()),
+    referenceRange: v.optional(v.union(v.string(), v.null())),
+    isAbnormal: v.optional(v.boolean()),
+    status: v.optional(v.string()),
+    isCorrected: v.optional(v.boolean()),
+    originalValue: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { indicatorId, ...updates } = args;
+    const now = Date.now();
+    await ctx.db.patch(indicatorId, { ...updates, updatedAt: now });
+    return indicatorId;
+  },
+});
+
+export const deleteManyMedicalIndicators = mutation({
+  args: { indicatorIds: v.array(v.id("medicalIndicators")) },
+  handler: async (ctx, args) => {
+    await Promise.all(args.indicatorIds.map((id) => ctx.db.delete(id)));
+  },
+});
+
+// === Health Reminders =========================================================
+
+export const listHealthRemindersByMember = query({
+  args: { memberId: v.id("familyMembers") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("healthReminders")
+      .withIndex("by_member", (q) => q.eq("memberId", args.memberId))
+      .filter((q) => q.eq(q.field("deletedAt"), undefined))
+      .collect();
+  },
+});
+
+export const getHealthReminderByType = query({
+  args: { memberId: v.id("familyMembers"), reminderType: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("healthReminders")
+      .withIndex("by_member_type", (q) =>
+        q.eq("memberId", args.memberId).eq("reminderType", args.reminderType)
+      )
+      .unique();
+  },
+});
+
+export const createHealthReminder = mutation({
+  args: {
+    memberId: v.id("familyMembers"),
+    reminderType: v.string(),
+    enabled: v.boolean(),
+    hour: v.number(),
+    minute: v.number(),
+    daysOfWeek: v.array(v.number()),
+    message: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    return await ctx.db.insert("healthReminders", {
+      ...args,
+      streakDays: 0,
+      createdAt: now,
+      updatedAt: now,
+    });
+  },
+});
+
+export const upsertHealthReminder = mutation({
+  args: {
+    memberId: v.id("familyMembers"),
+    reminderType: v.string(),
+    enabled: v.boolean(),
+    hour: v.number(),
+    minute: v.number(),
+    daysOfWeek: v.array(v.number()),
+    message: v.optional(v.string()),
+    streakDays: v.optional(v.number()),
+    lastTriggeredAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("healthReminders")
+      .withIndex("by_member_type", (q) =>
+        q.eq("memberId", args.memberId).eq("reminderType", args.reminderType)
+      )
+      .unique();
+
+    const now = Date.now();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        enabled: args.enabled,
+        hour: args.hour,
+        minute: args.minute,
+        daysOfWeek: args.daysOfWeek,
+        message: args.message,
+        streakDays: args.streakDays ?? existing.streakDays,
+        lastTriggeredAt: args.lastTriggeredAt ?? existing.lastTriggeredAt,
+        updatedAt: now,
+      });
+      return existing._id;
+    }
+
+    return await ctx.db.insert("healthReminders", {
+      ...args,
+      streakDays: args.streakDays ?? 0,
+      createdAt: now,
+      updatedAt: now,
+    });
+  },
+});
+
+export const deleteHealthReminder = mutation({
+  args: { reminderId: v.id("healthReminders") },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    await ctx.db.patch(args.reminderId, { deletedAt: now, updatedAt: now });
+  },
+});
