@@ -1123,4 +1123,105 @@ export default defineSchema({
     type: v.string(),
     strictness: v.optional(v.string()),
   }).index("by_member", ["memberId"]),
+
+  // ==================== OAuth & Integrations ====================
+  oAuthStates: defineTable({
+    state: v.string(),
+    userId: v.string(),
+    platform: v.string(),
+    redirectUri: v.string(),
+    expiresAt: v.number(),
+  })
+    .index("by_state", ["state"])
+    .index("by_user_platform", ["userId", "platform"]),
+
+  instacartCarts: defineTable({
+    userId: v.string(),
+    cartId: v.string(),
+    retailerId: v.optional(v.string()),
+    checkoutUrl: v.optional(v.string()),
+    deepLink: v.optional(v.string()),
+    items: v.optional(v.any()),
+    mealPlanId: v.optional(v.string()),
+    status: v.string(),
+    expiresAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_status", ["userId", "status"]),
+
+  // ==================== Smart Triggers ====================
+  smartTriggerLogs: defineTable({
+    userId: v.string(),
+    triggerType: v.string(),
+    triggerScore: v.number(),
+    factors: v.any(),
+    triggered: v.boolean(),
+    mealPlanId: v.optional(v.string()),
+    emailSent: v.optional(v.boolean()),
+    cooldownUntil: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_type", ["userId", "triggerType"]),
+
+  userBehaviorPatterns: defineTable({
+    userId: v.string(),
+    preferredShoppingDay: v.optional(v.string()),
+    averageOrderInterval: v.optional(v.number()),
+    lastOrderDate: v.optional(v.string()),
+    typicalOrderSize: v.optional(v.number()),
+    preferredRetailers: v.optional(v.any()),
+    dietaryPatterns: v.optional(v.any()),
+  }).index("by_user", ["userId"]),
+
+  // ==================== Community ====================
+  communityPosts: defineTable({
+    memberId: v.string(),
+    title: v.string(),
+    content: v.string(),
+    type: v.string(),
+    status: v.string(),
+    likes: v.optional(v.number()),
+  })
+    .index("by_member", ["memberId"])
+    .index("by_status", ["status"]),
+
+  communityComments: defineTable({
+    postId: v.id("communityPosts"),
+    memberId: v.string(),
+    content: v.string(),
+  }).index("by_post", ["postId"]),
+
+  // ==================== Family Goals & Trends ====================
+  familyGoals: defineTable({
+    familyId: v.string(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    category: v.string(),
+    targetDate: v.optional(v.number()),
+    createdBy: v.string(),
+    status: v.string(),
+  })
+    .index("by_family", ["familyId"])
+    .index("by_family_status", ["familyId", "status"]),
+
+  comments: defineTable({
+    targetId: v.string(),
+    targetType: v.string(),
+    memberId: v.string(),
+    content: v.string(),
+  }).index("by_target", ["targetId", "targetType"]),
+
+  trendData: defineTable({
+    memberId: v.string(),
+    dataType: v.string(),
+    startDate: v.number(),
+    endDate: v.number(),
+    aggregatedData: v.any(),
+    mean: v.optional(v.number()),
+    median: v.optional(v.number()),
+    min: v.optional(v.number()),
+    max: v.optional(v.number()),
+    expiresAt: v.optional(v.number()),
+  }).index("by_member_type", ["memberId", "dataType"]),
 });
