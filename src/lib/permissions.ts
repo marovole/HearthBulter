@@ -189,51 +189,36 @@ export function canPerformAction(
   return hasPermission(userRole, permission, resourceOwnerId, currentUserId);
 }
 
-// 获取用户在家庭中的角色
+// 获取用户在家庭中的角色（Convex 版本）
 export async function getUserFamilyRole(
   userId: string,
-  familyId: string,
-  prisma: any
+  familyId: string
 ): Promise<FamilyMemberRole | null> {
-  const member = await prisma.familyMember.findFirst({
-    where: {
-      userId,
-      familyId,
-      deletedAt: null,
-    },
-    select: {
-      role: true,
-    },
-  });
-
-  return member?.role || null;
+  // 使用 memberRepository 验证成员访问
+  const { memberRepository } = await import("@/lib/repositories");
+  try {
+    const result = await memberRepository.verifyMemberAccess(familyId, userId);
+    return result.member?.role || null;
+  } catch {
+    return null;
+  }
 }
 
 // 检查用户是否是家庭管理员
-export async function isFamilyAdmin(
-  userId: string,
-  familyId: string,
-  prisma: any
-): Promise<boolean> {
-  const role = await getUserFamilyRole(userId, familyId, prisma);
+export async function isFamilyAdmin(userId: string, familyId: string): Promise<boolean> {
+  const role = await getUserFamilyRole(userId, familyId);
   return role === FamilyMemberRole.ADMIN;
 }
 
-// 检查用户是否是家庭创建者
-export async function isFamilyCreator(
-  userId: string,
-  familyId: string,
-  prisma: any
-): Promise<boolean> {
-  const family = await prisma.family.findFirst({
-    where: {
-      id: familyId,
-      creatorId: userId,
-      deletedAt: null,
-    },
-  });
-
-  return !!family;
+// 检查用户是否是家庭创建者（Convex 版本）
+export async function isFamilyCreator(userId: string, familyId: string): Promise<boolean> {
+  const { familyRepository } = await import("@/lib/repositories");
+  try {
+    const family = await familyRepository.findById(familyId);
+    return family?.creatorId === userId;
+  } catch {
+    return false;
+  }
 }
 
 // 权限错误类

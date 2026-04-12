@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { Permission, hasPermission, getUserFamilyRole } from "@/lib/permissions";
+import { Permission, hasPermission, getUserFamilyRole, isFamilyCreator } from "@/lib/permissions";
 import { FamilyMemberRole } from "@/types/enums";
-import { prisma } from "@/lib/db";
 
 // 权限中间件配置
 export interface PermissionMiddlewareConfig {
@@ -60,7 +59,7 @@ export async function withPermissions(
         };
       }
 
-      const memberRole = await getUserFamilyRole(userId, familyId, prisma);
+      const memberRole = await getUserFamilyRole(userId, familyId);
       if (!memberRole) {
         return {
           success: false,
@@ -84,15 +83,8 @@ export async function withPermissions(
 
       // 4. 检查家庭创建者权限
       if (config.requireFamilyCreator) {
-        const family = await prisma.family.findFirst({
-          where: {
-            id: familyId,
-            creatorId: userId,
-            deletedAt: null,
-          },
-        });
-
-        if (!family) {
+        const isCreator = await isFamilyCreator(userId, familyId);
+        if (!isCreator) {
           return {
             success: false,
             response: NextResponse.json(

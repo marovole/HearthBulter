@@ -4,7 +4,6 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, testDatabaseConnection } from "@/lib/db";
 import { CacheService } from "@/lib/cache/redis-client";
 
 // 错误级别定义
