@@ -25,7 +25,7 @@ const loadFoods = async (ctx: { db: any }, foodIds: string[]) => {
       if (food) {
         foods.set(foodId, food);
       }
-    }),
+    })
   );
 
   return foods;
@@ -45,10 +45,7 @@ export const getPlan = query({
       .query("mealPlans")
       .withIndex("by_member", (q) => q.eq("memberId", args.memberId))
       .filter((q) =>
-        q.and(
-          q.gte(q.field("startDate"), args.startDate),
-          q.lte(q.field("endDate"), args.endDate),
-        ),
+        q.and(q.gte(q.field("startDate"), args.startDate), q.lte(q.field("endDate"), args.endDate))
       )
       .collect();
 
@@ -69,9 +66,7 @@ export const getPlan = query({
         totalCarbs: meals.reduce((acc, m) => acc + m.carbs, 0),
         totalFat: meals.reduce((acc, m) => acc + m.fat, 0),
         averageDailyCalories:
-          meals.length > 0
-            ? meals.reduce((acc, m) => acc + m.calories, 0) / (meals.length / 3)
-            : 0,
+          meals.length > 0 ? meals.reduce((acc, m) => acc + m.calories, 0) / (meals.length / 3) : 0,
         goalAchievementRate: 95,
       },
     };
@@ -123,12 +118,10 @@ export const getPlanDetails = query({
     const foods = await loadFoods(ctx, foodIds);
 
     const mealsWithIngredients = meals.map((meal) => {
-      const ingredients = (ingredientsByMeal.get(meal._id) ?? []).map(
-        (ingredient) => ({
-          ...ingredient,
-          food: foods.get(ingredient.foodId),
-        }),
-      );
+      const ingredients = (ingredientsByMeal.get(meal._id) ?? []).map((ingredient) => ({
+        ...ingredient,
+        food: foods.get(ingredient.foodId),
+      }));
       return { ...meal, ingredients };
     });
 
@@ -142,9 +135,7 @@ export const listByMembers = query({
     const memberSet = new Set(args.memberIds);
     const plans = await ctx.db.query("mealPlans").collect();
 
-    return plans.filter(
-      (plan) => memberSet.has(plan.memberId) && !plan.deletedAt,
-    );
+    return plans.filter((plan) => memberSet.has(plan.memberId) && !plan.deletedAt);
   },
 });
 
@@ -254,7 +245,7 @@ export const createPlanWithMeals = mutation({
           v.literal("BREAKFAST"),
           v.literal("LUNCH"),
           v.literal("DINNER"),
-          v.literal("SNACK"),
+          v.literal("SNACK")
         ),
         calories: v.number(),
         protein: v.number(),
@@ -266,10 +257,10 @@ export const createPlanWithMeals = mutation({
             v.object({
               foodId: v.id("foods"),
               amount: v.number(),
-            }),
-          ),
+            })
+          )
         ),
-      }),
+      })
     ),
   },
   handler: async (ctx, args) => {
@@ -330,7 +321,7 @@ export const createMeal = mutation({
       v.literal("BREAKFAST"),
       v.literal("LUNCH"),
       v.literal("DINNER"),
-      v.literal("SNACK"),
+      v.literal("SNACK")
     ),
     calories: v.number(),
     protein: v.number(),
@@ -342,8 +333,8 @@ export const createMeal = mutation({
         v.object({
           foodId: v.id("foods"),
           amount: v.number(),
-        }),
-      ),
+        })
+      )
     ),
   },
   handler: async (ctx, args) => {
@@ -446,16 +437,42 @@ export const getMealById = query({
   },
 });
 
+export const updatePlan = mutation({
+  args: {
+    planId: v.id("mealPlans"),
+    patch: v.any(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.planId, {
+      ...args.patch,
+      updatedAt: Date.now(),
+    });
+    return await ctx.db.get(args.planId);
+  },
+});
+
+export const deleteMeal = mutation({
+  args: { mealId: v.id("meals") },
+  handler: async (ctx, args) => {
+    const ingredients = await ctx.db
+      .query("mealIngredients")
+      .withIndex("by_meal", (q) => q.eq("mealId", args.mealId))
+      .collect();
+
+    for (const ing of ingredients) {
+      await ctx.db.delete(ing._id);
+    }
+
+    await ctx.db.delete(args.mealId);
+    return args.mealId;
+  },
+});
+
 export const updateMeal = mutation({
   args: {
     mealId: v.id("meals"),
     mealType: v.optional(
-      v.union(
-        v.literal("BREAKFAST"),
-        v.literal("LUNCH"),
-        v.literal("DINNER"),
-        v.literal("SNACK"),
-      ),
+      v.union(v.literal("BREAKFAST"), v.literal("LUNCH"), v.literal("DINNER"), v.literal("SNACK"))
     ),
     recipeId: v.optional(v.id("recipes")),
     calories: v.number(),
@@ -467,18 +484,13 @@ export const updateMeal = mutation({
         v.object({
           foodId: v.id("foods"),
           amount: v.number(),
-        }),
-      ),
+        })
+      )
     ),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    const mealType = args.mealType as
-      | "BREAKFAST"
-      | "LUNCH"
-      | "DINNER"
-      | "SNACK"
-      | undefined;
+    const mealType = args.mealType as "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK" | undefined;
 
     await ctx.db.patch(args.mealId, {
       mealType,

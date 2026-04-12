@@ -1,11 +1,11 @@
-import { NeonMealPlanRepository } from "./implementations/neon-meal-plan-repository";
+import { ConvexMealPlanRepository } from "./implementations/convex-meal-plan-repository";
 import type { MealPlanRepository } from "./interfaces/meal-plan-repository";
 
 let instance: MealPlanRepository | null = null;
 
 export function getMealPlanRepository(): MealPlanRepository {
   if (!instance) {
-    instance = new NeonMealPlanRepository();
+    instance = new ConvexMealPlanRepository();
   }
   return instance;
 }
@@ -17,7 +17,7 @@ export function getMealPlanRepository(): MealPlanRepository {
  * ```typescript
  * import { mealPlanRepository } from '@/lib/repositories/meal-plan-repository-singleton';
  *
- * const plan = await mealPlanRepository.getPlanById(id);
+ * const plan = await mealPlanRepository.getMealPlanById(id);
  * ```
  */
 export const mealPlanRepository = getMealPlanRepository();
