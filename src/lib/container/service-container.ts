@@ -6,7 +6,7 @@ import type { FamilyRepository } from "@/lib/repositories/interfaces/family-repo
 
 import { ConvexRecommendationRepository } from "@/lib/repositories/implementations/convex-recommendation-repository";
 import { ConvexNotificationRepository } from "@/lib/repositories/implementations/convex-notification-repository";
-import { NeonAnalyticsRepository } from "@/lib/repositories/implementations/neon-analytics-repository";
+import { ConvexAnalyticsRepository } from "@/lib/repositories/implementations/convex-analytics-repository";
 import { ConvexBudgetRepository } from "@/lib/repositories/implementations/convex-budget-repository";
 import { ConvexFamilyRepository } from "@/lib/repositories/implementations/convex-family-repository";
 
@@ -146,7 +146,7 @@ export class ServiceContainer {
       if (this.config.repositoryType === "mock") {
         throw new Error("Mock repositories not yet implemented");
       }
-      this.analyticsRepository = new NeonAnalyticsRepository();
+      this.analyticsRepository = new ConvexAnalyticsRepository();
     }
 
     return this.analyticsRepository;

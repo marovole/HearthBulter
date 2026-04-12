@@ -10,7 +10,7 @@
  */
 
 import type { AnalyticsRepository } from "@/lib/repositories/interfaces/analytics-repository";
-import { NeonAnalyticsRepository } from "@/lib/repositories/implementations/neon-analytics-repository";
+import { ConvexAnalyticsRepository } from "@/lib/repositories/implementations/convex-analytics-repository";
 import type { TrendDataType } from "@/lib/types/analytics";
 
 export interface TimeSeriesPoint {
@@ -418,7 +418,7 @@ let defaultAnalyticsRepository: AnalyticsRepository | undefined;
  */
 function getDefaultAnalyticsRepository(): AnalyticsRepository {
   if (!defaultAnalyticsRepository) {
-    defaultAnalyticsRepository = new NeonAnalyticsRepository();
+    defaultAnalyticsRepository = new ConvexAnalyticsRepository();
   }
   return defaultAnalyticsRepository;
 }

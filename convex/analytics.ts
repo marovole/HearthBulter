@@ -537,3 +537,233 @@ export const groupMealLogsByDate = query({
     return dateSet.size;
   },
 });
+
+// ============================================================================
+// 趋势分析相关查询
+// ============================================================================
+
+export const getMemberProfile = query({
+  args: { memberId: v.id("familyMembers") },
+  handler: async (ctx, args) => {
+    const member = await ctx.db.get(args.memberId);
+    if (!member || member.deletedAt) {
+      return null;
+    }
+    return {
+      id: member._id,
+      familyId: member.familyId,
+      name: member.name,
+      gender: member.gender ?? null,
+      birthDate: member.birthDate,
+      height: member.height ?? null,
+      weight: member.weight ?? null,
+      avatar: member.avatar ?? null,
+    };
+  },
+});
+
+export const aggregateMealLogs = query({
+  args: {
+    memberId: v.id("familyMembers"),
+    startDate: v.number(),
+    endDate: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const data = await ctx.db
+      .query("mealLogs")
+      .withIndex("by_member_date", (q) =>
+        q.eq("memberId", args.memberId).gte("date", args.startDate)
+      )
+      .filter((q) => q.eq(q.field("deletedAt"), undefined))
+      .collect();
+
+    const filtered = data.filter((m) => m.date <= args.endDate);
+    const uniqueDays = new Set(filtered.map((m) => m.date)).size;
+
+    const totalDays = Math.ceil((args.endDate - args.startDate) / (1000 * 60 * 60 * 24));
+
+    return {
+      totalDays: Math.max(totalDays, 1),
+      dataCompleteDays: uniqueDays,
+    };
+  },
+});
+
+export const fetchNutritionTrend = query({
+  args: {
+    memberId: v.id("familyMembers"),
+    metric: v.string(), // CALORIES, PROTEIN, CARBS, FAT
+    startDate: v.number(),
+    endDate: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const data = await ctx.db
+      .query("mealLogs")
+      .withIndex("by_member_date", (q) =>
+        q.eq("memberId", args.memberId).gte("date", args.startDate)
+      )
+      .filter((q) => q.eq(q.field("deletedAt"), undefined))
+      .collect();
+
+    const filtered = data.filter((m) => m.date <= args.endDate);
+
+    const fieldMap: Record<string, string> = {
+      CALORIES: "totalCalories",
+      PROTEIN: "totalProtein",
+      CARBS: "totalCarbs",
+      FAT: "totalFat",
+    };
+
+    const field = fieldMap[args.metric];
+    if (!field) return [];
+
+    const dailyMap = new Map<number, number>();
+    for (const row of filtered) {
+      const value = (row as unknown as Record<string, number>)[field] ?? 0;
+      dailyMap.set(row.date, (dailyMap.get(row.date) ?? 0) + value);
+    }
+
+    return Array.from(dailyMap.entries()).map(([date, value]) => ({
+      date,
+      value,
+    }));
+  },
+});
+
+export const fetchHealthMetricTrend = query({
+  args: {
+    memberId: v.id("familyMembers"),
+    metric: v.string(), // WEIGHT, BODY_FAT, MUSCLE_MASS, BLOOD_PRESSURE, HEART_RATE
+    startDate: v.number(),
+    endDate: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const data = await ctx.db
+      .query("healthData")
+      .withIndex("by_member", (q) => q.eq("memberId", args.memberId))
+      .filter((q) => q.eq(q.field("deletedAt"), undefined))
+      .collect();
+
+    const fieldMap: Record<string, string> = {
+      WEIGHT: "weight",
+      BODY_FAT: "bodyFat",
+      MUSCLE_MASS: "muscleMass",
+      BLOOD_PRESSURE: "bloodPressureSystolic",
+      HEART_RATE: "heartRate",
+    };
+
+    const field = fieldMap[args.metric];
+    if (!field) return [];
+
+    return data
+      .filter(
+        (row) =>
+          row.measuredAt >= args.startDate &&
+          row.measuredAt <= args.endDate &&
+          (row as unknown as Record<string, number | undefined>)[field] !== undefined
+      )
+      .map((row) => ({
+        date: row.measuredAt,
+        value: (row as unknown as Record<string, number>)[field] ?? 0,
+      }))
+      .sort((a, b) => a.date - b.date);
+  },
+});
+
+export const fetchScoreTrend = query({
+  args: {
+    memberId: v.id("familyMembers"),
+    startDate: v.number(),
+    endDate: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const data = await ctx.db
+      .query("healthScores")
+      .withIndex("by_member_date", (q) =>
+        q.eq("memberId", args.memberId).gte("date", args.startDate)
+      )
+      .filter((q) => q.eq(q.field("deletedAt"), undefined))
+      .collect();
+
+    return data
+      .filter((s) => s.date <= args.endDate)
+      .map((row) => ({
+        date: row.date,
+        value: row.overallScore,
+      }))
+      .sort((a, b) => a.date - b.date);
+  },
+});
+
+// ============================================================================
+// 报告相关查询
+// ============================================================================
+
+export const saveReportSnapshot = mutation({
+  args: {
+    id: v.string(),
+    memberId: v.id("familyMembers"),
+    period: v.object({
+      startDate: v.number(),
+      endDate: v.number(),
+      label: v.string(),
+    }),
+    payload: v.record(v.string(), v.any()),
+    status: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    return await ctx.db.insert("healthReports", {
+      memberId: args.memberId,
+      reportType: "SNAPSHOT",
+      startDate: args.period.startDate,
+      endDate: args.period.endDate,
+      title: args.period.label,
+      summary: JSON.stringify(args.payload),
+      htmlContent: "",
+      dataSnapshot: JSON.stringify(args.payload),
+      insights: "",
+      overallScore: 0,
+      status: args.status,
+      createdAt: now,
+      updatedAt: now,
+    });
+  },
+});
+
+export const listReportSnapshots = query({
+  args: {
+    memberId: v.id("familyMembers"),
+    limit: v.optional(v.number()),
+    offset: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const data = await ctx.db
+      .query("healthReports")
+      .withIndex("by_member", (q) => q.eq("memberId", args.memberId))
+      .filter((q) => q.eq(q.field("deletedAt"), undefined))
+      .collect();
+
+    const sorted = data.sort((a, b) => b.createdAt - a.createdAt);
+    const offset = args.offset ?? 0;
+    const limit = args.limit ?? 20;
+    const items = sorted.slice(offset, offset + limit);
+
+    return {
+      items: items.map((row) => ({
+        id: row._id,
+        memberId: row.memberId,
+        period: {
+          startDate: row.startDate,
+          endDate: row.endDate,
+          label: row.title,
+        },
+        payload: JSON.parse(row.dataSnapshot || "{}"),
+        status: row.status,
+        createdAt: row.createdAt,
+      })),
+      total: sorted.length,
+      hasMore: offset + items.length < sorted.length,
+    };
+  },
+});
