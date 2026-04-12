@@ -1,24 +1,9 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
-
-/**
- * 验证用户是否有权限访问成员的健康数据
- */
+import { auth } from "@/lib/auth";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-async function verifyMemberAccess(
-  memberId: string,
-  clerkId: string,
-  convexClient: any,
-  api: any
-): Promise<boolean> {
-  const result = await convexClient.query(api.members.verifyAccess, {
-    memberId: memberId as any,
-    clerkId,
-  });
-  return Boolean(result?.hasAccess);
-}
 
 /**
  * GET /api/dashboard/nutrition-analysis
@@ -26,8 +11,8 @@ async function verifyMemberAccess(
  */
 export async function GET(request: NextRequest) {
   try {
-    const clerkId = request.headers.get("x-auth-user-id");
-    if (!clerkId) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
@@ -40,10 +25,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "缺少成员ID参数" }, { status: 400 });
     }
 
-    const { api, convexClient } = await import("@/lib/convex-client");
-
     // 验证权限
-    const hasAccess = await verifyMemberAccess(memberId, clerkId, convexClient, api);
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限访问该成员的营养分析数据" }, { status: 403 });
     }

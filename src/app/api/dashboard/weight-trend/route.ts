@@ -1,24 +1,13 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
+import { convexClient, api } from "@/lib/convex-client";
 
-/**
- * 验证用户是否有权限访问成员的健康数据
- */
+// Convex ID type helper
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-async function verifyMemberAccess(
-  memberId: string,
-  clerkId: string,
-  convexClient: any,
-  api: any
-): Promise<boolean> {
-  const result = await convexClient.query(api.members.verifyAccess, {
-    memberId: memberId as any,
-    clerkId,
-  });
-  return Boolean(result?.hasAccess);
-}
 
 /**
  * GET /api/dashboard/weight-trend
@@ -26,8 +15,8 @@ async function verifyMemberAccess(
  */
 export async function GET(request: NextRequest) {
   try {
-    const clerkId = request.headers.get("x-auth-user-id");
-    if (!clerkId) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
@@ -40,10 +29,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "缺少成员ID参数" }, { status: 400 });
     }
 
-    const { api, convexClient } = await import("@/lib/convex-client");
-
     // 验证权限
-    const hasAccess = await verifyMemberAccess(memberId, clerkId, convexClient, api);
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限访问该成员的体重趋势数据" }, { status: 403 });
     }
@@ -51,11 +38,12 @@ export async function GET(request: NextRequest) {
     const endAt = Date.now();
     const startAt = endAt - days * 24 * 60 * 60 * 1000;
 
-    const records = await convexClient.query(api.health.listByMemberDateRange, {
-      memberId: memberId as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+    const records = (await convexClient.query(api.health.listByMemberDateRange, {
+      memberId: memberId as Id<"familyMembers">,
       startDate: startAt,
       endDate: endAt,
-    });
+    })) as any[];
 
     const weightPoints = (records || [])
       .filter((r: any) => typeof r?.weight === "number")
@@ -86,8 +74,8 @@ export async function GET(request: NextRequest) {
     const max = Math.max(...weights);
     const average = weights.reduce((a: number, b: number) => a + b, 0) / weights.length;
 
-    const first = weightPoints[0];
-    const last = weightPoints[weightPoints.length - 1];
+    const first = weightPoints[0]!;
+    const last = weightPoints[weightPoints.length - 1]!;
     const change = last.weight - first.weight;
     const changePercent = first.weight ? (change / first.weight) * 100 : 0;
 

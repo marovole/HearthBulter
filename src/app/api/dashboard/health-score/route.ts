@@ -1,24 +1,13 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
+import { convexClient, api } from "@/lib/convex-client";
 
-/**
- * 验证用户是否有权限访问成员的健康数据
- */
+// Convex ID type helper
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-async function verifyMemberAccess(
-  memberId: string,
-  clerkId: string,
-  convexClient: any,
-  api: any
-): Promise<boolean> {
-  const result = await convexClient.query(api.members.verifyAccess, {
-    memberId: memberId as any,
-    clerkId,
-  });
-  return Boolean(result?.hasAccess);
-}
 
 function getBmiCategory(bmi: number): "underweight" | "normal" | "overweight" | "obese" {
   if (bmi < 18.5) return "underweight";
@@ -33,8 +22,8 @@ function getBmiCategory(bmi: number): "underweight" | "normal" | "overweight" | 
  */
 export async function GET(request: NextRequest) {
   try {
-    const clerkId = request.headers.get("x-auth-user-id");
-    if (!clerkId) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
@@ -46,22 +35,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "缺少成员ID参数" }, { status: 400 });
     }
 
-    const { api, convexClient } = await import("@/lib/convex-client");
-
     // 验证权限
-    const hasAccess = await verifyMemberAccess(memberId, clerkId, convexClient, api);
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限访问该成员的健康评分数据" }, { status: 403 });
     }
 
-    const member = await convexClient.query(api.members.getById, {
-      memberId: memberId as any,
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+    const member = (await convexClient.query(api.members.getById, {
+      memberId: memberId as Id<"familyMembers">,
+    })) as any;
 
-    const latestMetrics = await convexClient.query(api.health.getMetrics, {
-      memberId: memberId as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex 返回类型推断受限
+    const latestMetrics = (await convexClient.query(api.health.getMetrics, {
+      memberId: memberId as Id<"familyMembers">,
       limit: 1,
-    });
+    })) as any;
 
     const latest = Array.isArray(latestMetrics) ? latestMetrics[0] : null;
     const weight: number | null =
