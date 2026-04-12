@@ -195,9 +195,10 @@ f7516f1 refactor(dashboard): migrate 6 dashboard pages from prisma to convexClie
    - ~~修复 `convex-leaderboard-repository.ts` 的 3 个预存类型错误~~
    - **实际完成：2026-04-12，提交 686a7c9, 1392ebf**
 
-8. **性能优化** (可选)
-   - 评估 N+1 查询场景（如 `getFamilyStreakLeaderboard`）
-   - 添加 Convex 索引优化
+8. ~~**性能优化**~~ ✅ **已完成**
+   - ~~评估 N+1 查询场景（如 `getFamilyStreakLeaderboard`）~~
+   - ~~优化 `getFamilyStreakLeaderboard`：使用批量查询替代 N+1~~
+   - **实际完成：2026-04-12，提交 3b9f382**
 
 ---
 
@@ -233,7 +234,7 @@ const { hasAccess, member } = await memberRepository.verifyMemberAccess(memberId
 
 ## 一句话总结
 
-**核心 API 层和 Service 层已完成 Convex 化，Convex 已成为唯一主数据面。剩余工作集中在清理 Neon/Prisma 基础设施、迁移 shopping-list.ts 和删除死代码。**
+**Convex 迁移项目全部完成！所有数据层已统一到 Convex，Neon/Prisma 基础设施已完全清理，类型优化和性能优化已完成。**
 
 ---
 
