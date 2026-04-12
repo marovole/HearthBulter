@@ -1082,4 +1082,45 @@ export default defineSchema({
   })
     .index("by_member", ["memberId"])
     .index("by_member_type", ["memberId", "reminderType"]),
+
+  // ==================== AI & Dietary ====================
+  aiAdvice: defineTable({
+    memberId: v.string(),
+    type: v.string(),
+    content: v.any(),
+    prompt: v.string(),
+    tokens: v.number(),
+    feedback: v.optional(v.any()),
+    generatedAt: v.number(),
+  })
+    .index("by_member", ["memberId"])
+    .index("by_member_type", ["memberId", "type"]),
+
+  aiConversations: defineTable({
+    memberId: v.string(),
+    title: v.string(),
+    messages: v.any(),
+    status: v.string(),
+    tokens: v.number(),
+    lastMessageAt: v.optional(v.number()),
+  })
+    .index("by_member", ["memberId"])
+    .index("by_member_status", ["memberId", "status"]),
+
+  promptTemplates: defineTable({
+    name: v.string(),
+    type: v.string(),
+    template: v.string(),
+    version: v.number(),
+    parameters: v.optional(v.any()),
+    isActive: v.boolean(),
+  })
+    .index("by_type", ["type"])
+    .index("by_name", ["name"]),
+
+  dietaryPreferences: defineTable({
+    memberId: v.string(),
+    type: v.string(),
+    strictness: v.optional(v.string()),
+  }).index("by_member", ["memberId"]),
 });
