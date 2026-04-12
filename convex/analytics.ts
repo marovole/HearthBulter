@@ -459,6 +459,25 @@ export const getTrackingStreak = query({
   },
 });
 
+// 批量获取家庭成员的 streak 数据（优化 N+1 查询）
+export const getTrackingStreaksByMembers = query({
+  args: {
+    memberIds: v.array(v.id("familyMembers")),
+  },
+  handler: async (ctx, args) => {
+    const results = await Promise.all(
+      args.memberIds.map(async (memberId) => {
+        const data = await ctx.db
+          .query("trackingStreaks")
+          .withIndex("by_member", (q) => q.eq("memberId", memberId))
+          .unique();
+        return { memberId, streak: data ?? null };
+      })
+    );
+    return results;
+  },
+});
+
 export const upsertTrackingStreak = mutation({
   args: {
     memberId: v.id("familyMembers"),

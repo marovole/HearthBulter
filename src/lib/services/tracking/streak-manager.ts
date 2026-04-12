@@ -282,6 +282,7 @@ export async function getCheckInCalendar(memberId: string, year: number, month: 
 
 /**
  * 获取打卡排行榜（家庭成员间的对比）
+ * 优化：使用批量查询避免 N+1 问题
  */
 export async function getFamilyStreakLeaderboard(familyId: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -289,24 +290,33 @@ export async function getFamilyStreakLeaderboard(familyId: string) {
     familyId: toFamilyId(familyId),
   })) as any as FamilyMemberRecord[];
 
-  const leaderboard = await Promise.all(
-    members.map(async (member) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const streak = (await convexClient.query(api.analytics.getTrackingStreak, {
-        memberId: member._id,
-      })) as any as TrackingStreakRecord | null;
+  if (members.length === 0) return [];
 
-      return {
-        memberId: member.id ?? (member._id as string),
-        name: member.name,
-        avatar: member.avatar,
-        currentStreak: streak?.currentStreak ?? 0,
-        longestStreak: streak?.longestStreak ?? 0,
-        totalDays: streak?.totalDays ?? 0,
-        badges: streak ? parseBadgeIds(streak.badges) : [],
-      };
-    })
-  );
+  // 优化：批量获取所有成员的 streak 数据（1 次查询替代 N 次）
+  const memberIds = members.map((m) => m._id);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const streaksResult = (await convexClient.query(api.analytics.getTrackingStreaksByMembers, {
+    memberIds,
+  })) as any as Array<{ memberId: string; streak: TrackingStreakRecord | null }>;
+
+  // 构建 streak 查找映射
+  const streakMap = new Map<string, TrackingStreakRecord | null>();
+  for (const result of streaksResult) {
+    streakMap.set(result.memberId, result.streak);
+  }
+
+  const leaderboard = members.map((member) => {
+    const streak = streakMap.get(member._id as string) ?? null;
+    return {
+      memberId: member.id ?? (member._id as string),
+      name: member.name,
+      avatar: member.avatar,
+      currentStreak: streak?.currentStreak ?? 0,
+      longestStreak: streak?.longestStreak ?? 0,
+      totalDays: streak?.totalDays ?? 0,
+      badges: streak ? parseBadgeIds(streak.badges) : [],
+    };
+  });
 
   return leaderboard.sort((a, b) => {
     if (b.currentStreak !== a.currentStreak) {
