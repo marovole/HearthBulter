@@ -190,11 +190,12 @@ f7516f1 refactor(dashboard): migrate 6 dashboard pages from prisma to convexClie
 
 ### 低优先级（可选）
 
-7. **类型完善**
-   - 清理剩余的 `@ts-nocheck` 注释
-   - 修复 `convex-leaderboard-repository.ts` 的 3 个预存类型错误
+7. ~~**类型完善**~~ ✅ **已完成**
+   - ~~清理剩余的 `@ts-nocheck` 注释~~ (从 17 个减少到 10 个)
+   - ~~修复 `convex-leaderboard-repository.ts` 的 3 个预存类型错误~~
+   - **实际完成：2026-04-12，提交 686a7c9, 1392ebf**
 
-8. **性能优化**
+8. **性能优化** (可选)
    - 评估 N+1 查询场景（如 `getFamilyStreakLeaderboard`）
    - 添加 Convex 索引优化
 
