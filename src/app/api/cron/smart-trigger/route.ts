@@ -3,7 +3,6 @@
 // 每日运行，遍历用户计算触发分数
 // ============================================================================
 
-// @ts-nocheck - Convex returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { smartTriggerEngine } from "@/lib/services/smart-trigger";
 import { convexClient } from "@/lib/convex-client";

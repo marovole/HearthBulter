@@ -3,7 +3,6 @@
 // 处理 OAuth 授权码交换和 Token 存储
 // ============================================================================
 
-// @ts-nocheck - Convex returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { InstacartAdapter } from "@/lib/services/ecommerce/instacart-adapter";

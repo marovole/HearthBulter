@@ -3,7 +3,6 @@
 // 综合多因子计算触发分数，决定是否生成周计划
 // ============================================================================
 
-// @ts-nocheck - Convex returns untyped data, pending proper type definitions
 import { convexClient } from "@/lib/convex-client";
 import { asConvexQueryReference, asConvexMutationReference } from "@/lib/convex-reference";
 import {
@@ -201,7 +200,15 @@ export class SmartTriggerEngine {
       };
     }
 
-    const lastOrderDate = new Date(deliveredOrders[0].createdAt);
+    const firstOrder = deliveredOrders[0];
+    if (!firstOrder?.createdAt) {
+      return {
+        lastOrderDate: new Date(),
+        averageOrderInterval: 7,
+        daysSinceLastOrder: 999,
+      };
+    }
+    const lastOrderDate = new Date(firstOrder.createdAt);
     const daysSinceLastOrder = Math.floor(
       (Date.now() - lastOrderDate.getTime()) / (24 * 60 * 60 * 1000)
     );
@@ -210,12 +217,16 @@ export class SmartTriggerEngine {
     if (deliveredOrders.length >= 2) {
       const intervals: number[] = [];
       for (let i = 0; i < deliveredOrders.length - 1; i++) {
-        const interval = Math.floor(
-          (deliveredOrders[i].createdAt - deliveredOrders[i + 1].createdAt) / (24 * 60 * 60 * 1000)
-        );
+        const current = deliveredOrders[i];
+        const next = deliveredOrders[i + 1];
+        if (!current?.createdAt || !next?.createdAt) continue;
+        const interval = Math.floor((current.createdAt - next.createdAt) / (24 * 60 * 60 * 1000));
         intervals.push(interval);
       }
-      averageOrderInterval = Math.round(intervals.reduce((a, b) => a + b, 0) / intervals.length);
+      averageOrderInterval =
+        intervals.length > 0
+          ? Math.round(intervals.reduce((a, b) => a + b, 0) / intervals.length)
+          : 7;
     }
 
     return {

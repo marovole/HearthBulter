@@ -3,7 +3,6 @@
 // 生成周计划 HTML 邮件并发送
 // ============================================================================
 
-// @ts-nocheck - Convex returns untyped data, pending proper type definitions
 import { convexClient } from "@/lib/convex-client";
 import { asConvexQueryReference, asConvexMutationReference } from "@/lib/convex-reference";
 import { EmailService } from "./email-service";
@@ -146,7 +145,8 @@ export class WeeklyPlanEmailService {
 
     const mealsByDate = new Map<string, any[]>();
     for (const meal of mealPlan.meals || []) {
-      const dateKey = new Date(meal.date).toISOString().split("T")[0];
+      const dateKey = new Date(meal.date).toISOString().split("T")[0] ?? "";
+      if (!dateKey) continue;
       if (!mealsByDate.has(dateKey)) {
         mealsByDate.set(dateKey, []);
       }

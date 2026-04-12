@@ -3,7 +3,6 @@
 // 从周计划提取食材，匹配商品，创建 Instacart 购物车
 // ============================================================================
 
-// @ts-nocheck - Convex returns untyped data, pending proper type definitions
 import { convexClient } from "@/lib/convex-client";
 import { asConvexQueryReference, asConvexMutationReference } from "@/lib/convex-reference";
 import { InstacartAdapter, InstacartCart } from "./ecommerce/instacart-adapter";

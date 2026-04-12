@@ -3,7 +3,6 @@
 // 创建、更新、查询购物车
 // ============================================================================
 
-// @ts-nocheck - Convex returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import {
