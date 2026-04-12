@@ -1,11 +1,11 @@
-import { NeonDeviceRepository } from "./implementations/neon-device-repository";
+import { ConvexDeviceRepository } from "./implementations/convex-device-repository";
 import type { DeviceRepository } from "./interfaces/device-repository";
 
 let instance: DeviceRepository | null = null;
 
 export function getDeviceRepository(): DeviceRepository {
   if (!instance) {
-    instance = new NeonDeviceRepository();
+    instance = new ConvexDeviceRepository();
   }
   return instance;
 }
