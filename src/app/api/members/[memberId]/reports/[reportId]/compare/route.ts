@@ -1,38 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { neonAdapter } from "@/lib/db/neon-adapter";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
+import { convexClient, api } from "@/lib/convex-client";
 
 export const dynamic = "force-dynamic";
 
-interface FamilyMember {
-  id: string;
-  userId: string | null;
-  familyId: string;
-  role?: string;
-}
-
-interface Family {
-  id: string;
-  creatorId: string;
-}
-
-interface MedicalReport {
-  id: string;
-  memberId: string;
-  reportDate: string | null;
-  createdAt: string;
-  deletedAt: string | null;
-}
-
-interface MedicalIndicator {
-  id: string;
-  reportId: string;
-  indicatorType: string;
-  name: string;
-  value: number;
-  unit: string;
-  status: string;
-}
+// Convex ID type helper
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 type IndicatorType =
   | "TOTAL_CHOLESTEROL"
@@ -56,45 +30,6 @@ type IndicatorType =
   | "PLATELET"
   | "OTHER";
 
-async function verifyMemberAccess(
-  memberId: string,
-  userId: string
-): Promise<{ hasAccess: boolean }> {
-  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
-    where: { id: memberId, deletedAt: null },
-  });
-
-  if (!member) {
-    return { hasAccess: false };
-  }
-
-  const family = await neonAdapter.family.findFirst<Family>({
-    where: { id: member.familyId },
-  });
-
-  const isCreator = family?.creatorId === userId;
-
-  let isAdmin = false;
-  if (!isCreator) {
-    const adminMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
-      where: {
-        familyId: member.familyId,
-        userId: userId,
-        role: "ADMIN",
-        deletedAt: null,
-      },
-    });
-
-    isAdmin = !!adminMember;
-  }
-
-  const isSelf = member.userId === userId;
-
-  return {
-    hasAccess: isCreator || isAdmin || isSelf,
-  };
-}
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ memberId: string; reportId: string }> }
@@ -107,34 +42,48 @@ export async function GET(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限查看该报告" }, { status: 403 });
     }
 
-    const currentReport = await neonAdapter.medicalReport.findFirst<MedicalReport>({
-      where: { id: reportId, memberId, deletedAt: null },
+    const currentReport = await convexClient.query(api.health.getMedicalReportById, {
+      reportId: reportId as Id<"medicalReports">,
     });
 
-    if (!currentReport) {
+    if (!currentReport || currentReport.memberId !== memberId) {
       return NextResponse.json({ error: "报告不存在" }, { status: 404 });
     }
 
-    const currentIndicators = await neonAdapter.medicalIndicator.findMany<MedicalIndicator>({
-      where: { reportId },
+    const currentIndicators = await convexClient.query(api.health.listIndicatorsByReport, {
+      reportId: reportId as Id<"medicalReports">,
     });
 
-    const previousReports = await neonAdapter.medicalReport.findMany<MedicalReport>({
-      where: {
-        memberId,
-        deletedAt: null,
-        id: { not: reportId },
-        ...(currentReport.reportDate ? { reportDate: { lt: currentReport.reportDate } } : {}),
-      },
-      orderBy: [{ reportDate: "desc" }, { createdAt: "desc" }],
-      take: 1,
+    // 获取所有报告并客户端过滤找到上一个报告
+    const allReports = await convexClient.query(api.health.listMedicalReportsByMember, {
+      memberId: memberId as Id<"familyMembers">,
+      limit: 100, // 获取足够多的历史记录
     });
+
+    // 客户端过滤：排除当前报告，且报告日期早于当前报告
+    const previousReports = allReports
+      .filter((r) => {
+        if (r._id === reportId) return false;
+        if (!currentReport.reportDate) return true; // 如果当前报告无日期，取任意历史报告
+        if (!r.reportDate) return false;
+        return new Date(r.reportDate) < new Date(currentReport.reportDate);
+      })
+      .sort((a, b) => {
+        // 按报告日期降序，然后按创建日期降序
+        const dateA = a.reportDate
+          ? new Date(a.reportDate).getTime()
+          : new Date(a._creationTime).getTime();
+        const dateB = b.reportDate
+          ? new Date(b.reportDate).getTime()
+          : new Date(b._creationTime).getTime();
+        return dateB - dateA;
+      });
 
     const previousReport = previousReports?.[0];
 
@@ -142,15 +91,15 @@ export async function GET(
       return NextResponse.json({
         message: "暂无历史报告可对比",
         current: {
-          reportId: currentReport.id,
+          reportId: currentReport._id,
           reportDate: currentReport.reportDate,
           indicators: currentIndicators || [],
         },
       });
     }
 
-    const previousIndicators = await neonAdapter.medicalIndicator.findMany<MedicalIndicator>({
-      where: { reportId: previousReport.id },
+    const previousIndicators = await convexClient.query(api.health.listIndicatorsByReport, {
+      reportId: previousReport._id as Id<"medicalReports">,
     });
 
     const comparison: Array<{
@@ -264,14 +213,14 @@ export async function GET(
 
     return NextResponse.json({
       previous: {
-        reportId: previousReport.id,
+        reportId: previousReport._id,
         reportDate: previousReport.reportDate,
-        createdAt: previousReport.createdAt,
+        createdAt: new Date(previousReport._creationTime).toISOString(),
       },
       current: {
-        reportId: currentReport.id,
+        reportId: currentReport._id,
         reportDate: currentReport.reportDate,
-        createdAt: currentReport.createdAt,
+        createdAt: new Date(currentReport._creationTime).toISOString(),
       },
       comparison,
       summary: {

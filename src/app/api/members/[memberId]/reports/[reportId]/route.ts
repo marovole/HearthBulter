@@ -1,86 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { neonAdapter } from "@/lib/db/neon-adapter";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
+import { convexClient, api } from "@/lib/convex-client";
 import { FileStorageService } from "@/lib/services/file-storage-service";
 
 export const dynamic = "force-dynamic";
 
-interface FamilyMember {
-  id: string;
-  userId: string | null;
-  familyId: string;
-  role?: string;
-}
-
-interface Family {
-  id: string;
-  creatorId: string;
-}
-
-interface MedicalReport {
-  id: string;
-  memberId: string;
-  fileUrl: string | null;
-  reportDate: string | null;
-  institution: string | null;
-  reportType: string | null;
-  isCorrected: boolean;
-  correctedAt: string | null;
-  deletedAt: string | null;
-}
-
-interface MedicalIndicator {
-  id: string;
-  reportId: string;
-  indicatorType: string;
-  name: string;
-  value: number;
-  unit: string;
-  referenceRange: string | null;
-  isAbnormal: boolean;
-  status: string;
-  isCorrected: boolean;
-  originalValue: number | null;
-}
-
-async function verifyMemberAccess(
-  memberId: string,
-  userId: string
-): Promise<{ hasAccess: boolean }> {
-  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
-    where: { id: memberId, deletedAt: null },
-  });
-
-  if (!member) {
-    return { hasAccess: false };
-  }
-
-  const family = await neonAdapter.family.findFirst<Family>({
-    where: { id: member.familyId },
-  });
-
-  const isCreator = family?.creatorId === userId;
-
-  let isAdmin = false;
-  if (!isCreator) {
-    const adminMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
-      where: {
-        familyId: member.familyId,
-        userId: userId,
-        role: "ADMIN",
-        deletedAt: null,
-      },
-    });
-
-    isAdmin = !!adminMember;
-  }
-
-  const isSelf = member.userId === userId;
-
-  return {
-    hasAccess: isCreator || isAdmin || isSelf,
-  };
-}
+// Convex ID type helper
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 export async function GET(
   request: NextRequest,
@@ -94,27 +21,26 @@ export async function GET(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限查看该报告" }, { status: 403 });
     }
 
-    const report = await neonAdapter.medicalReport.findFirst<MedicalReport>({
-      where: { id: reportId, memberId, deletedAt: null },
+    const report = await convexClient.query(api.health.getMedicalReportById, {
+      reportId: reportId as Id<"medicalReports">,
     });
 
-    if (!report) {
+    if (!report || report.memberId !== memberId) {
       return NextResponse.json({ error: "报告不存在" }, { status: 404 });
     }
 
-    const indicators = await neonAdapter.medicalIndicator.findMany<MedicalIndicator>({
-      where: { reportId },
-      orderBy: [{ indicatorType: "asc" }, { createdAt: "asc" }],
+    const indicators = await convexClient.query(api.health.listIndicatorsByReport, {
+      reportId: reportId as Id<"medicalReports">,
     });
 
     return NextResponse.json(
-      { data: { ...report, indicators: indicators || [] } },
+      { data: { ...report, id: report._id, indicators: indicators || [] } },
       { status: 200 }
     );
   } catch (error) {
@@ -135,17 +61,17 @@ export async function PATCH(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限修改该报告" }, { status: 403 });
     }
 
-    const report = await neonAdapter.medicalReport.findFirst<MedicalReport>({
-      where: { id: reportId, memberId, deletedAt: null },
+    const report = await convexClient.query(api.health.getMedicalReportById, {
+      reportId: reportId as Id<"medicalReports">,
     });
 
-    if (!report) {
+    if (!report || report.memberId !== memberId) {
       return NextResponse.json({ error: "报告不存在" }, { status: 404 });
     }
 
@@ -176,23 +102,21 @@ export async function PATCH(
 
         if (!id) continue;
 
-        const indicator = await neonAdapter.medicalIndicator.findFirst<MedicalIndicator>({
-          where: { id, reportId },
+        const indicator = await convexClient.query(api.health.getMedicalIndicatorById, {
+          indicatorId: id as Id<"medicalIndicators">,
         });
 
-        if (indicator) {
-          await neonAdapter.medicalIndicator.update({
-            where: { id },
-            data: {
-              value: value !== undefined ? value : indicator.value,
-              unit: unit || indicator.unit,
-              referenceRange:
-                referenceRange !== undefined ? referenceRange : indicator.referenceRange,
-              status: status || indicator.status,
-              isAbnormal: status !== "NORMAL",
-              isCorrected: true,
-              originalValue: indicator.originalValue || indicator.value,
-            },
+        if (indicator && indicator.reportId === reportId) {
+          await convexClient.mutation(api.health.updateMedicalIndicator, {
+            indicatorId: id as Id<"medicalIndicators">,
+            value: value !== undefined ? value : indicator.value,
+            unit: unit || indicator.unit,
+            referenceRange:
+              referenceRange !== undefined ? referenceRange : indicator.referenceRange,
+            status: status || indicator.status,
+            isAbnormal: status !== "NORMAL",
+            isCorrected: true,
+            originalValue: indicator.originalValue || indicator.value,
           });
         }
       }
@@ -202,23 +126,25 @@ export async function PATCH(
     }
 
     if (Object.keys(updateData).length > 0) {
-      await neonAdapter.medicalReport.update({
-        where: { id: reportId },
-        data: updateData,
+      await convexClient.mutation(api.health.updateMedicalReport, {
+        reportId: reportId as Id<"medicalReports">,
+        ...updateData,
       });
     }
 
-    const updatedReport = await neonAdapter.medicalReport.findFirst<MedicalReport>({
-      where: { id: reportId },
+    const updatedReport = await convexClient.query(api.health.getMedicalReportById, {
+      reportId: reportId as Id<"medicalReports">,
     });
 
-    const updatedIndicators = await neonAdapter.medicalIndicator.findMany<MedicalIndicator>({
-      where: { reportId },
-      orderBy: [{ indicatorType: "asc" }, { createdAt: "asc" }],
+    const updatedIndicators = await convexClient.query(api.health.listIndicatorsByReport, {
+      reportId: reportId as Id<"medicalReports">,
     });
 
     return NextResponse.json(
-      { message: "报告修正成功", data: { ...updatedReport, indicators: updatedIndicators || [] } },
+      {
+        message: "报告修正成功",
+        data: { ...updatedReport, id: updatedReport?._id, indicators: updatedIndicators || [] },
+      },
       { status: 200 }
     );
   } catch (error) {
@@ -242,17 +168,17 @@ export async function DELETE(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限删除该报告" }, { status: 403 });
     }
 
-    const report = await neonAdapter.medicalReport.findFirst<MedicalReport>({
-      where: { id: reportId, memberId, deletedAt: null },
+    const report = await convexClient.query(api.health.getMedicalReportById, {
+      reportId: reportId as Id<"medicalReports">,
     });
 
-    if (!report) {
+    if (!report || report.memberId !== memberId) {
       return NextResponse.json({ error: "报告不存在" }, { status: 404 });
     }
 
@@ -267,14 +193,22 @@ export async function DELETE(
       console.warn("删除云存储文件失败（继续删除数据库记录）:", error);
     }
 
-    const now = new Date().toISOString();
-
-    await neonAdapter.medicalReport.update({
-      where: { id: reportId },
-      data: { deletedAt: now },
+    // 获取所有指标 ID 并批量删除
+    const indicators = await convexClient.query(api.health.listIndicatorsByReport, {
+      reportId: reportId as Id<"medicalReports">,
     });
 
-    await neonAdapter.medicalIndicator.deleteMany({ where: { reportId } });
+    if (indicators && indicators.length > 0) {
+      const indicatorIds = indicators.map((i) => i._id as Id<"medicalIndicators">);
+      await convexClient.mutation(api.health.deleteManyMedicalIndicators, {
+        indicatorIds,
+      });
+    }
+
+    // 软删除报告
+    await convexClient.mutation(api.health.deleteMedicalReport, {
+      reportId: reportId as Id<"medicalReports">,
+    });
 
     return NextResponse.json({ message: "报告删除成功" }, { status: 200 });
   } catch (error) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { neonAdapter } from "@/lib/db/neon-adapter";
+import { convexClient, api } from "@/lib/convex-client";
 import { safeParseArray, safeParseObject } from "@/lib/utils/json-helpers";
+import type { Id, Doc } from "@/convex/_generated/dataModel";
 
 interface UserPreference {
   memberId: string;
@@ -32,7 +33,7 @@ interface UserPreference {
  * GET /api/user/preferences
  * 获取用户偏好设置
  *
- * Migrated from Supabase to Neon
+ * Migrated from Neon to Convex
  */
 
 // Force dynamic rendering
@@ -46,9 +47,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "memberId is required" }, { status: 400 });
     }
 
-    const preferences = await neonAdapter.userPreference.findUnique<UserPreference>({
-      where: { memberId },
-    });
+    const preferences = await convexClient.query<Doc<"userPreferences"> | null>(
+      api.recommendations.getUserPreference,
+      {
+        memberId: memberId as Id<"familyMembers">,
+      }
+    );
 
     if (!preferences) {
       return NextResponse.json({
@@ -82,11 +86,29 @@ export async function GET(request: NextRequest) {
     }
 
     const normalizedPreferences = {
-      ...preferences,
+      memberId,
+      spiceLevel: "MEDIUM",
+      sweetness: "MEDIUM",
+      saltiness: "MEDIUM",
       preferredCuisines: safeParseArray(preferences.preferredCuisines),
       avoidedIngredients: safeParseArray(preferences.avoidedIngredients),
       preferredIngredients: safeParseArray(preferences.preferredIngredients),
+      maxCookTime: preferences.maxCookTime ?? null,
+      minServings: 1,
+      maxServings: 10,
+      costLevel: preferences.costLevel ?? "MEDIUM",
+      maxEstimatedCost: null,
+      dietType: "OMNIVORE",
+      isLowCarb: false,
+      isLowFat: false,
+      isHighProtein: false,
+      isVegetarian: false,
+      isVegan: false,
+      isGlutenFree: false,
+      isDairyFree: false,
+      enableRecommendations: true,
       learnedPreferences: safeParseObject(preferences.learnedPreferences),
+      preferenceScore: 0,
     };
 
     return NextResponse.json({
@@ -103,7 +125,7 @@ export async function GET(request: NextRequest) {
  * POST /api/user/preferences
  * 创建或更新用户偏好设置
  *
- * Migrated from Supabase to Neon
+ * Migrated from Neon to Convex
  */
 export async function POST(request: NextRequest) {
   try {
@@ -114,15 +136,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "memberId is required" }, { status: 400 });
     }
 
-    const data = {
+    // Upsert user preference using Convex mutation
+    await convexClient.mutation(api.recommendations.upsertUserPreference, {
+      memberId: memberId as Id<"familyMembers">,
+      preferredIngredients: preferences.preferredIngredients || [],
+      avoidedIngredients: preferences.avoidedIngredients || [],
+      maxCookTime: preferences.maxCookTime || null,
+      costLevel: preferences.costLevel || "MEDIUM",
+      preferredCuisines: preferences.preferredCuisines || [],
+      learnedPreferences: preferences.learnedPreferences || {},
+    });
+
+    // Fetch the updated preference to return
+    const userPreference = await convexClient.query<Doc<"userPreferences"> | null>(
+      api.recommendations.getUserPreference,
+      {
+        memberId: memberId as Id<"familyMembers">,
+      }
+    );
+
+    const normalizedPreference: UserPreference = {
       memberId,
       spiceLevel: preferences.spiceLevel || "MEDIUM",
       sweetness: preferences.sweetness || "MEDIUM",
       saltiness: preferences.saltiness || "MEDIUM",
-      preferredCuisines: preferences.preferredCuisines || [],
-      avoidedIngredients: preferences.avoidedIngredients || [],
-      preferredIngredients: preferences.preferredIngredients || [],
-      maxCookTime: preferences.maxCookTime || null,
+      preferredCuisines: safeParseArray(
+        userPreference?.preferredCuisines ?? preferences.preferredCuisines ?? []
+      ),
+      avoidedIngredients: safeParseArray(
+        userPreference?.avoidedIngredients ?? preferences.avoidedIngredients ?? []
+      ),
+      preferredIngredients: safeParseArray(
+        userPreference?.preferredIngredients ?? preferences.preferredIngredients ?? []
+      ),
+      maxCookTime: preferences.maxCookTime ?? null,
       minServings: preferences.minServings || 1,
       maxServings: preferences.maxServings || 10,
       costLevel: preferences.costLevel || "MEDIUM",
@@ -136,20 +183,10 @@ export async function POST(request: NextRequest) {
       isGlutenFree: preferences.isGlutenFree || false,
       isDairyFree: preferences.isDairyFree || false,
       enableRecommendations: preferences.enableRecommendations !== false,
-    };
-
-    const userPreference = await neonAdapter.userPreference.upsert<UserPreference>({
-      where: { memberId },
-      create: data,
-      update: data,
-    });
-
-    const normalizedPreference = {
-      ...userPreference,
-      preferredCuisines: safeParseArray(userPreference.preferredCuisines),
-      avoidedIngredients: safeParseArray(userPreference.avoidedIngredients),
-      preferredIngredients: safeParseArray(userPreference.preferredIngredients),
-      learnedPreferences: safeParseObject(userPreference.learnedPreferences),
+      learnedPreferences: safeParseObject(
+        userPreference?.learnedPreferences ?? preferences.learnedPreferences ?? {}
+      ),
+      preferenceScore: 0,
     };
 
     return NextResponse.json({

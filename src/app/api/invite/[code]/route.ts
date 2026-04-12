@@ -1,29 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { neonAdapter } from "@/lib/db/neon-adapter";
-import { NeonClientManager } from "@/lib/db/neon-client";
+import { convexClient, api } from "@/lib/convex-client";
+
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 interface FamilyInvitation {
-  id: string;
+  _id: Id<"familyInvitations">;
   inviteCode: string;
   email: string;
   role: string;
   status: string;
-  familyId: string;
-  expiresAt: Date;
+  familyId: Id<"families">;
+  expiresAt: number;
 }
 
 interface Family {
-  id: string;
+  _id: Id<"families">;
   name: string;
   description?: string;
+}
+
+interface FamilyMember {
+  _id: Id<"familyMembers">;
+  familyId: Id<"families">;
+  userId?: Id<"users">;
+  name: string;
+  gender: "MALE" | "FEMALE" | "OTHER";
+  birthDate: number;
+  role: "ADMIN" | "MEMBER" | "GUEST";
+  deletedAt?: number;
+}
+
+interface AcceptInvitationResult {
+  success: boolean;
+  error?: string;
+  message?: string;
+  data?: {
+    family: { id: string; name: string; description?: string };
+    member: { id: string; name: string; role: string };
+  };
 }
 
 /**
  * GET /api/invite/:code
  * 获取邀请信息
  *
- * Migrated from Supabase to Neon
+ * Migrated from Neon to Convex
  */
 
 // Force dynamic rendering for auth()
@@ -32,26 +54,29 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { code } = await params;
 
-    const invitation = await neonAdapter.familyInvitation.findFirst<FamilyInvitation>({
-      where: { inviteCode: code },
-    });
+    const invitation = await convexClient.query<FamilyInvitation | null>(
+      api.families.getInvitationByCode,
+      {
+        inviteCode: code,
+      }
+    );
 
     if (!invitation) {
       return NextResponse.json({ error: "邀请码无效" }, { status: 404 });
     }
 
-    const family = await neonAdapter.family.findUnique<Family>({
-      where: { id: invitation.familyId },
+    const family = await convexClient.query<Family | null>(api.families.getById, {
+      familyId: invitation.familyId,
     });
 
     if (!family) {
       return NextResponse.json({ error: "家庭不存在" }, { status: 404 });
     }
 
-    if (new Date(invitation.expiresAt) < new Date()) {
-      await neonAdapter.familyInvitation.update({
-        where: { id: invitation.id },
-        data: { status: "EXPIRED", updatedAt: new Date() },
+    if (invitation.expiresAt < Date.now()) {
+      await convexClient.mutation(api.families.updateInvitationStatus, {
+        invitationId: invitation._id,
+        status: "EXPIRED",
       });
       return NextResponse.json({ error: "邀请已过期" }, { status: 410 });
     }
@@ -64,20 +89,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "该邀请已被拒绝" }, { status: 410 });
     }
 
-    const memberCount = await neonAdapter.familyMember.count({
-      where: { familyId: family.id, deletedAt: null },
+    const members = await convexClient.query<FamilyMember[]>(api.families.listMembers, {
+      familyId: family._id,
+      includeDeleted: false,
     });
+    const memberCount = members?.length || 0;
 
     return NextResponse.json(
       {
         invitation: {
-          id: invitation.id,
+          id: invitation._id,
           email: invitation.email,
           role: invitation.role,
-          expiresAt: invitation.expiresAt,
+          expiresAt: new Date(invitation.expiresAt),
         },
         family: {
-          id: family.id,
+          id: family._id,
           name: family.name,
           description: family.description,
           memberCount: memberCount || 0,
@@ -95,7 +122,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
  * POST /api/invite/:code
  * 接受邀请并加入家庭
  *
- * Migrated from Supabase to Neon
+ * Migrated from Neon to Convex
  */
 export async function POST(
   request: NextRequest,
@@ -116,33 +143,16 @@ export async function POST(
       return NextResponse.json({ error: "请提供成员名称" }, { status: 400 });
     }
 
-    const invitation = await neonAdapter.familyInvitation.findFirst<FamilyInvitation>({
-      where: { inviteCode: code },
-    });
-
-    if (!invitation) {
-      return NextResponse.json({ error: "邀请码无效" }, { status: 404 });
-    }
-
-    const rpcResult = await NeonClientManager.query<{ result: unknown }>(
-      "SELECT accept_family_invite($1, $2, $3, $4, $5) as result",
-      [
-        invitation.id,
-        session.user.id,
-        memberName.trim(),
-        gender || "MALE",
-        birthDate || "2000-01-01",
-      ]
+    const result = await convexClient.mutation<AcceptInvitationResult>(
+      api.families.acceptInvitation,
+      {
+        inviteCode: code,
+        userId: session.user.id as Id<"users">,
+        memberName: memberName.trim(),
+        gender: gender || "MALE",
+        birthDate: birthDate ? new Date(birthDate).getTime() : undefined,
+      }
     );
-
-    const result = rpcResult[0]?.result as
-      | {
-          success: boolean;
-          error?: string;
-          message?: string;
-          data?: { family: unknown; member: unknown };
-        }
-      | undefined;
 
     if (!result?.success) {
       const errorCode = result?.error;

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { testDatabaseConnection } from "@/lib/db";
 import { foodRepository } from "@/lib/repositories/food-repository-singleton";
-import { neonAdapter } from "@/lib/db/neon-adapter";
 import { usdaService } from "@/lib/services/usda-service";
 import { CacheService, CacheKeyBuilder, CACHE_CONFIG } from "@/lib/cache/redis-client";
 import { FoodCategory } from "@/lib/types/meal";
@@ -59,12 +57,6 @@ export async function GET(request: NextRequest) {
     let dbDuration = 0;
 
     try {
-      // 测试数据库连接
-      const dbConnected = await testDatabaseConnection();
-      if (!dbConnected) {
-        throw new Error("数据库连接失败");
-      }
-
       // 使用 Repository 执行搜索
       const searchResult = await foodRepository.searchFoods({
         query,
@@ -127,55 +119,13 @@ export async function GET(request: NextRequest) {
       const usdaDuration = Date.now() - usdaStartTime;
       console.log(`🌐 USDA API 查询 - ${usdaDuration}ms - 找到 ${usdaResults.length} 条结果`);
 
-      // 将USDA结果保存到数据库（异步，不阻塞响应）
-      setImmediate(() => {
-        Promise.all(
-          usdaResults.map(async (foodData) => {
-            if (!foodData.usdaId) {
-              return;
-            }
-
-            try {
-              const existing = await neonAdapter.food.findFirst({
-                where: { usdaId: foodData.usdaId },
-              });
-
-              if (existing) {
-                return;
-              }
-
-              await neonAdapter.food.create({
-                data: {
-                  name: foodData.name,
-                  nameEn: foodData.nameEn,
-                  aliases: JSON.stringify(foodData.aliases),
-                  calories: foodData.calories,
-                  protein: foodData.protein,
-                  carbs: foodData.carbs,
-                  fat: foodData.fat,
-                  fiber: foodData.fiber,
-                  sugar: foodData.sugar,
-                  sodium: foodData.sodium,
-                  vitaminA: foodData.vitaminA,
-                  vitaminC: foodData.vitaminC,
-                  calcium: foodData.calcium,
-                  iron: foodData.iron,
-                  category: foodData.category as FoodCategory,
-                  tags: JSON.stringify(foodData.tags),
-                  source: foodData.source,
-                  usdaId: foodData.usdaId,
-                  verified: foodData.verified,
-                  cachedAt: new Date(),
-                },
-              });
-            } catch (error) {
-              console.error("保存USDA数据失败:", error);
-            }
-          })
-        ).catch((error) => {
-          console.error("批量保存USDA数据失败:", error);
-        });
-      });
+      // TODO: 将USDA结果保存到Convex数据库（需要添加 createFood 和 getFoodByUsdaId 函数到 convex/budget.ts）
+      // 暂时跳过USDA数据缓存，等待Convex函数实现
+      // setImmediate(() => {
+      //   // 需要实现：
+      //   // 1. convexClient.query(api.budget.getFoodByUsdaId, { usdaId })
+      //   // 2. convexClient.mutation(api.budget.createFood, { ...foodData })
+      // });
 
       // 合并结果
       const allFoods = [

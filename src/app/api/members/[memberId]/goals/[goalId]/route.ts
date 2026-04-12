@@ -1,39 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { neonAdapter } from "@/lib/db/neon-adapter";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
+import { convexClient, api } from "@/lib/convex-client";
 import { z } from "zod";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 
-interface FamilyMember {
-  id: string;
-  userId: string | null;
-  familyId: string;
-  role?: string;
-}
-
-interface Family {
-  id: string;
-  creatorId: string;
-}
-
-interface HealthGoal {
-  id: string;
-  memberId: string;
-  startWeight: number | null;
-  currentWeight: number | null;
-  targetWeight: number | null;
-  startDate: string;
-  targetDate: string | null;
-  progress: number;
-  status: string;
-  carbRatio: number | null;
-  proteinRatio: number | null;
-  fatRatio: number | null;
-  targetWeeks: number | null;
-  deletedAt: string | null;
-}
+// Convex ID type helper
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 // 更新健康目标的验证 schema
 const updateGoalSchema = z.object({
@@ -64,70 +39,8 @@ function calculateProgress(
 }
 
 /**
- * 验证用户是否有权限访问健康目标
- *
- * Migrated from Supabase to Neon
- */
-async function verifyGoalAccess(
-  goalId: string,
-  memberId: string,
-  userId: string
-): Promise<{ hasAccess: boolean; goal: HealthGoal | null }> {
-  // 获取健康目标
-  const goal = await neonAdapter.healthGoal.findFirst<HealthGoal>({
-    where: { id: goalId, memberId: memberId, deletedAt: null },
-  });
-
-  if (!goal) {
-    return { hasAccess: false, goal: null };
-  }
-
-  // 查询成员信息
-  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
-    where: { id: memberId, deletedAt: null },
-  });
-
-  if (!member) {
-    return { hasAccess: false, goal: null };
-  }
-
-  // 查询家庭信息
-  const family = await neonAdapter.family.findFirst<Family>({
-    where: { id: member.familyId },
-  });
-
-  // 检查是否是家庭创建者
-  const isCreator = family?.creatorId === userId;
-
-  // 检查是否是管理员
-  let isAdmin = false;
-  if (!isCreator && member.familyId) {
-    const adminMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
-      where: {
-        familyId: member.familyId,
-        userId: userId,
-        role: "ADMIN",
-        deletedAt: null,
-      },
-    });
-
-    isAdmin = !!adminMember;
-  }
-
-  // 检查是否是本人
-  const isSelf = member.userId === userId;
-
-  return {
-    hasAccess: isCreator || isAdmin || isSelf,
-    goal,
-  };
-}
-
-/**
  * GET /api/members/:memberId/goals/:goalId
  * 获取单个健康目标
- *
- * Migrated from Supabase to Neon
  */
 export async function GET(
   request: NextRequest,
@@ -140,10 +53,19 @@ export async function GET(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    // 验证权限并获取目标
-    const { hasAccess, goal } = await verifyGoalAccess(goalId, memberId, session.user.id);
+    // 验证权限
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
-    if (!hasAccess || !goal) {
+    if (!hasAccess) {
+      return NextResponse.json({ error: "无权限访问该成员的健康目标" }, { status: 403 });
+    }
+
+    // 获取健康目标
+    const goal = await convexClient.query(api.health.getGoalById, {
+      goalId: goalId as Id<"healthGoals">,
+    });
+
+    if (!goal || goal.memberId !== memberId) {
       return NextResponse.json({ error: "健康目标不存在" }, { status: 404 });
     }
 
@@ -157,8 +79,6 @@ export async function GET(
 /**
  * PATCH /api/members/:memberId/goals/:goalId
  * 更新健康目标
- *
- * Migrated from Supabase to Neon
  */
 export async function PATCH(
   request: NextRequest,
@@ -183,9 +103,18 @@ export async function PATCH(
     }
 
     // 验证权限
-    const { hasAccess, goal } = await verifyGoalAccess(goalId, memberId, session.user.id);
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
-    if (!hasAccess || !goal) {
+    if (!hasAccess) {
+      return NextResponse.json({ error: "无权限访问该成员的健康目标" }, { status: 403 });
+    }
+
+    // 获取健康目标
+    const goal = await convexClient.query(api.health.getGoalById, {
+      goalId: goalId as Id<"healthGoals">,
+    });
+
+    if (!goal || goal.memberId !== memberId) {
       return NextResponse.json({ error: "健康目标不存在" }, { status: 404 });
     }
 
@@ -218,9 +147,9 @@ export async function PATCH(
     updateData.progress = calculateProgress(goal.startWeight, currentWeight, targetWeight);
 
     // 更新目标
-    const updatedGoal = await neonAdapter.healthGoal.update<HealthGoal>({
-      where: { id: goalId },
-      data: updateData,
+    const updatedGoal = await convexClient.mutation(api.health.updateGoal, {
+      goalId: goalId as Id<"healthGoals">,
+      ...updateData,
     });
 
     return NextResponse.json(
@@ -239,8 +168,6 @@ export async function PATCH(
 /**
  * DELETE /api/members/:memberId/goals/:goalId
  * 删除健康目标（软删除）
- *
- * Migrated from Supabase to Neon
  */
 export async function DELETE(
   request: NextRequest,
@@ -254,18 +181,24 @@ export async function DELETE(
     }
 
     // 验证权限
-    const { hasAccess, goal } = await verifyGoalAccess(goalId, memberId, session.user.id);
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
-    if (!hasAccess || !goal) {
+    if (!hasAccess) {
+      return NextResponse.json({ error: "无权限访问该成员的健康目标" }, { status: 403 });
+    }
+
+    // 获取健康目标
+    const goal = await convexClient.query(api.health.getGoalById, {
+      goalId: goalId as Id<"healthGoals">,
+    });
+
+    if (!goal || goal.memberId !== memberId) {
       return NextResponse.json({ error: "健康目标不存在" }, { status: 404 });
     }
 
-    const now = new Date().toISOString();
-
     // 软删除目标
-    await neonAdapter.healthGoal.update({
-      where: { id: goalId },
-      data: { deletedAt: now },
+    await convexClient.mutation(api.health.deleteGoal, {
+      goalId: goalId as Id<"healthGoals">,
     });
 
     return NextResponse.json({ message: "健康目标删除成功" }, { status: 200 });

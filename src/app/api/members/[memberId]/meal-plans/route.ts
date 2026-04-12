@@ -1,24 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { neonAdapter } from "@/lib/db/neon-adapter";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
 import { mealPlanner } from "@/lib/services/meal-planner";
 import { mealPlanRepository } from "@/lib/repositories/meal-plan-repository-singleton";
 import { z } from "zod";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-
-interface FamilyMember {
-  id: string;
-  userId: string | null;
-  familyId: string;
-  role?: string;
-}
-
-interface Family {
-  id: string;
-  creatorId: string;
-}
 
 // 创建食谱计划的验证 schema
 const createMealPlanSchema = z.object({
@@ -27,57 +15,8 @@ const createMealPlanSchema = z.object({
 });
 
 /**
- * 验证用户是否有权限访问成员的膳食计划
- *
- * Migrated from Supabase to Neon
- */
-async function verifyMemberAccess(
-  memberId: string,
-  userId: string
-): Promise<{ hasAccess: boolean; member: FamilyMember | null }> {
-  // 查询成员信息
-  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
-    where: { id: memberId, deletedAt: null },
-  });
-
-  if (!member) {
-    return { hasAccess: false, member: null };
-  }
-
-  // 查询家庭信息
-  const family = await neonAdapter.family.findFirst<Family>({
-    where: { id: member.familyId },
-  });
-
-  const isCreator = family?.creatorId === userId;
-
-  let isAdmin = false;
-  if (!isCreator) {
-    const adminMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
-      where: {
-        familyId: member.familyId,
-        userId: userId,
-        role: "ADMIN",
-        deletedAt: null,
-      },
-    });
-
-    isAdmin = !!adminMember;
-  }
-
-  const isSelf = member.userId === userId;
-
-  return {
-    hasAccess: isCreator || isAdmin || isSelf,
-    member,
-  };
-}
-
-/**
  * POST /api/members/:memberId/meal-plans
  * 生成新食谱计划
- *
- * Migrated from Supabase to Neon
  */
 export async function POST(
   request: NextRequest,
@@ -91,7 +30,10 @@ export async function POST(
     }
 
     // 验证权限
-    const { hasAccess, member } = await verifyMemberAccess(memberId, session.user.id);
+    const { hasAccess, member } = await memberRepository.verifyMemberAccess(
+      memberId,
+      session.user.id
+    );
 
     if (!hasAccess || !member) {
       return NextResponse.json({ error: "成员不存在" }, { status: 404 });
@@ -129,8 +71,6 @@ export async function POST(
 /**
  * GET /api/members/:memberId/meal-plans
  * 查询历史食谱
- *
- * Migrated from Supabase to Neon
  */
 export async function GET(
   request: NextRequest,
@@ -144,7 +84,10 @@ export async function GET(
     }
 
     // 验证权限
-    const { hasAccess, member } = await verifyMemberAccess(memberId, session.user.id);
+    const { hasAccess, member } = await memberRepository.verifyMemberAccess(
+      memberId,
+      session.user.id
+    );
 
     if (!hasAccess || !member) {
       return NextResponse.json({ error: "成员不存在" }, { status: 404 });

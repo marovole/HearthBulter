@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { neonAdapter } from "@/lib/db/neon-adapter";
+import { convexClient, api } from "@/lib/convex-client";
 import { auth } from "@/lib/auth";
 import { AnomalyStatus } from "@/types/enums";
 import {
@@ -8,6 +8,9 @@ import {
   ignoreAnomaly,
 } from "@/lib/services/analytics/anomaly-detector";
 import { requireMemberDataAccess } from "@/lib/middleware/authorization";
+
+// Convex ID type alias
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 /**
  * GET /api/analytics/anomalies
@@ -42,24 +45,41 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const where: Record<string, unknown> = {
-      memberId,
-      deletedAt: null,
-    };
+    // Use a wide date range to get all anomalies (1 year back to now)
+    const endDate = Date.now();
+    const startDate = endDate - 365 * 24 * 60 * 60 * 1000;
 
-    if (status) {
-      where.status = status;
-    }
-
-    const anomalies = await neonAdapter.healthAnomaly.findMany({
-      where,
-      orderBy: { detectedAt: "desc" },
-      take: limit,
+    const anomalies = await convexClient.query<
+      Array<{
+        _id: string;
+        anomalyType: string;
+        severity: string;
+        title: string;
+        description: string;
+        dataType: string | null;
+        value: number;
+        expectedMin: number | null;
+        expectedMax: number | null;
+        deviation: number | null;
+        status: string;
+        detectedAt: number;
+      }>
+    >(api.analytics.listAnomaliesByMember, {
+      memberId: memberId as Id<"familyMembers">,
+      startDate,
+      endDate,
+      limit,
     });
+
+    // Client-side filtering by status if provided
+    let filteredAnomalies = anomalies || [];
+    if (status) {
+      filteredAnomalies = filteredAnomalies.filter((a) => a.status === status);
+    }
 
     return NextResponse.json({
       success: true,
-      data: anomalies || [],
+      data: filteredAnomalies,
     });
   } catch (error) {
     console.error("Failed to get anomalies:", error);

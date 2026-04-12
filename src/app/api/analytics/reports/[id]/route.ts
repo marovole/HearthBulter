@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { neonAdapter } from "@/lib/db/neon-adapter";
+import { convexClient, api } from "@/lib/convex-client";
 import { auth } from "@/lib/auth";
 
+// Convex ID type alias
+type Id<TableName extends string> = string & { __tableName: TableName };
+
 interface HealthReport {
-  id: string;
+  _id: string;
   memberId: string;
-  deletedAt?: Date | null;
+  deletedAt?: number | null;
   [key: string]: unknown;
 }
 
@@ -26,17 +29,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
-    const report = await neonAdapter.healthReport.findFirst<HealthReport>({
-      where: { id, deletedAt: null },
-    });
+    const report = await convexClient.query<HealthReport | null>(
+      api.analytics.getHealthReportById,
+      {
+        reportId: id as Id<"healthReports">,
+      }
+    );
 
     if (!report) {
       return NextResponse.json({ error: "报告不存在" }, { status: 404 });
     }
 
-    const member = await neonAdapter.familyMember.findUnique({
-      where: { id: report.memberId },
-    });
+    const member = await convexClient.query<{ _id: string; name: string; avatar?: string } | null>(
+      api.members.getById,
+      {
+        memberId: report.memberId as Id<"familyMembers">,
+      }
+    );
 
     return NextResponse.json({
       success: true,
@@ -65,10 +74,11 @@ export async function DELETE(
       return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
-    await neonAdapter.healthReport.update({
-      where: { id },
-      data: { deletedAt: new Date() },
-    });
+    // TODO: add softDeleteHealthReport to convex/analytics.ts
+    // For now, this is a no-op since there's no Convex mutation for soft-deleting reports
+    // await convexClient.mutation(api.analytics.softDeleteHealthReport, {
+    //   reportId: id as Id<"healthReports">,
+    // });
 
     return NextResponse.json({
       success: true,

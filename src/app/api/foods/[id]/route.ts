@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { foodRepository } from "@/lib/repositories/food-repository-singleton";
-import { neonAdapter } from "@/lib/db/neon-adapter";
 import { usdaService } from "@/lib/services/usda-service";
 import { foodCacheService } from "@/lib/services/cache-service";
 import type { FoodRecord } from "@/lib/repositories/interfaces/food-repository";
@@ -34,34 +33,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       try {
         const usdaFood = await usdaService.getFoodByFdcIdAndMap(parseInt(id));
 
-        const savedFood = await neonAdapter.food.create<FoodRecord>({
-          data: {
-            name: usdaFood.name,
-            nameEn: usdaFood.nameEn,
-            aliases: JSON.stringify(usdaFood.aliases),
-            calories: usdaFood.calories,
-            protein: usdaFood.protein,
-            carbs: usdaFood.carbs,
-            fat: usdaFood.fat,
-            fiber: usdaFood.fiber,
-            sugar: usdaFood.sugar,
-            sodium: usdaFood.sodium,
-            vitaminA: usdaFood.vitaminA,
-            vitaminC: usdaFood.vitaminC,
-            calcium: usdaFood.calcium,
-            iron: usdaFood.iron,
-            category: usdaFood.category,
-            tags: JSON.stringify(usdaFood.tags),
-            source: usdaFood.source,
-            usdaId: usdaFood.usdaId,
-            verified: usdaFood.verified,
-            cachedAt: new Date(),
-          },
-        });
+        // TODO: 将USDA结果保存到Convex数据库（需要添加 createFood 函数到 convex/budget.ts）
+        // 暂时跳过保存，直接返回USDA数据
+        // const savedFood = await convexClient.mutation(api.budget.createFood, { ...usdaFood });
+        // await foodCacheService.setFood(savedFood);
+        // return NextResponse.json(parseFoodResponse(savedFood), { status: 200 });
 
-        await foodCacheService.setFood(savedFood as FoodRecord);
-
-        return NextResponse.json(parseFoodResponse(savedFood), { status: 200 });
+        // 临时：直接返回USDA数据（不缓存到数据库）
+        return NextResponse.json(parseFoodResponse(usdaFood), { status: 200 });
       } catch (usdaError) {
         console.error("从USDA获取食物失败:", usdaError);
       }

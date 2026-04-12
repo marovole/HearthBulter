@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { neonAdapter } from "@/lib/db/neon-adapter";
+import { convexClient, api } from "@/lib/convex-client";
+
+interface CleanupResult {
+  expiredUpdated: number;
+  softDeleted: number;
+}
 
 /**
  * POST /api/cleanup/expired-invitations - 清理过期邀请
  *
- * Migrated from Supabase to Neon
+ * Migrated from Neon to Convex
  */
 
 // Force dynamic rendering for auth()
@@ -18,37 +23,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "无权限执行此操作" }, { status: 403 });
     }
 
-    const now = new Date();
-
-    const expiredInvitations = await neonAdapter.familyInvitation.findMany({
-      where: { status: "PENDING", expiresAt: { lt: now } },
-    });
-
-    for (const inv of expiredInvitations) {
-      await neonAdapter.familyInvitation.update({
-        where: { id: (inv as { id: string }).id },
-        data: { status: "EXPIRED" },
-      });
-    }
-
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const deletableInvitations = await neonAdapter.familyInvitation.findMany({
-      where: { status: { in: ["EXPIRED", "REJECTED"] }, updatedAt: { lt: thirtyDaysAgo } },
-    });
-
-    for (const inv of deletableInvitations) {
-      await neonAdapter.familyInvitation.update({
-        where: { id: (inv as { id: string }).id },
-        data: { status: "DELETED" },
-      });
-    }
+    const result = await convexClient.mutation<CleanupResult>(
+      api.families.cleanupExpiredInvitations,
+      {}
+    );
 
     return NextResponse.json(
       {
         message: "清理任务完成",
         results: {
-          expiredUpdated: expiredInvitations.length,
-          softDeleted: deletableInvitations.length,
+          expiredUpdated: result.expiredUpdated,
+          softDeleted: result.softDeleted,
         },
       },
       { status: 200 }
@@ -62,7 +47,7 @@ export async function POST(request: NextRequest) {
 /**
  * GET /api/cleanup/expired-invitations - 获取过期邀请统计
  *
- * Migrated from Supabase to Neon
+ * Migrated from Neon to Convex
  */
 export async function GET(request: NextRequest) {
   try {
@@ -72,15 +57,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "无权限执行此操作" }, { status: 403 });
     }
 
-    const now = new Date();
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const now = Date.now();
+    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
 
     const [pendingExpired, expiredStatus, rejectedStatus, softDeletable] = await Promise.all([
-      neonAdapter.familyInvitation.count({ where: { status: "PENDING", expiresAt: { lt: now } } }),
-      neonAdapter.familyInvitation.count({ where: { status: "EXPIRED" } }),
-      neonAdapter.familyInvitation.count({ where: { status: "REJECTED" } }),
-      neonAdapter.familyInvitation.count({
-        where: { status: { in: ["EXPIRED", "REJECTED"] }, updatedAt: { lt: thirtyDaysAgo } },
+      convexClient.query<number>(api.families.countInvitationsByStatus, {
+        status: "PENDING",
+        expiresBefore: now,
+      }),
+      convexClient.query<number>(api.families.countInvitationsByStatus, {
+        status: "EXPIRED",
+      }),
+      convexClient.query<number>(api.families.countInvitationsByStatus, {
+        status: "REJECTED",
+      }),
+      convexClient.query<number>(api.families.countInvitationsByStatus, {
+        updatedBefore: thirtyDaysAgo,
       }),
     ]);
 

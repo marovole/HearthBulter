@@ -375,6 +375,204 @@ export const getUserFamilyRole = query({
   },
 });
 
+// === Family Invitations ==================================================
+
+export const getInvitationByCode = query({
+  args: { inviteCode: v.string() },
+  handler: async (ctx, args) => {
+    const invitation = await ctx.db
+      .query("familyInvitations")
+      .withIndex("by_invite_code", (q) => q.eq("inviteCode", args.inviteCode))
+      .unique();
+
+    if (!invitation || invitation.deletedAt) return null;
+    return invitation;
+  },
+});
+
+export const createInvitation = mutation({
+  args: {
+    inviteCode: v.string(),
+    email: v.string(),
+    role: v.string(),
+    familyId: v.id("families"),
+    userId: v.optional(v.id("users")),
+    expiresAt: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    return await ctx.db.insert("familyInvitations", {
+      ...args,
+      status: "PENDING",
+      createdAt: now,
+      updatedAt: now,
+    });
+  },
+});
+
+export const updateInvitationStatus = mutation({
+  args: {
+    invitationId: v.id("familyInvitations"),
+    status: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    await ctx.db.patch(args.invitationId, {
+      status: args.status,
+      updatedAt: now,
+    });
+    return args.invitationId;
+  },
+});
+
+export const acceptInvitation = mutation({
+  args: {
+    inviteCode: v.string(),
+    userId: v.id("users"),
+    memberName: v.string(),
+    gender: v.optional(v.string()),
+    birthDate: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // Find invitation by code
+    const invitation = await ctx.db
+      .query("familyInvitations")
+      .withIndex("by_invite_code", (q) => q.eq("inviteCode", args.inviteCode))
+      .unique();
+
+    if (!invitation || invitation.deletedAt) {
+      return {
+        success: false,
+        error: "INVALID_OR_EXPIRED_INVITATION",
+        message: "邀请码无效或已过期",
+      };
+    }
+
+    // Check expiration
+    if (invitation.expiresAt < Date.now()) {
+      await ctx.db.patch(invitation._id, { status: "EXPIRED", updatedAt: Date.now() });
+      return { success: false, error: "INVALID_OR_EXPIRED_INVITATION", message: "邀请已过期" };
+    }
+
+    // Check status
+    if (invitation.status === "ACCEPTED") {
+      return { success: false, error: "ALREADY_ACCEPTED", message: "该邀请已被接受" };
+    }
+
+    if (invitation.status !== "PENDING") {
+      return { success: false, error: "INVALID_OR_EXPIRED_INVITATION", message: "邀请不可用" };
+    }
+
+    // Check if user is already a member of this family
+    const existingMember = await ctx.db
+      .query("familyMembers")
+      .withIndex("by_family", (q) => q.eq("familyId", invitation.familyId))
+      .filter((q) => q.eq(q.field("userId"), args.userId))
+      .filter((q) => q.eq(q.field("deletedAt"), undefined))
+      .unique();
+
+    if (existingMember) {
+      return { success: false, error: "ALREADY_MEMBER", message: "您已经是该家庭的成员" };
+    }
+
+    // Get family
+    const family = await ctx.db.get(invitation.familyId);
+    if (!family || family.deletedAt) {
+      return { success: false, error: "FAMILY_NOT_FOUND", message: "家庭不存在" };
+    }
+
+    // Create member
+    const now = Date.now();
+    const memberId = await ctx.db.insert("familyMembers", {
+      familyId: invitation.familyId,
+      userId: args.userId,
+      name: args.memberName,
+      gender: (args.gender ?? "OTHER") as "MALE" | "FEMALE" | "OTHER",
+      birthDate: args.birthDate ?? now,
+      role: (invitation.role ?? "MEMBER") as "ADMIN" | "MEMBER" | "GUEST",
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    // Update invitation status
+    await ctx.db.patch(invitation._id, {
+      status: "ACCEPTED",
+      userId: args.userId,
+      updatedAt: now,
+    });
+
+    return {
+      success: true,
+      message: "成功加入家庭",
+      data: {
+        family: { id: family._id, name: family.name, description: family.description },
+        member: { id: memberId, name: args.memberName, role: invitation.role },
+      },
+    };
+  },
+});
+
+export const cleanupExpiredInvitations = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+
+    // Mark expired PENDING invitations
+    const pendingExpired = await ctx.db
+      .query("familyInvitations")
+      .withIndex("by_status", (q) => q.eq("status", "PENDING"))
+      .collect();
+
+    let expiredUpdated = 0;
+    for (const inv of pendingExpired) {
+      if (inv.expiresAt < now) {
+        await ctx.db.patch(inv._id, { status: "EXPIRED", updatedAt: now });
+        expiredUpdated++;
+      }
+    }
+
+    // Soft-delete old EXPIRED/REJECTED invitations
+    const oldInvitations = await ctx.db.query("familyInvitations").collect();
+
+    let softDeleted = 0;
+    for (const inv of oldInvitations) {
+      if (
+        (inv.status === "EXPIRED" || inv.status === "REJECTED") &&
+        inv.updatedAt < thirtyDaysAgo
+      ) {
+        await ctx.db.patch(inv._id, { status: "DELETED", updatedAt: now });
+        softDeleted++;
+      }
+    }
+
+    return { expiredUpdated, softDeleted };
+  },
+});
+
+export const countInvitationsByStatus = query({
+  args: {
+    status: v.optional(v.string()),
+    expiresBefore: v.optional(v.number()),
+    updatedBefore: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    let invitations = await ctx.db.query("familyInvitations").collect();
+
+    if (args.status) {
+      invitations = invitations.filter((inv) => inv.status === args.status);
+    }
+    if (args.expiresBefore) {
+      invitations = invitations.filter((inv) => inv.expiresAt < args.expiresBefore!);
+    }
+    if (args.updatedBefore) {
+      invitations = invitations.filter((inv) => inv.updatedAt < args.updatedBefore!);
+    }
+
+    return invitations.length;
+  },
+});
+
 function generateInviteCode() {
   return Math.random().toString(36).slice(2, 10).toUpperCase();
 }

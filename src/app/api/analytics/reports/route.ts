@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { neonAdapter } from "@/lib/db/neon-adapter";
+import { convexClient, api } from "@/lib/convex-client";
 import { auth } from "@/lib/auth";
 import { ReportType } from "@/types/enums";
 import { createReport } from "@/lib/services/analytics/report-generator";
 import { requireMemberDataAccess } from "@/lib/middleware/authorization";
+
+// Convex ID type alias
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 /**
  * GET /api/analytics/reports
@@ -39,34 +42,54 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const where: Record<string, unknown> = {
-      memberId,
-      deletedAt: null,
-    };
+    // Use a wide date range to get all reports (10 years back to 1 year future)
+    const endDate = Date.now() + 365 * 24 * 60 * 60 * 1000;
+    const startDate = endDate - 10 * 365 * 24 * 60 * 60 * 1000;
 
+    const reports = await convexClient.query<
+      Array<{
+        _id: string;
+        memberId: string;
+        reportType: string;
+        startDate: number;
+        endDate: number;
+        title: string;
+        summary: string;
+        htmlContent: string;
+        dataSnapshot: string;
+        insights: string;
+        overallScore: number;
+        status: string;
+        shareToken?: string;
+        shareExpiresAt?: number;
+        createdAt: number;
+        updatedAt: number;
+      }>
+    >(api.analytics.getHealthReportsByMember, {
+      memberId: memberId as Id<"familyMembers">,
+      startDate,
+      endDate,
+    });
+
+    // Client-side filtering by reportType if provided
+    let filteredReports = reports || [];
     if (reportType) {
-      where.reportType = reportType;
+      filteredReports = filteredReports.filter((r) => r.reportType === reportType);
     }
 
-    const [reports, total] = await Promise.all([
-      neonAdapter.healthReport.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        take: pageSize,
-        skip: (page - 1) * pageSize,
-      }),
-      neonAdapter.healthReport.count({ where }),
-    ]);
+    // Client-side pagination
+    const total = filteredReports.length;
+    const paginatedReports = filteredReports.slice((page - 1) * pageSize, page * pageSize);
 
     return NextResponse.json({
       success: true,
       data: {
-        reports: reports || [],
+        reports: paginatedReports,
         pagination: {
           page,
           pageSize,
-          total: total || 0,
-          totalPages: Math.ceil((total || 0) / pageSize),
+          total,
+          totalPages: Math.ceil(total / pageSize),
         },
       },
     });

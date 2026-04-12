@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { neonAdapter } from "@/lib/db/neon-adapter";
+import { convexClient, api } from "@/lib/convex-client";
 import { getCurrentUser } from "@/lib/auth";
 import { requireAdmin } from "@/lib/middleware/authorization";
+import type { Doc } from "@/convex/_generated/dataModel";
 
 /**
  * GET /api/monitoring - 系统监控端点
  *
- * Migrated from Supabase to Neon
+ * Migrated from Neon to Convex
  */
 
 // Force dynamic rendering
@@ -27,8 +28,10 @@ export async function GET() {
       }
     }
 
-    // 获取基本统计信息（使用Neon）
-    const totalUsers = await neonAdapter.user.count();
+    // 获取基本统计信息（使用Convex）
+    // TODO: Add dedicated count function to Convex schema
+    const allMembers = await convexClient.query<Doc<"familyMembers">[]>(api.members.listAll, {});
+    const totalUsers = allMembers.length;
 
     return NextResponse.json({
       system: "healthy",

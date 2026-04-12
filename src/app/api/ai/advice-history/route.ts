@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { neonAdapter } from "@/lib/db/neon-adapter";
-import { fetchAdviceHistory } from "@/lib/db/neon-rpc-helpers";
+import { convexClient, api } from "@/lib/convex-client";
 import { addCacheHeaders, EDGE_CACHE_PRESETS } from "@/lib/cache/edge-cache-helpers";
+import type { Id, Doc } from "@/convex/_generated/dataModel";
 
 interface FamilyMember {
   id: string;
@@ -22,11 +22,22 @@ interface AiConversation {
   lastMessageAt: string | null;
 }
 
+interface AdviceItem {
+  id: string;
+  memberId: string;
+  type: string;
+  content: unknown;
+  prompt: string;
+  tokens: number;
+  feedback?: unknown;
+  generatedAt: number;
+}
+
 /**
  * GET /api/ai/advice-history
  * 获取AI建议历史和对话历史
  *
- * Migrated from Supabase to Neon
+ * Migrated from Neon to Convex
  */
 
 // Force dynamic rendering for auth()
@@ -48,9 +59,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Member ID is required" }, { status: 400 });
     }
 
-    const member = await neonAdapter.familyMember.findUnique<FamilyMember>({
-      where: { id: memberId },
-    });
+    const member = await convexClient.query<Doc<"familyMembers"> | null>(
+      api.families.getMemberById,
+      {
+        memberId: memberId as Id<"familyMembers">,
+      }
+    );
 
     if (!member) {
       return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
@@ -60,65 +74,82 @@ export async function GET(request: NextRequest) {
 
     let isAdmin = false;
     if (!isOwnMember) {
-      const adminCheck = await neonAdapter.familyMember.findFirst<FamilyMember>({
-        where: {
-          familyId: member.familyId,
-          userId: session.user.id,
-          role: "ADMIN",
-          deletedAt: null,
-        },
+      const role = await convexClient.query<string | null>(api.families.getUserFamilyRole, {
+        familyId: member.familyId,
+        userId: member.userId,
       });
-      isAdmin = !!adminCheck;
+      isAdmin = role === "ADMIN";
     }
 
     if (!isOwnMember && !isAdmin) {
       return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
-    const adviceResult = await fetchAdviceHistory(memberId, { limit, offset });
-
-    if (!adviceResult.success || !adviceResult.data) {
-      console.error("获取AI建议历史失败:", adviceResult.error);
-      return NextResponse.json({ error: "Failed to fetch advice history" }, { status: 500 });
-    }
-
-    const { advice: rawAdvice, pagination } = adviceResult.data;
-
-    const filteredAdvice = type
-      ? rawAdvice.filter((item: { type: string }) => item.type === type)
-      : rawAdvice;
-
-    const conversationHistory = await neonAdapter.aiConversation.findMany<AiConversation>({
-      where: { memberId, deletedAt: null },
-      orderBy: { lastMessageAt: "desc" },
-      take: Math.min(limit, 10),
+    // Fetch advice from Convex with client-side pagination
+    const allAdvice = await convexClient.query<Doc<"aiAdvice">[]>(api.ai.listAdviceByMember, {
+      memberId,
+      type: type || undefined,
+      limit: limit + offset, // Fetch enough to handle offset
     });
 
-    const processedConversations = (conversationHistory || []).map((conv) => {
-      const messages = Array.isArray(conv.messages) ? conv.messages : [];
-      return {
-        ...conv,
-        messages: messages.slice(-5),
-        messageCount: messages.length,
-      };
-    });
+    const rawAdvice = allAdvice.slice(offset, offset + limit);
+    const total = allAdvice.length;
+    const hasMore = offset + limit < total;
+
+    const filteredAdvice = rawAdvice;
+
+    // Fetch conversations from Convex
+    const allConversations = await convexClient.query<Doc<"aiConversations">[]>(
+      api.ai.listConversationsByMember,
+      {
+        memberId,
+      }
+    );
+
+    const conversationHistory = allConversations.slice(0, Math.min(limit, 10));
+
+    const processedConversations = (conversationHistory || []).map(
+      (conv: Doc<"aiConversations">) => {
+        const messages = Array.isArray(conv.messages) ? conv.messages : [];
+        return {
+          id: conv._id,
+          title: conv.title,
+          messages: messages.slice(-5),
+          messageCount: messages.length,
+          status: conv.status,
+          tokens: conv.tokens,
+          createdAt: new Date(conv._creationTime).toISOString(),
+          updatedAt: new Date(conv._creationTime).toISOString(),
+          lastMessageAt: conv.lastMessageAt ? new Date(conv.lastMessageAt).toISOString() : null,
+        };
+      }
+    );
 
     const adviceStats = calculateAdviceStats(filteredAdvice);
 
     const responseData = {
       advice: {
-        items: filteredAdvice,
-        total: pagination.total,
-        limit: pagination.limit,
-        offset: pagination.offset,
-        hasMore: pagination.hasMore,
+        items: filteredAdvice.map((item: Doc<"aiAdvice">) => ({
+          id: item._id,
+          memberId: item.memberId,
+          type: item.type,
+          content: item.content,
+          prompt: item.prompt,
+          tokens: item.tokens,
+          feedback: item.feedback,
+          generatedAt: new Date(item.generatedAt).toISOString(),
+        })),
+        total,
+        limit,
+        offset,
+        hasMore,
       },
       conversations: {
         items: processedConversations,
         total: processedConversations.length,
       },
       summary: {
-        totalAdvice: pagination.total,
+        totalAdvice: total,
         totalConversations: processedConversations.length,
         adviceByType: adviceStats,
       },

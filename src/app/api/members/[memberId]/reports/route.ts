@@ -1,93 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { neonAdapter } from "@/lib/db/neon-adapter";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
+import { convexClient, api } from "@/lib/convex-client";
 import { OcrService, type SupportedMimeType } from "@/lib/services/ocr-service";
 import { ReportParser } from "@/lib/services/report-parser";
 import { FileStorageService } from "@/lib/services/file-storage-service";
 
 export const dynamic = "force-dynamic";
 
-interface FamilyMember {
-  id: string;
-  userId: string | null;
-  familyId: string;
-  role?: string;
-}
-
-interface Family {
-  id: string;
-  creatorId: string;
-}
-
-interface MedicalReport {
-  id: string;
-  memberId: string;
-  fileName: string;
-  fileSize: number;
-  mimeType: string;
-  fileUrl: string | null;
-  ocrStatus: string;
-  ocrText: string | null;
-  ocrError: string | null;
-  reportDate: string | null;
-  institution: string | null;
-  reportType: string | null;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-}
-
-interface MedicalIndicator {
-  id: string;
-  reportId: string;
-  indicatorType: string;
-  name: string;
-  value: number;
-  unit: string;
-  referenceRange: string | null;
-  isAbnormal: boolean;
-  status: string;
-}
-
-async function verifyMemberAccess(
-  memberId: string,
-  userId: string
-): Promise<{ hasAccess: boolean; member: FamilyMember | null }> {
-  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
-    where: { id: memberId, deletedAt: null },
-  });
-
-  if (!member) {
-    return { hasAccess: false, member: null };
-  }
-
-  const family = await neonAdapter.family.findFirst<Family>({
-    where: { id: member.familyId },
-  });
-
-  const isCreator = family?.creatorId === userId;
-
-  let isAdmin = false;
-  if (!isCreator) {
-    const adminMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
-      where: {
-        familyId: member.familyId,
-        userId: userId,
-        role: "ADMIN",
-        deletedAt: null,
-      },
-    });
-
-    isAdmin = !!adminMember;
-  }
-
-  const isSelf = member.userId === userId;
-
-  return {
-    hasAccess: isCreator || isAdmin || isSelf,
-    member,
-  };
-}
+// Convex ID type helper
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 async function processOCR(reportId: string, fileBuffer: Buffer, mimeType: SupportedMimeType) {
   try {
@@ -107,36 +29,32 @@ async function processOCR(reportId: string, fileBuffer: Buffer, mimeType: Suppor
       updateData.ocrError = validation.errors.join("; ");
     }
 
-    await neonAdapter.medicalReport.update({
-      where: { id: reportId },
-      data: updateData,
+    await convexClient.mutation(api.health.updateMedicalReport, {
+      reportId: reportId as Id<"medicalReports">,
+      ...updateData,
     });
 
     if (validation.valid && parsedReport.indicators.length > 0) {
       for (const indicator of parsedReport.indicators) {
-        await neonAdapter.medicalIndicator.create({
-          data: {
-            reportId,
-            indicatorType: indicator.indicatorType,
-            name: indicator.name,
-            value: indicator.value,
-            unit: indicator.unit,
-            referenceRange: indicator.referenceRange || null,
-            isAbnormal: indicator.isAbnormal,
-            status: indicator.status,
-          },
+        await convexClient.mutation(api.health.createMedicalIndicator, {
+          reportId: reportId as Id<"medicalReports">,
+          indicatorType: indicator.indicatorType,
+          name: indicator.name,
+          value: indicator.value,
+          unit: indicator.unit,
+          referenceRange: indicator.referenceRange || null,
+          isAbnormal: indicator.isAbnormal,
+          status: indicator.status,
         });
       }
     }
   } catch (error) {
     console.error("OCR处理失败:", error);
 
-    await neonAdapter.medicalReport.update({
-      where: { id: reportId },
-      data: {
-        ocrStatus: "FAILED",
-        ocrError: error instanceof Error ? error.message : "OCR处理失败",
-      },
+    await convexClient.mutation(api.health.updateMedicalReport, {
+      reportId: reportId as Id<"medicalReports">,
+      ocrStatus: "FAILED",
+      ocrError: error instanceof Error ? error.message : "OCR处理失败",
     });
   }
 }
@@ -153,7 +71,7 @@ export async function POST(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限为该成员上传报告" }, { status: 403 });
@@ -183,14 +101,12 @@ export async function POST(
 
     const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-    const report = await neonAdapter.medicalReport.create<MedicalReport>({
-      data: {
-        memberId,
-        fileName: file.name,
-        fileSize: file.size,
-        mimeType,
-        ocrStatus: "PROCESSING",
-      },
+    const report = await convexClient.mutation(api.health.createMedicalReport, {
+      memberId: memberId as Id<"familyMembers">,
+      fileName: file.name,
+      fileSize: file.size,
+      mimeType,
+      ocrStatus: "PROCESSING",
     });
 
     try {
@@ -198,25 +114,27 @@ export async function POST(
         contentType: mimeType as SupportedMimeType,
       });
 
-      await neonAdapter.medicalReport.update({
-        where: { id: report.id },
-        data: { fileUrl: uploadResult.url },
+      await convexClient.mutation(api.health.updateMedicalReport, {
+        reportId: report._id as Id<"medicalReports">,
+        fileUrl: uploadResult.url,
       });
 
-      processOCR(report.id, fileBuffer, mimeType as SupportedMimeType).catch((error) => {
+      processOCR(report._id, fileBuffer, mimeType as SupportedMimeType).catch((error) => {
         console.error("OCR处理失败:", error);
       });
 
       return NextResponse.json(
         {
           message: "文件上传成功，正在处理OCR识别",
-          reportId: report.id,
+          reportId: report._id,
           status: "PROCESSING",
         },
         { status: 202 }
       );
     } catch (error) {
-      await neonAdapter.medicalReport.delete({ where: { id: report.id } });
+      await convexClient.mutation(api.health.deleteMedicalReport, {
+        reportId: report._id as Id<"medicalReports">,
+      });
       throw error;
     }
   } catch (error) {
@@ -243,7 +161,7 @@ export async function GET(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限查看该成员的报告" }, { status: 403 });
@@ -254,44 +172,42 @@ export async function GET(
     const offset = parseInt(searchParams.get("offset") || "0");
     const status = searchParams.get("status");
 
-    const whereClause: Record<string, unknown> = { memberId, deletedAt: null };
+    // 获取报告列表（Convex 返回所有，客户端过滤和分页）
+    const reports = await convexClient.query(api.health.listMedicalReportsByMember, {
+      memberId: memberId as Id<"familyMembers">,
+      limit: limit + offset, // 获取足够多的数据用于客户端分页
+    });
+
+    // 客户端过滤 status
+    let filteredReports = reports;
     if (status) {
-      whereClause.ocrStatus = status;
+      filteredReports = reports.filter((r) => r.ocrStatus === status);
     }
 
-    const reports = await neonAdapter.medicalReport.findMany<MedicalReport>({
-      where: whereClause,
-      orderBy: { createdAt: "desc" },
-      take: limit,
-      skip: offset,
-    });
+    // 客户端分页
+    const total = filteredReports.length;
+    const paginatedReports = filteredReports.slice(offset, offset + limit);
 
-    const count = await neonAdapter.medicalReport.count({ where: whereClause });
-
-    if (!reports || reports.length === 0) {
-      return NextResponse.json({ data: [], total: count || 0, limit, offset }, { status: 200 });
+    if (!paginatedReports || paginatedReports.length === 0) {
+      return NextResponse.json({ data: [], total, limit, offset }, { status: 200 });
     }
 
-    const reportIds = reports.map((r) => r.id);
-    const indicators = await neonAdapter.medicalIndicator.findMany<MedicalIndicator>({
-      where: { reportId: { in: reportIds } },
-    });
-
-    const indicatorsMap = new Map<string, MedicalIndicator[]>();
-    indicators?.forEach((indicator) => {
-      if (!indicatorsMap.has(indicator.reportId)) {
-        indicatorsMap.set(indicator.reportId, []);
-      }
-      indicatorsMap.get(indicator.reportId)!.push(indicator);
-    });
-
-    const assembledReports = reports.map((report) => ({
-      ...report,
-      indicators: indicatorsMap.get(report.id) || [],
-    }));
+    // 获取所有报告的指标
+    const reportsWithIndicators = await Promise.all(
+      paginatedReports.map(async (report) => {
+        const indicators = await convexClient.query(api.health.listIndicatorsByReport, {
+          reportId: report._id as Id<"medicalReports">,
+        });
+        return {
+          ...report,
+          id: report._id,
+          indicators: indicators || [],
+        };
+      })
+    );
 
     return NextResponse.json(
-      { data: assembledReports, total: count || 0, limit, offset },
+      { data: reportsWithIndicators, total, limit, offset },
       { status: 200 }
     );
   } catch (error) {

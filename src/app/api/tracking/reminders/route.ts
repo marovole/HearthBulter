@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { neonAdapter } from "@/lib/db/neon-adapter";
+import { convexClient, api } from "@/lib/convex-client";
 import { z } from "zod";
 import { reminderService } from "@/lib/services/tracking/reminder-service";
+import type { Id } from "@/convex/_generated/dataModel";
 
 interface FamilyMember {
   id: string;
@@ -19,43 +20,36 @@ interface Family {
 /**
  * 验证用户是否有权限访问成员的追踪数据
  *
- * Migrated from Supabase to Neon
+ * Migrated from Neon to Convex
  */
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
+interface VerifyAccessResult {
+  hasAccess: boolean;
+  member?: {
+    id: string;
+    name: string;
+    familyId: string;
+    userId?: string;
+    role?: string;
+    family?: {
+      id: string;
+      creatorId: string;
+    };
+  };
+}
+
 async function verifyTrackingAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean }> {
-  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
-    where: { id: memberId, deletedAt: null },
+  const accessResult = await convexClient.query<VerifyAccessResult>(api.members.verifyAccess, {
+    memberId: memberId as Id<"familyMembers">,
+    clerkId: userId,
   });
 
-  if (!member) {
-    return { hasAccess: false };
-  }
-
-  const family = await neonAdapter.family.findUnique<Family>({
-    where: { id: member.familyId },
-  });
-
-  if (!family) {
-    return { hasAccess: false };
-  }
-
-  const isCreator = family.creatorId === userId;
-  const isSelf = member.userId === userId;
-
-  const userMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
-    where: { familyId: member.familyId, userId, deletedAt: null },
-  });
-
-  const isAdmin = userMember?.role === "ADMIN" || isCreator;
-
-  return {
-    hasAccess: isAdmin || isSelf,
-  };
+  return { hasAccess: accessResult.hasAccess };
 }
 
 /**

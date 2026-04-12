@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { memberRepository } from "@/lib/repositories/member-repository-singleton";
+import { convexClient, api } from "@/lib/convex-client";
 import { z } from "zod";
+
+// Convex ID type helper
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 // 计算 BMR (基础代谢率) - Mifflin-St Jeor 公式
 
@@ -41,6 +45,15 @@ const createGoalSchema = z.object({
   proteinRatio: z.number().min(0).max(1).optional().default(0.2),
   fatRatio: z.number().min(0).max(1).optional().default(0.3),
 });
+
+// Member details type from Convex
+interface MemberDetails {
+  _id: Id<"familyMembers">;
+  birthDate: number;
+  gender: string;
+  weight?: number;
+  height?: number;
+}
 
 /**
  * GET /api/members/:memberId/goals
@@ -132,23 +145,14 @@ export async function POST(
     } = validation.data;
 
     // 为了计算 BMR/TDEE，需要获取成员的详细信息
-    // 注意：verifyMemberAccess 返回的 member 对象不包含这些字段
-    // 这里需要单独查询（保留业务逻辑层）
-    const { neonAdapter } = await import("@/lib/db/neon-adapter");
-    const memberDetailsRaw = await neonAdapter.familyMember.findUnique({
-      where: { id: memberId, deletedAt: null },
-    });
+    // 使用 Convex 查询成员详情
+    const memberDetails = (await convexClient.query(api.members.getById, {
+      memberId: memberId as Id<"familyMembers">,
+    })) as MemberDetails | null;
 
-    if (!memberDetailsRaw) {
+    if (!memberDetails) {
       return NextResponse.json({ error: "无法获取成员详细信息" }, { status: 500 });
     }
-
-    const memberDetails = memberDetailsRaw as {
-      birthDate: string | Date;
-      gender: string;
-      weight: number | null;
-      height: number | null;
-    };
 
     // 计算年龄（业务逻辑）
     const birthDate = new Date(memberDetails.birthDate);
