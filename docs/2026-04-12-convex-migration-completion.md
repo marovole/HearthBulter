@@ -97,16 +97,16 @@ summary: 记录 HearthBulter 数据层统一到 Convex 的完整迁移成果、�
 
 ### 待清理的 Neon/Prisma 残留
 
-| 文件/目录                         | 状态        | 说明                                        |
-| --------------------------------- | ----------- | ------------------------------------------- |
-| `neon-analytics-repository.ts`    | ⚠️ 仍被使用 | `service-container.ts`, `trend-analyzer.ts` |
-| `neon-notification-repository.ts` | ⚠️ 待确认   | 检查是否被使用                              |
-| `neon-budget-repository.ts`       | ⚠️ 待确认   | 检查是否被使用                              |
-| `neon-family-repository.ts`       | ⚠️ 残余引用 | 大部分已迁移                                |
-| `neon-adapter.ts`                 | ⚠️ 仍有依赖 | `db/index.ts` 等                            |
-| `neon-client.ts`                  | ⚠️ 仍有依赖 | `cache/neon-trend-cache.ts` 等              |
-| `prisma/` 目录                    | ⏸️ 待删除   | 需确认无依赖后删除                          |
-| `shopping-list.ts`                | ✅ 已完成   | 已迁移到 Convex                             |
+| 文件/目录                          | 状态        | 说明                                            |
+| ---------------------------------- | ----------- | ----------------------------------------------- |
+| ~~`neon-analytics-repository.ts`~~ | ✅ 已删除   | ~~`service-container.ts`, `trend-analyzer.ts`~~ |
+| `neon-notification-repository.ts`  | ⚠️ 待确认   | 检查是否被使用                                  |
+| `neon-budget-repository.ts`        | ⚠️ 待确认   | 检查是否被使用                                  |
+| `neon-family-repository.ts`        | ⚠️ 残余引用 | 大部分已迁移                                    |
+| `neon-adapter.ts`                  | ⚠️ 仍有依赖 | `db/index.ts` 等                                |
+| `neon-client.ts`                   | ⚠️ 仍有依赖 | `cache/neon-trend-cache.ts` 等                  |
+| `prisma/` 目录                     | ⏸️ 待删除   | 需确认无依赖后删除                              |
+| `shopping-list.ts`                 | ✅ 已完成   | 已迁移到 Convex                                 |
 
 ---
 
@@ -158,9 +158,10 @@ f7516f1 refactor(dashboard): migrate 6 dashboard pages from prisma to convexClie
    - ~~`role-management.ts` - 确认未被引用后删除~~
    - **实际完成：2026-04-12，提交 e816832**
 
-3. **完成 Neon Repository 迁移**
-   - `neon-analytics-repository.ts` → `ConvexAnalyticsRepository`
-   - 需补齐 `convex/analytics.ts` 的缺失查询
+3. ~~**完成 Neon Repository 迁移**~~ ✅ **已完成**
+   - ~~`neon-analytics-repository.ts` → `ConvexAnalyticsRepository`~~
+   - ~~需补齐 `convex/analytics.ts` 的缺失查询~~
+   - **实际完成：2026-04-12，提交 e9c1360**
 
 ### 中优先级（建议本月完成）
 
