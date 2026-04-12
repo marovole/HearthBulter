@@ -1,11 +1,11 @@
-import { NeonLeaderboardRepository } from "./implementations/neon-leaderboard-repository";
+import { ConvexLeaderboardRepository } from "./implementations/convex-leaderboard-repository";
 import type { LeaderboardRepository } from "./interfaces/leaderboard-repository";
 
 let instance: LeaderboardRepository | null = null;
 
 export function getLeaderboardRepository(): LeaderboardRepository {
   if (!instance) {
-    instance = new NeonLeaderboardRepository();
+    instance = new ConvexLeaderboardRepository();
   }
   return instance;
 }
