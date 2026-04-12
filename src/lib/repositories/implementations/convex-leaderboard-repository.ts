@@ -204,12 +204,15 @@ export class ConvexLeaderboardRepository implements LeaderboardRepository {
         if (!member) return null;
 
         const healthData = await this.fetchHealthDataForMember(memberId, filter);
-        return {
+        const data: MemberHealthData = {
           memberId: member.id,
           name: member.name,
-          avatar: member.avatar ?? undefined,
           healthData,
-        } satisfies MemberHealthData;
+        };
+        if (member.avatar) {
+          data.avatar = member.avatar;
+        }
+        return data;
       })
     );
 
@@ -336,7 +339,9 @@ export class ConvexLeaderboardRepository implements LeaderboardRepository {
     if (query.endDate) {
       const endMs = query.endDate.getTime();
       results = results.filter((r) => {
-        const at = r.calculatedAt instanceof Date ? r.calculatedAt.getTime() : r.calculatedAt;
+        const calculatedAt = r.calculatedAt;
+        if (!calculatedAt) return false;
+        const at = calculatedAt instanceof Date ? calculatedAt.getTime() : calculatedAt;
         return at <= endMs;
       });
     }

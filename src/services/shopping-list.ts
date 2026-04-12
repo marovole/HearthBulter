@@ -1,5 +1,5 @@
-// Convex 购物清单服务 - 替换原有的 ShoppingListService
 // @ts-nocheck - 类型兼容性问题待解决
+// Convex 购物清单服务 - 替换原有的 ShoppingListService
 import { convexClient } from "@/lib/convex-client";
 import { api } from "@/../convex/_generated/api";
 import { hasPermission, Permission } from "@/lib/permissions";
