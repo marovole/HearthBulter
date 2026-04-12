@@ -1,11 +1,11 @@
-import { NeonFoodRepository } from "./implementations/neon-food-repository";
+import { ConvexFoodRepository } from "./implementations/convex-food-repository";
 import type { FoodRepository } from "./interfaces/food-repository";
 
 let instance: FoodRepository | null = null;
 
 export function getFoodRepository(): FoodRepository {
   if (!instance) {
-    instance = new NeonFoodRepository();
+    instance = new ConvexFoodRepository();
   }
   return instance;
 }
@@ -17,7 +17,7 @@ export function getFoodRepository(): FoodRepository {
  * ```typescript
  * import { foodRepository } from '@/lib/repositories/food-repository-singleton';
  *
- * const food = await foodRepository.getFoodById(id);
+ * const food = await foodRepository.findById(id);
  * ```
  */
 export const foodRepository = getFoodRepository();
