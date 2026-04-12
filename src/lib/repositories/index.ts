@@ -19,7 +19,3 @@ export * from "./interfaces/budget-repository";
 
 // Convex 实现
 export * from "./implementations/convex-analytics-repository";
-
-// Neon 实现（待迁移）
-export * from "./implementations/neon-notification-repository";
-export * from "./implementations/neon-budget-repository";
