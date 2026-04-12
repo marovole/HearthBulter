@@ -1,4 +1,6 @@
-import { PrismaClient, InventoryItem, InventoryStatus, NotificationType } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { InventoryStatus, NotificationType } from "@/types/enums";
+import type { InventoryItem } from "@/types/models";
 import { inventoryTracker } from "./inventory-tracker";
 
 const prisma = new PrismaClient();
@@ -50,7 +52,7 @@ export class ExpiryMonitor {
     });
 
     if (!item || !item.expiryDate) {
-      return item!;
+      return item as unknown as InventoryItem;
     }
 
     const daysToExpiry = this.calculateDaysToExpiry(item.expiryDate);
@@ -69,7 +71,7 @@ export class ExpiryMonitor {
       },
     });
 
-    return updatedItem;
+    return updatedItem as unknown as InventoryItem;
   }
 
   /**
@@ -106,7 +108,7 @@ export class ExpiryMonitor {
         foodName: item.food.nameEn ? `${item.food.name} (${item.food.nameEn})` : item.food.name,
         expiryDate: item.expiryDate!,
         daysToExpiry: item.daysToExpiry || 0,
-        status: item.status,
+        status: item.status as InventoryStatus,
         quantity: item.quantity,
         unit: item.unit,
         storageLocation: item.storageLocation,
@@ -199,7 +201,7 @@ export class ExpiryMonitor {
           }),
           notes: "自动处理过期物品",
           preventable: true,
-          preventionTip: this.generatePreventionTip(item),
+          preventionTip: this.generatePreventionTip(item as unknown as InventoryItem),
         },
       });
 

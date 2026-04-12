@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { MedicalReport, MedicalIndicator, IndicatorStatus } from "@prisma/client";
+import type { IndicatorStatus } from "@/types/enums";
+import type { MedicalReport, MedicalIndicator } from "@/types/models";
 
 interface OcrResultProps {
   reportId: string;
@@ -176,9 +177,13 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
                 <span className="text-red-600">
                   {indicator.value} {indicator.unit}
                 </span>
-                <span className={`rounded px-2 py-1 text-xs ${STATUS_COLORS[indicator.status]}`}>
-                  {STATUS_LABELS[indicator.status]}
-                </span>
+                {indicator.status && (
+                  <span
+                    className={`rounded px-2 py-1 text-xs ${STATUS_COLORS[indicator.status as IndicatorStatus]}`}
+                  >
+                    {STATUS_LABELS[indicator.status as IndicatorStatus]}
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -204,11 +209,13 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
                 <div className="flex-1">
                   <div className="flex items-center space-x-3">
                     <h4 className="font-medium text-gray-900">{indicator.name}</h4>
-                    <span
-                      className={`rounded px-2 py-1 text-xs ${STATUS_COLORS[indicator.status]}`}
-                    >
-                      {STATUS_LABELS[indicator.status]}
-                    </span>
+                    {indicator.status && (
+                      <span
+                        className={`rounded px-2 py-1 text-xs ${STATUS_COLORS[indicator.status as IndicatorStatus]}`}
+                      >
+                        {STATUS_LABELS[indicator.status as IndicatorStatus]}
+                      </span>
+                    )}
                   </div>
                   {indicator.referenceRange && (
                     <p className="mt-1 text-sm text-gray-500">

@@ -1,4 +1,6 @@
-import { PrismaClient, Order, OrderStatus, MealLog, FoodCategory } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { OrderStatus, FoodCategory } from "@/types/enums";
+import type { Order, MealLog } from "@/types/models";
 import type { StorageLocation } from "@/lib/repositories/types/inventory";
 import { inventoryTracker } from "./inventory-tracker";
 
@@ -344,10 +346,15 @@ export class InventorySync {
   /**
    * 解析订单商品
    */
-  private parseOrderItems(order: Order): OrderItem[] {
+  private parseOrderItems(order: any): OrderItem[] {
     try {
       // 假设订单商品信息存储在items字段中，格式为JSON
-      const items = JSON.parse(order.items as string);
+      const itemsData = order.items;
+      if (!itemsData) {
+        return [];
+      }
+
+      const items = typeof itemsData === "string" ? JSON.parse(itemsData) : itemsData;
 
       return items.map((item: ParsedOrderItem) => ({
         name: item.name || item.productName,

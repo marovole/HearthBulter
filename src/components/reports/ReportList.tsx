@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import type { MedicalReport, MedicalIndicator } from "@prisma/client";
+import type { MedicalReport, MedicalIndicator } from "@/types/models";
 
 interface ReportListProps {
   memberId: string;
@@ -186,11 +186,13 @@ export function ReportList({ memberId, familyId, onReportSelect }: ReportListPro
                   <div className="flex-1">
                     <div className="mb-2 flex items-center space-x-3">
                       <h3 className="font-medium text-gray-900">{report.fileName}</h3>
-                      <span
-                        className={`rounded px-2 py-1 text-xs ${STATUS_COLORS[report.ocrStatus]}`}
-                      >
-                        {STATUS_LABELS[report.ocrStatus]}
-                      </span>
+                      {report.ocrStatus && (
+                        <span
+                          className={`rounded px-2 py-1 text-xs ${STATUS_COLORS[report.ocrStatus]}`}
+                        >
+                          {STATUS_LABELS[report.ocrStatus]}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center space-x-4 text-sm text-gray-600">

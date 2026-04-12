@@ -2,64 +2,34 @@
  * 社交分享功能相关类型定义
  */
 
+import {
+  AchievementType,
+  AchievementRarity,
+  LeaderboardType,
+  CommunityPostStatus,
+  CommunityPostType,
+  SharePrivacyLevel,
+  ShareTrackingEventType,
+  ShareContentType,
+  SocialPlatform,
+} from "./enums";
+
 export type SharedContent = Record<string, unknown>;
 export type Achievement = Record<string, unknown>;
 export type LeaderboardEntry = Record<string, unknown>;
 export type CommunityPost = Record<string, unknown>;
 
-export enum AchievementType {
-  CHECK_IN_STREAK = "CHECK_IN_STREAK",
-  WEIGHT_LOSS = "WEIGHT_LOSS",
-  NUTRITION_GOAL = "NUTRITION_GOAL",
-  EXERCISE_TARGET = "EXERCISE_TARGET",
-  HEALTH_MILESTONE = "HEALTH_MILESTONE",
-  COMMUNITY_CONTRIBUTION = "COMMUNITY_CONTRIBUTION",
-}
-
-export enum AchievementRarity {
-  BRONZE = "BRONZE",
-  SILVER = "SILVER",
-  GOLD = "GOLD",
-  PLATINUM = "PLATINUM",
-  DIAMOND = "DIAMOND",
-}
-
-export enum LeaderboardType {
-  HEALTH_SCORE = "HEALTH_SCORE",
-  CHECK_IN_STREAK = "CHECK_IN_STREAK",
-  WEIGHT_LOSS = "WEIGHT_LOSS",
-  EXERCISE_MINUTES = "EXERCISE_MINUTES",
-  NUTRITION_SCORE = "NUTRITION_SCORE",
-}
-
-export enum CommunityPostStatus {
-  DRAFT = "DRAFT",
-  PUBLISHED = "PUBLISHED",
-  HIDDEN = "HIDDEN",
-  DELETED = "DELETED",
-}
-
-export enum CommunityPostType {
-  EXPERIENCE = "EXPERIENCE",
-  RECIPE_SHOW = "RECIPE_SHOW",
-  ACHIEVEMENT = "ACHIEVEMENT",
-  QUESTION = "QUESTION",
-  DISCUSSION = "DISCUSSION",
-}
-
-export enum SharePrivacyLevel {
-  PUBLIC = "PUBLIC",
-  FRIENDS = "FRIENDS",
-  PRIVATE = "PRIVATE",
-}
-
-export enum ShareTrackingEventType {
-  VIEW = "VIEW",
-  CLICK = "CLICK",
-  SHARE = "SHARE",
-  CONVERSION = "CONVERSION",
-  DOWNLOAD = "DOWNLOAD",
-}
+export {
+  AchievementType,
+  AchievementRarity,
+  LeaderboardType,
+  CommunityPostStatus,
+  CommunityPostType,
+  SharePrivacyLevel,
+  ShareTrackingEventType,
+  ShareContentType,
+  SocialPlatform,
+};
 
 /**
  * 分享内容输入类型
@@ -74,34 +44,6 @@ export interface ShareContentInput {
   privacyLevel: SharePrivacyLevel;
   platforms: SocialPlatform[];
   customMessage?: string;
-}
-
-export enum ShareContentType {
-  HEALTH_REPORT = "HEALTH_REPORT",
-  GOAL_ACHIEVED = "GOAL_ACHIEVED",
-  RECIPE_CREATED = "RECIPE_CREATED",
-  ACHIEVEMENT_UNLOCKED = "ACHIEVEMENT_UNLOCKED",
-  MEAL_PLAN_COMPLETED = "MEAL_PLAN_COMPLETED",
-  WEIGHT_MILESTONE = "WEIGHT_MILESTONE",
-  CHECKIN_STREAK = "CHECKIN_STREAK",
-  PERSONAL_RECORD = "PERSONAL_RECORD",
-  COMMUNITY_POST = "COMMUNITY_POST",
-}
-
-/**
- * 社交平台类型
- */
-export enum SocialPlatform {
-  WECHAT = "WECHAT", // 微信
-  MOMENTS = "MOMENTS", // 朋友圈
-  WEIBO = "WEIBO", // 微博
-  QQ = "QQ", // QQ
-  LINKEDIN = "LINKEDIN", // 领英
-  TWITTER = "TWITTER", // Twitter
-  FACEBOOK = "FACEBOOK", // Facebook
-  INSTAGRAM = "INSTAGRAM", // Instagram
-  COPY_LINK = "COPY_LINK", // 复制链接
-  DOWNLOAD = "DOWNLOAD", // 下载图片
 }
 
 /**
@@ -290,12 +232,19 @@ export interface ShareStats {
  */
 export const SHARE_CONTENT_TYPE_LABELS: Record<ShareContentType, string> = {
   [ShareContentType.HEALTH_REPORT]: "健康报告",
+  [ShareContentType.GOAL_ACHIEVEMENT]: "目标达成",
   [ShareContentType.GOAL_ACHIEVED]: "目标达成",
+  [ShareContentType.MEAL_LOG]: "餐食记录",
+  [ShareContentType.RECIPE]: "食谱",
   [ShareContentType.RECIPE_CREATED]: "食谱创建",
+  [ShareContentType.ACHIEVEMENT]: "成就",
   [ShareContentType.ACHIEVEMENT_UNLOCKED]: "成就解锁",
-  [ShareContentType.MEAL_PLAN_COMPLETED]: "餐食计划完成",
-  [ShareContentType.WEIGHT_MILESTONE]: "体重里程碑",
+  [ShareContentType.CHECK_IN_STREAK]: "连续打卡",
   [ShareContentType.CHECKIN_STREAK]: "连续打卡",
+  [ShareContentType.WEIGHT_MILESTONE]: "体重里程碑",
+  [ShareContentType.WEEKLY_SUMMARY]: "每周总结",
+  [ShareContentType.MONTHLY_REPORT]: "月度报告",
+  [ShareContentType.MEAL_PLAN_COMPLETED]: "餐食计划完成",
   [ShareContentType.PERSONAL_RECORD]: "个人记录",
   [ShareContentType.COMMUNITY_POST]: "社区帖子",
 };
