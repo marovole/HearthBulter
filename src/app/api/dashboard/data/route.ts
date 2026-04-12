@@ -1,7 +1,6 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
 import { dashboardDataService } from "@/lib/services/dashboard-data-service";
 
 /**
@@ -14,32 +13,8 @@ async function verifyMemberAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean }> {
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          creatorId: true,
-          members: {
-            where: { userId, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-    },
-  });
-
-  if (!member) {
-    return { hasAccess: false };
-  }
-
-  const isCreator = member.family.creatorId === userId;
-  const isAdmin = member.family.members[0]?.role === "ADMIN" || isCreator;
-  const isSelf = member.userId === userId;
-
-  return {
-    hasAccess: isAdmin || isSelf,
-  };
+  const result = await memberRepository.verifyMemberAccess(memberId, userId);
+  return { hasAccess: result.hasAccess };
 }
 
 /**

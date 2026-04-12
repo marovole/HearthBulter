@@ -1,10 +1,15 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { recipeOptimizer } from "@/lib/services/ai/recipe-optimizer";
-import { prisma } from "@/lib/db";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
+import { healthRepository } from "@/lib/repositories/health-repository-singleton";
+import { convexClient, api } from "@/lib/convex-client";
+import { asConvexQueryReference } from "@/lib/convex-reference";
 import { getDefaultRateLimitConfig, rateLimiter } from "@/lib/services/ai/rate-limiter";
 import { sensitiveFilter } from "@/lib/services/sensitive-filter";
+
+// Convex ID type - using string with type assertion
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
@@ -55,80 +60,87 @@ export async function POST(request: NextRequest) {
     }
 
     // 验证用户权限
-    const member = await prisma.familyMember.findFirst({
-      where: {
-        id: memberId,
-        OR: [
-          { userId: session.user.id },
-          {
-            family: {
-              members: {
-                some: {
-                  userId: session.user.id,
-                  role: "ADMIN",
-                },
-              },
-            },
-          },
-        ],
-      },
-      include: {
-        dietaryPreference: true,
-        allergies: true,
-      },
-    });
+    const accessResult = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
-    if (!member) {
+    if (!accessResult.hasAccess) {
       return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
-    const memberData = member as {
-      allergies?: Array<{ allergenName?: string }>;
-      dietaryPreference?: {
-        isVegetarian?: boolean;
-        isVegan?: boolean;
-        isKeto?: boolean;
-        isLowCarb?: boolean;
-      };
+    // 获取成员健康上下文（包含饮食偏好和过敏信息）
+    const healthContext = await healthRepository.getMemberHealthContext(memberId);
+
+    const memberData = {
+      allergies: healthContext?.allergies || [],
+      dietaryPreference: healthContext?.dietaryPreference
+        ? {
+            isVegetarian: healthContext.dietaryPreference.isVegetarian,
+            isVegan: healthContext.dietaryPreference.isVegan,
+            isKeto: healthContext.dietaryPreference.dietType?.toLowerCase().includes("keto"),
+            isLowCarb: healthContext.dietaryPreference.dietType?.toLowerCase().includes("low"),
+          }
+        : undefined,
     };
 
-    // 获取食谱数据
-    // 注意：使用类型断言，因为 Supabase 适配器类型定义不完整
-    const recipe = await (prisma as any).meal.findFirst({
-      where: {
-        id: recipeId,
-        plan: {
-          memberId,
-        },
-      },
-      include: {
-        ingredients: {
-          include: {
-            food: true,
-          },
-        },
-      },
-    });
+    // 获取食谱数据（meal）
+    const meal = (await convexClient.query(asConvexQueryReference("meals:getMealById"), {
+      mealId: recipeId as Id<"meals">,
+    })) as {
+      _id: string;
+      planId: Id<"mealPlans">;
+      date: number;
+      mealType: string;
+      calories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+    } | null;
 
-    if (!recipe) {
+    if (!meal) {
       return NextResponse.json({ error: "Recipe not found" }, { status: 404 });
     }
 
+    // 验证 meal 的 plan 属于该 member
+    const plan = (await convexClient.query(asConvexQueryReference("meals:getPlanById"), {
+      planId: meal.planId,
+    })) as { memberId: string } | null;
+
+    if (!plan || plan.memberId !== memberId) {
+      return NextResponse.json({ error: "Recipe not found or access denied" }, { status: 404 });
+    }
+
+    // 获取食材列表
+    const ingredients = (await convexClient.query(
+      asConvexQueryReference("meals:listMealIngredients"),
+      {
+        mealId: meal._id as Id<"meals">,
+      }
+    )) as Array<{ _id: string; foodId: Id<"foods">; amount: number }>;
+
+    // 获取食物详情
+    const foodIds = ingredients.map((ing) => ing.foodId);
+    const foods = (await convexClient.query(asConvexQueryReference("budget:getFoodsByIds"), {
+      foodIds,
+    })) as Array<{ _id: Id<"foods">; name: string }>;
+    const foodMap = new Map(foods.map((f) => [f._id, f]));
+
     // 转换食谱数据为优化器格式
     const recipeData = {
-      id: recipe.id,
-      name: `Meal ${recipe.date.toISOString().split("T")[0]} ${recipe.mealType}`,
-      ingredients: recipe.ingredients.map((ing: any) => ({
-        id: ing.id,
-        name: ing.food.name,
-        amount: ing.amount,
-        unit: "g",
-      })),
+      id: meal._id,
+      name: `Meal ${new Date(meal.date).toISOString().split("T")[0]} ${meal.mealType}`,
+      ingredients: ingredients.map((ing) => {
+        const food = foodMap.get(ing.foodId);
+        return {
+          id: ing._id,
+          name: food?.name || "Unknown",
+          amount: ing.amount,
+          unit: "g",
+        };
+      }),
       nutrition: {
-        calories: recipe.calories,
-        protein: recipe.protein,
-        carbs: recipe.carbs,
-        fat: recipe.fat,
+        calories: meal.calories,
+        protein: meal.protein,
+        carbs: meal.carbs,
+        fat: meal.fat,
       },
     };
 
@@ -173,25 +185,23 @@ export async function POST(request: NextRequest) {
     );
 
     // 保存优化建议到数据库
-    const aiAdvice = await prisma.aiAdvice.create({
-      data: {
-        memberId,
-        type: "RECIPE_OPTIMIZATION",
-        content: {
-          originalRecipe: recipeData,
-          optimization: optimizationResult,
-          targetNutrition: defaultTargetNutrition,
-          preferences: userPreferences,
-        },
-        prompt: `Recipe optimization for ${optimizationLevel} level with seasonal considerations`,
-        tokens: 0,
+    const aiAdvice = await healthRepository.saveHealthAdvice({
+      memberId,
+      type: "RECIPE_OPTIMIZATION",
+      content: {
+        originalRecipe: recipeData,
+        optimization: optimizationResult,
+        targetNutrition: defaultTargetNutrition,
+        preferences: userPreferences,
       },
+      prompt: `Recipe optimization for ${optimizationLevel} level with seasonal considerations`,
+      tokens: 0,
     });
 
     return NextResponse.json({
-      adviceId: aiAdvice.id,
+      adviceId: aiAdvice?.id || "",
       optimization: optimizationResult,
-      generatedAt: aiAdvice.generatedAt,
+      generatedAt: aiAdvice?.generatedAt || new Date(),
     });
   } catch (error) {
     console.error("Recipe optimization API error:", error);
@@ -217,37 +227,15 @@ export async function GET(request: NextRequest) {
     }
 
     // 验证用户权限
-    const member = await prisma.familyMember.findFirst({
-      where: {
-        id: memberId,
-        OR: [
-          { userId: session.user.id },
-          {
-            family: {
-              members: {
-                some: {
-                  userId: session.user.id,
-                  role: "ADMIN",
-                },
-              },
-            },
-          },
-        ],
-      },
-      include: {
-        dietaryPreference: true,
-        allergies: true,
-      },
-    });
+    const accessResult = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
-    if (!member) {
+    if (!accessResult.hasAccess) {
       return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
-    const memberData = member as {
-      allergies?: Array<{ allergenName?: string }>;
-    };
-    const memberAllergies = Array.isArray(memberData.allergies) ? memberData.allergies : [];
+    // 获取成员健康上下文（包含过敏信息）
+    const healthContext = await healthRepository.getMemberHealthContext(memberId);
+    const memberAllergies = healthContext?.allergies || [];
 
     // 构建用户偏好
     const userPreferences = {

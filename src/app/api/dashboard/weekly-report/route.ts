@@ -1,7 +1,6 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
 import { reportGenerator } from "@/lib/services/report-generator";
 
 /**
@@ -14,31 +13,24 @@ async function verifyMemberAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean; member: any }> {
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          creatorId: true,
-          members: {
-            where: { userId, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-    },
-  });
+  const result = await memberRepository.verifyMemberAccess(memberId, userId);
 
-  if (!member) {
+  if (!result.member) {
     return { hasAccess: false, member: null };
   }
 
-  const isCreator = member.family.creatorId === userId;
-  const isAdmin = member.family.members[0]?.role === "ADMIN" || isCreator;
-  const isSelf = member.userId === userId;
+  // 构造与之前格式兼容的 member 对象
+  const member = {
+    id: result.member.id,
+    name: result.member.name,
+    userId: result.member.userId,
+    familyId: result.member.familyId,
+    role: result.member.role,
+    family: result.member.family,
+  };
 
   return {
-    hasAccess: isAdmin || isSelf,
+    hasAccess: result.hasAccess,
     member,
   };
 }

@@ -1,10 +1,16 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { healthReportGenerator, ReportType } from "@/lib/services/ai/health-report-generator";
-import { prisma } from "@/lib/db";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
+import { healthRepository } from "@/lib/repositories/health-repository-singleton";
+import { mealTrackingRepository } from "@/lib/repositories/meal-tracking-repository-singleton";
+import { convexClient, api } from "@/lib/convex-client";
+import { asConvexQueryReference } from "@/lib/convex-reference";
 import { getDefaultRateLimitConfig, rateLimiter } from "@/lib/services/ai/rate-limiter";
 import { sensitiveFilter } from "@/lib/services/sensitive-filter";
+
+// Convex ID type - using string with type assertion
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
@@ -57,26 +63,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 验证用户权限
-    const member = await prisma.familyMember.findFirst({
-      where: {
-        id: memberId,
-        OR: [
-          { userId: session.user.id },
-          {
-            family: {
-              members: {
-                some: {
-                  userId: session.user.id,
-                  role: "ADMIN",
-                },
-              },
-            },
-          },
-        ],
-      },
-    });
+    const accessResult = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
-    if (!member) {
+    if (!accessResult.hasAccess) {
       return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
@@ -92,47 +81,41 @@ export async function POST(request: NextRequest) {
     const report = await healthReportGenerator.generateReport(reportData, includeAIInsights);
 
     // 保存报告到数据库
-    const savedReport = await prisma.healthReport.create({
-      data: {
-        memberId,
-        reportType: reportType.toUpperCase() as any,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
-        title: report.title,
-        summary: report.summary,
-        dataSnapshot: JSON.stringify(reportData),
-        insights: report.insights.length > 0 ? report.insights : null,
-        overallScore:
-          report.sections.find((s) => s.id === "executive_summary")?.data?.overall_score || null,
-        htmlContent: report.htmlContent,
-        status: report.status,
-        shareToken: report.shareToken,
-      },
+    const reportId = await convexClient.mutation(api.analytics.createHealthReport, {
+      memberId: memberId as Id<"familyMembers">,
+      reportType: reportType.toUpperCase(),
+      startDate: new Date(startDate).getTime(),
+      endDate: new Date(endDate).getTime(),
+      title: report.title,
+      summary: report.summary,
+      htmlContent: report.htmlContent,
+      dataSnapshot: JSON.stringify(reportData),
+      insights: report.insights.length > 0 ? JSON.stringify(report.insights) : "",
+      overallScore:
+        report.sections.find((s) => s.id === "executive_summary")?.data?.overall_score || 0,
     });
 
     // 保存AI建议记录
     if (report.insights.length > 0) {
-      await prisma.aiAdvice.create({
-        data: {
-          memberId,
-          type: "REPORT_GENERATION",
-          content: {
-            reportId: savedReport.id,
-            insights: report.insights,
-            recommendations: report.recommendations,
-          },
-          prompt: `Generated ${reportType} health report with AI insights`,
-          tokens: 0,
+      await healthRepository.saveHealthAdvice({
+        memberId,
+        type: "REPORT_GENERATION",
+        content: {
+          reportId: reportId as string,
+          insights: report.insights,
+          recommendations: report.recommendations,
         },
+        prompt: `Generated ${reportType} health report with AI insights`,
+        tokens: 0,
       });
     }
 
     return NextResponse.json({
-      reportId: savedReport.id,
+      reportId: reportId as string,
       report: {
         ...report,
-        id: savedReport.id,
-        shareToken: savedReport.shareToken,
+        id: reportId as string,
+        shareToken: report.shareToken,
       },
     });
   } catch (error) {
@@ -159,52 +142,57 @@ export async function GET(request: NextRequest) {
     }
 
     // 验证用户权限
-    const member = await prisma.familyMember.findFirst({
-      where: {
-        id: memberId,
-        OR: [
-          { userId: session.user.id },
-          {
-            family: {
-              members: {
-                some: {
-                  userId: session.user.id,
-                  role: "ADMIN",
-                },
-              },
-            },
-          },
-        ],
-      },
-    });
+    const accessResult = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
-    if (!member) {
+    if (!accessResult.hasAccess) {
       return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
-    // 获取报告历史
-    const reports = await prisma.healthReport.findMany({
-      where: {
-        memberId,
-        ...(reportType && { reportType: reportType.toUpperCase() as any }),
-      },
-      orderBy: { createdAt: "desc" },
-      take: limit,
-      select: {
-        id: true,
-        title: true,
-        reportType: true,
-        startDate: true,
-        endDate: true,
-        summary: true,
-        overallScore: true,
-        status: true,
-        createdAt: true,
-        shareToken: true,
-      },
-    });
+    // 获取报告历史 — 使用宽泛日期范围获取最近报告
+    const now = Date.now();
+    const ninetyDaysAgo = now - 90 * 24 * 60 * 60 * 1000;
+    const convexReports = (await convexClient.query(
+      asConvexQueryReference("analytics:getHealthReportsByMember"),
+      {
+        memberId: memberId as Id<"familyMembers">,
+        startDate: ninetyDaysAgo,
+        endDate: now,
+        limit,
+      }
+    )) as Array<{
+      _id: string;
+      title: string;
+      reportType: string;
+      startDate: number;
+      endDate: number;
+      summary: string;
+      overallScore: number;
+      status: string;
+      createdAt: number;
+      shareToken?: string;
+    }>;
 
-    return NextResponse.json({ reports });
+    // 过滤报告类型并映射字段
+    let reports = convexReports || [];
+    if (reportType) {
+      reports = reports.filter((r) => r.reportType === reportType.toUpperCase());
+    }
+
+    // 限制数量并映射为响应格式
+    const mappedReports = reports.slice(0, limit).map((r) => ({
+      id: r._id,
+      title: r.title,
+      reportType: r.reportType,
+      startDate: new Date(r.startDate).toISOString(),
+      endDate: new Date(r.endDate).toISOString(),
+      summary: r.summary,
+      overallScore: r.overallScore,
+      status: r.status,
+      createdAt: new Date(r.createdAt).toISOString(),
+      shareToken: r.shareToken,
+    }));
+
+    return NextResponse.json({ reports: mappedReports });
   } catch (error) {
     console.error("Report history API error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -218,125 +206,82 @@ async function collectReportData(
   startDate: Date,
   endDate: Date
 ) {
-  // 获取健康评分数据
-  const healthScores = (await prisma.healthScore.findMany({
-    where: {
-      memberId,
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
-    orderBy: { date: "asc" },
-    select: {
-      date: true,
-      overallScore: true,
-    },
-  })) as Array<{ date: Date; overallScore: number | null }>;
+  const startTimestamp = startDate.getTime();
+  const endTimestamp = endDate.getTime();
 
-  // 获取营养数据
-  const nutritionTargets = (await prisma.dailyNutritionTarget.findMany({
-    where: {
-      memberId,
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
-    orderBy: { date: "asc" },
-    select: {
-      date: true,
-      targetCalories: true,
-      actualCalories: true,
-      targetProtein: true,
-      actualProtein: true,
-      targetCarbs: true,
-      actualCarbs: true,
-      targetFat: true,
-      actualFat: true,
-    },
-  })) as Array<{
-    date: Date;
-    targetCalories: number | null;
-    actualCalories: number | null;
-    targetProtein: number | null;
-    actualProtein: number | null;
-    targetCarbs: number | null;
-    actualCarbs: number | null;
-    targetFat: number | null;
-    actualFat: number | null;
-  }>;
+  // 并行获取所有数据
+  const [healthScores, nutritionTargets, auxiliaryTrackings, healthMetricsResult, mealLogsResult] =
+    await Promise.all([
+      // 获取健康评分数据
+      convexClient.query(asConvexQueryReference("analytics:listHealthScores"), {
+        memberId: memberId as Id<"familyMembers">,
+        startDate: startTimestamp,
+        endDate: endTimestamp,
+      }) as Promise<Array<{ date: number; overallScore: number }>>,
 
-  // 获取活动数据
-  const auxiliaryTrackings = (await prisma.auxiliaryTracking.findMany({
-    where: {
-      memberId,
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
-    orderBy: { date: "asc" },
-    select: {
-      date: true,
-      exerciseMinutes: true,
-      waterIntake: true,
-    },
-  })) as Array<{
-    date: Date;
-    exerciseMinutes: number | null;
-    waterIntake: number | null;
-  }>;
+      // 获取营养数据
+      convexClient.query(asConvexQueryReference("analytics:listDailyNutritionTargets"), {
+        memberId: memberId as Id<"familyMembers">,
+        startDate: startTimestamp,
+        endDate: endTimestamp,
+      }) as Promise<
+        Array<{
+          date: number;
+          targetCalories: number;
+          actualCalories: number;
+          targetProtein: number;
+          actualProtein: number;
+          targetCarbs: number;
+          actualCarbs: number;
+          targetFat: number;
+          actualFat: number;
+        }>
+      >,
 
-  // 获取健康指标数据
-  const healthMetrics = (await prisma.healthData.findMany({
-    where: {
-      memberId,
-      measuredAt: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
-    orderBy: { measuredAt: "asc" },
-    select: {
-      measuredAt: true,
-      weight: true,
-      bloodPressureSystolic: true,
-      bloodPressureDiastolic: true,
-      heartRate: true,
-    },
-  })) as Array<{
-    measuredAt: Date;
-    weight: number | null;
-    bloodPressureSystolic: number | null;
-    bloodPressureDiastolic: number | null;
-    heartRate: number | null;
-  }>;
+      // 获取活动数据
+      convexClient.query(asConvexQueryReference("analytics:listAuxiliaryTrackings"), {
+        memberId: memberId as Id<"familyMembers">,
+        startDate: startTimestamp,
+        endDate: endTimestamp,
+      }) as Promise<
+        Array<{
+          date: number;
+          exerciseMinutes?: number;
+          waterIntake?: number;
+        }>
+      >,
 
-  // 获取餐饮记录
-  const mealLogs = (await prisma.mealLog.findMany({
-    where: {
-      memberId,
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
-    orderBy: { date: "asc" },
-    select: {
-      date: true,
-      mealType: true,
-      calories: true,
-      notes: true,
-    },
-  })) as Array<{
-    date: Date;
-    mealType: string;
-    calories: number | null;
-    notes: string | null;
-  }>;
+      // 获取健康指标数据
+      memberRepository.getHealthData({
+        memberId,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        limit: 100,
+        sortOrder: "asc",
+      }),
 
-  const mealLogsByDate = mealLogs.reduce<
+      // 获取餐饮记录
+      mealTrackingRepository.listMealLogs(
+        memberId,
+        {
+          startDate,
+          endDate,
+        },
+        { limit: 100 }
+      ),
+    ]);
+
+  // 处理健康指标数据
+  const healthMetrics = healthMetricsResult.data.map((h) => ({
+    measuredAt: new Date(h.measuredAt),
+    weight: h.weight ?? null,
+    bloodPressureSystolic: h.bloodPressureSystolic ?? null,
+    bloodPressureDiastolic: h.bloodPressureDiastolic ?? null,
+    heartRate: h.heartRate ?? null,
+  }));
+
+  // 处理餐饮记录
+  const mealLogsByDate = mealLogsResult.items.reduce<
     Record<
       string,
       {
@@ -367,35 +312,35 @@ async function collectReportData(
     endDate,
     data: {
       health_scores: healthScores.map((h) => ({
-        date: h.date.toISOString().slice(0, 10),
+        date: new Date(h.date).toISOString().slice(0, 10),
         score: h.overallScore ?? 0,
       })),
       nutrition_data: {
         calories: nutritionTargets.map((n) => ({
-          date: n.date.toISOString().slice(0, 10),
+          date: new Date(n.date).toISOString().slice(0, 10),
           actual: n.actualCalories ?? 0,
           target: n.targetCalories ?? 0,
         })),
         macros: {
           protein: nutritionTargets.map((n) => ({
-            date: n.date.toISOString().slice(0, 10),
+            date: new Date(n.date).toISOString().slice(0, 10),
             actual: n.actualProtein ?? 0,
             target: n.targetProtein ?? 0,
           })),
           carbs: nutritionTargets.map((n) => ({
-            date: n.date.toISOString().slice(0, 10),
+            date: new Date(n.date).toISOString().slice(0, 10),
             actual: n.actualCarbs ?? 0,
             target: n.targetCarbs ?? 0,
           })),
           fat: nutritionTargets.map((n) => ({
-            date: n.date.toISOString().slice(0, 10),
+            date: new Date(n.date).toISOString().slice(0, 10),
             actual: n.actualFat ?? 0,
             target: n.targetFat ?? 0,
           })),
         },
       },
       activity_data: auxiliaryTrackings.map((a) => ({
-        date: a.date.toISOString().slice(0, 10),
+        date: new Date(a.date).toISOString().slice(0, 10),
         exercise_minutes: a.exerciseMinutes ?? 0,
         water_intake: a.waterIntake ?? 0,
       })),

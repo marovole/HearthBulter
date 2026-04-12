@@ -10,8 +10,10 @@
 
 import type * as achievements from "../achievements.js";
 import type * as activities from "../activities.js";
+import type * as ai from "../ai.js";
 import type * as analytics from "../analytics.js";
 import type * as budget from "../budget.js";
+import type * as community from "../community.js";
 import type * as consents from "../consents.js";
 import type * as dashboard from "../dashboard.js";
 import type * as devices from "../devices.js";
@@ -19,6 +21,7 @@ import type * as ecommerce from "../ecommerce.js";
 import type * as families from "../families.js";
 import type * as files from "../files.js";
 import type * as health from "../health.js";
+import type * as instacart from "../instacart.js";
 import type * as inventory from "../inventory.js";
 import type * as leaderboards from "../leaderboards.js";
 import type * as lib_auth from "../lib/auth.js";
@@ -35,6 +38,7 @@ import type * as recommendations from "../recommendations.js";
 import type * as seed from "../seed.js";
 import type * as shareTracking from "../shareTracking.js";
 import type * as shoppingLists from "../shoppingLists.js";
+import type * as smartTrigger from "../smartTrigger.js";
 import type * as social from "../social.js";
 import type * as tasks from "../tasks.js";
 import type * as tracking from "../tracking.js";
@@ -45,8 +49,10 @@ import type { ApiFromModules, FilterApi, FunctionReference } from "convex/server
 declare const fullApi: ApiFromModules<{
   achievements: typeof achievements;
   activities: typeof activities;
+  ai: typeof ai;
   analytics: typeof analytics;
   budget: typeof budget;
+  community: typeof community;
   consents: typeof consents;
   dashboard: typeof dashboard;
   devices: typeof devices;
@@ -54,6 +60,7 @@ declare const fullApi: ApiFromModules<{
   families: typeof families;
   files: typeof files;
   health: typeof health;
+  instacart: typeof instacart;
   inventory: typeof inventory;
   leaderboards: typeof leaderboards;
   "lib/auth": typeof lib_auth;
@@ -70,6 +77,7 @@ declare const fullApi: ApiFromModules<{
   seed: typeof seed;
   shareTracking: typeof shareTracking;
   shoppingLists: typeof shoppingLists;
+  smartTrigger: typeof smartTrigger;
   social: typeof social;
   tasks: typeof tasks;
   tracking: typeof tracking;

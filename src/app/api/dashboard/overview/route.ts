@@ -1,7 +1,6 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
 import { convexClient, api } from "@/lib/convex-client";
 
 /**
@@ -12,33 +11,10 @@ import { convexClient, api } from "@/lib/convex-client";
 export const dynamic = "force-dynamic";
 
 async function verifyMemberAccess(memberId: string, userId: string) {
-  // 暂时保留 Prisma 权限检查，直到权限逻辑完全迁移到 Convex
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          creatorId: true,
-          members: {
-            where: { userId, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-    },
-  });
-
-  if (!member) {
-    return { hasAccess: false, member: null };
-  }
-
-  const isCreator = member.family.creatorId === userId;
-  const isAdmin = member.family.members[0]?.role === "ADMIN" || isCreator;
-  const isSelf = member.userId === userId;
-
+  const result = await memberRepository.verifyMemberAccess(memberId, userId);
   return {
-    hasAccess: isAdmin || isSelf,
-    member,
+    hasAccess: result.hasAccess,
+    member: result.member,
   };
 }
 
