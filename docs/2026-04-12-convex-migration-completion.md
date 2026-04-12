@@ -97,16 +97,20 @@ summary: 记录 HearthBulter 数据层统一到 Convex 的完整迁移成果、�
 
 ### 待清理的 Neon/Prisma 残留
 
-| 文件/目录                          | 状态        | 说明                                            |
-| ---------------------------------- | ----------- | ----------------------------------------------- |
-| ~~`neon-analytics-repository.ts`~~ | ✅ 已删除   | ~~`service-container.ts`, `trend-analyzer.ts`~~ |
-| `neon-notification-repository.ts`  | ⚠️ 待确认   | 检查是否被使用                                  |
-| `neon-budget-repository.ts`        | ⚠️ 待确认   | 检查是否被使用                                  |
-| `neon-family-repository.ts`        | ⚠️ 残余引用 | 大部分已迁移                                    |
-| `neon-adapter.ts`                  | ⚠️ 仍有依赖 | `db/index.ts` 等                                |
-| `neon-client.ts`                   | ⚠️ 仍有依赖 | `cache/neon-trend-cache.ts` 等                  |
-| `prisma/` 目录                     | ⏸️ 待删除   | 需确认无依赖后删除                              |
-| `shopping-list.ts`                 | ✅ 已完成   | 已迁移到 Convex                                 |
+| 文件/目录                             | 状态      | 说明                                            |
+| ------------------------------------- | --------- | ----------------------------------------------- |
+| ~~`neon-analytics-repository.ts`~~    | ✅ 已删除 | ~~`service-container.ts`, `trend-analyzer.ts`~~ |
+| ~~`neon-notification-repository.ts`~~ | ✅ 已删除 | ~~未使用~~                                      |
+| ~~`neon-budget-repository.ts`~~       | ✅ 已删除 | ~~未使用~~                                      |
+| ~~`neon-family-repository.ts`~~       | ✅ 已删除 | ~~未使用~~                                      |
+| ~~`neon-adapter.ts`~~                 | ✅ 已删除 | ~~`db/index.ts` 等~~                            |
+| ~~`neon-client.ts`~~                  | ✅ 已删除 | ~~`cache/neon-trend-cache.ts` 等~~              |
+| ~~`neon-rpc-helpers.ts`~~             | ✅ 已删除 | ~~未使用~~                                      |
+| ~~`prisma/` 目录~~                    | ✅ 已删除 | ~~整个目录~~                                    |
+| `shopping-list.ts`                    | ✅ 已完成 | 已迁移到 Convex                                 |
+| ~~`expiry-monitor.ts`~~               | ✅ 已删除 | ~~过期服务~~                                    |
+| ~~`inventory-analyzer.ts`~~           | ✅ 已删除 | ~~过期服务~~                                    |
+| ~~`inventory-sync.ts`~~               | ✅ 已删除 | ~~过期服务~~                                    |
 
 ---
 
@@ -165,21 +169,24 @@ f7516f1 refactor(dashboard): migrate 6 dashboard pages from prisma to convexClie
 
 ### 中优先级（建议本月完成）
 
-4. **删除 Neon 基础设施**
-   - `src/lib/db/neon-adapter.ts`
-   - `src/lib/db/neon-client.ts`
-   - `src/lib/db/neon-rpc-helpers.ts`
-   - `src/lib/db/index.ts` 中的 neon 导出
+4. ~~**删除 Neon 基础设施**~~ ✅ **已完成**
+   - ~~`src/lib/db/neon-adapter.ts`~~
+   - ~~`src/lib/db/neon-client.ts`~~
+   - ~~`src/lib/db/neon-rpc-helpers.ts`~~
+   - ~~`src/lib/db/index.ts` 中的 neon 导出~~
+   - **实际完成：2026-04-12，提交 6456f31**
 
-5. **删除 Prisma 目录**
-   - `prisma/schema.prisma`
-   - `prisma/migrations/`
-   - 从 `package.json` 移除 `@prisma/client` 和 `prisma`
+5. ~~**删除 Prisma 目录**~~ ✅ **已完成**
+   - ~~`prisma/schema.prisma`~~
+   - ~~`prisma/migrations/`~~
+   - ~~从 `package.json` 移除 `@prisma/client` 和 `prisma`~~
+   - **实际完成：2026-04-12，提交 6456f31**
 
-6. **清理过期 services**
-   - `expiry-monitor.ts`
-   - `inventory-analyzer.ts`
-   - `inventory-sync.ts`
+6. ~~**清理过期 services**~~ ✅ **已完成**
+   - ~~`expiry-monitor.ts`~~
+   - ~~`inventory-analyzer.ts`~~
+   - ~~`inventory-sync.ts`~~
+   - **实际完成：2026-04-12，提交 6456f31**
 
 ### 低优先级（可选）
 
