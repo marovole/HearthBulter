@@ -136,12 +136,13 @@ export interface Meal {
   id: string;
   planId: string;
   name: string;
-  type: MealType | string;
+  mealType: string;
+  type?: string;
   date: Date;
-  calories?: number | null;
-  protein?: number | null;
-  carbs?: number | null;
-  fat?: number | null;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
   notes?: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -152,6 +153,7 @@ export interface MealIngredient {
   mealId: string;
   foodId: string;
   quantity: number;
+  amount: number;
   unit: string;
   notes?: string | null;
 }
@@ -247,22 +249,68 @@ export interface Order {
   updatedAt: Date;
 }
 
+export interface MealLog {
+  id: string;
+  memberId: string;
+  mealType: string;
+  date: Date;
+  calories?: number | null;
+  protein?: number | null;
+  carbs?: number | null;
+  fat?: number | null;
+  notes?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface InventoryItem {
   id: string;
   familyId: string;
+  memberId?: string;
   foodId?: string | null;
   name: string;
   quantity: number;
   unit: string;
+  originalQuantity?: number;
   category?: string | null;
   location?: string | null;
+  storageLocation?: string | null;
   purchaseDate?: Date | null;
+  purchasePrice?: number | null;
+  purchaseSource?: string | null;
   expiryDate?: Date | null;
   price?: number | null;
   notes?: string | null;
+  status?: string;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;
+}
+
+export interface InventoryUsage {
+  id: string;
+  inventoryItemId: string;
+  memberId: string;
+  usedQuantity: number;
+  usedAt: Date;
+  usageType: string;
+  relatedId?: string | null;
+  relatedType?: string | null;
+  notes?: string | null;
+  recipeName?: string | null;
+}
+
+export interface WasteLog {
+  id: string;
+  inventoryItemId: string;
+  memberId: string;
+  wastedQuantity: number;
+  wasteReason: string;
+  wastedAt: Date;
+  estimatedCost?: number | null;
+  notes?: string | null;
+  preventable?: boolean;
+  preventionTip?: string | null;
 }
 
 export interface DeviceConnection {
@@ -307,7 +355,10 @@ export interface MedicalReport {
   reportType?: string | null;
   institution?: string | null;
   imageUrl?: string | null;
+  fileName?: string | null;
   ocrText?: string | null;
+  ocrStatus?: string | null;
+  ocrError?: string | null;
   processedAt?: Date | null;
   status: string;
   createdAt: Date;
@@ -323,6 +374,7 @@ export interface MedicalIndicator {
   unit?: string | null;
   referenceRange?: string | null;
   isAbnormal?: boolean | null;
+  status?: string | null;
   category?: string | null;
   createdAt: Date;
 }

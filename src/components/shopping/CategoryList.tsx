@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckboxItem } from "./CheckboxItem";
-import type { FoodCategory } from "@prisma/client";
+import type { FoodCategory } from "@/types/enums";
 
 interface ShoppingItem {
   id: string;

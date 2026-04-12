@@ -30,7 +30,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { InventoryStatus, StorageLocation } from "@prisma/client";
+import { InventoryStatus, StorageLocation } from "@/types/enums";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 

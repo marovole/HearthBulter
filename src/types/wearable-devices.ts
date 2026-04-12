@@ -8,7 +8,7 @@ import type {
   SyncStatus,
   DevicePermission,
   HealthDataType,
-} from "@prisma/client";
+} from "@/types/enums";
 import type { HealthDataSource } from "@/lib/repositories/interfaces/member-repository";
 
 export type { DeviceType, PlatformType, HealthDataSource };
@@ -19,16 +19,16 @@ export type { DeviceType, PlatformType, HealthDataSource };
 export interface DeviceConnectionInput {
   memberId: string;
   deviceId: string;
-  deviceType: DeviceType;
+  deviceType: DeviceType | string;
   deviceName: string;
   manufacturer: string;
   model?: string;
   firmwareVersion?: string;
-  platform: PlatformType;
+  platform: PlatformType | string;
   accessToken?: string;
   refreshToken?: string;
-  permissions: DevicePermission[];
-  dataTypes: HealthDataType[];
+  permissions: (DevicePermission | string)[];
+  dataTypes: (HealthDataType | string)[];
   syncInterval?: number;
 }
 

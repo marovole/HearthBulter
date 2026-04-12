@@ -16,7 +16,7 @@ import {
   Utensils,
   TrendingUp,
 } from "lucide-react";
-import { ShareContentType, SharePrivacyLevel } from "@prisma/client";
+import { ShareContentType, SharePrivacyLevel } from "@/types/enums";
 
 interface ShareCardProps {
   share: {
@@ -80,16 +80,23 @@ export function ShareCard({
 
   // 获取内容类型标签
   const getContentTypeLabel = (type: ShareContentType) => {
-    const labels: Record<ShareContentType, string> = {
+    const labels: Record<string, string> = {
       HEALTH_REPORT: "健康报告",
       GOAL_ACHIEVEMENT: "目标达成",
+      GOAL_ACHIEVED: "目标达成",
       MEAL_LOG: "餐饮打卡",
       ACHIEVEMENT: "成就徽章",
+      ACHIEVEMENT_UNLOCKED: "成就徽章",
       CHECK_IN_STREAK: "连续打卡",
+      CHECKIN_STREAK: "连续打卡",
       WEIGHT_MILESTONE: "体重里程碑",
       RECIPE: "食谱分享",
+      RECIPE_CREATED: "食谱创建",
       WEEKLY_SUMMARY: "每周总结",
       MONTHLY_REPORT: "月度报告",
+      MEAL_PLAN_COMPLETED: "餐食计划完成",
+      PERSONAL_RECORD: "个人记录",
+      COMMUNITY_POST: "社区帖子",
     };
     return labels[type] || "分享";
   };

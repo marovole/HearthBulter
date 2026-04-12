@@ -17,7 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ShareContentType } from "@prisma/client";
+import { ShareContentType } from "@/types/enums";
 
 interface ShareButtonProps {
   contentType: ShareContentType;

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { format, startOfDay, addDays, isSameDay } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { MealCard } from "./MealCard";
-import type { MealType, MealPlan, Meal, MealIngredient } from "@prisma/client";
+import type { MealType } from "@/types/enums";
+import type { MealPlan, Meal, MealIngredient } from "@/types/models";
 
 interface MealPlanWithMeals extends MealPlan {
   meals: (Meal & {
@@ -23,7 +24,7 @@ interface WeeklyPlanProps {
   onGenerateShoppingList?: () => void;
 }
 
-const MEAL_TYPE_ORDER: MealType[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACK"];
+const MEAL_TYPE_ORDER: string[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACK"];
 
 type DailyMeals = {
   date: Date;

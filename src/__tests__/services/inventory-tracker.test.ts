@@ -1,5 +1,6 @@
 import { inventoryTracker } from "@/services/inventory-tracker";
-import { PrismaClient, InventoryStatus, StorageLocation } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { InventoryStatus, StorageLocation } from "@/types/enums";
 
 const prisma = new PrismaClient();
 

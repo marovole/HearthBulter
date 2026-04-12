@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neonAdapter } from "@/lib/db/neon-adapter";
 import { auth } from "@/lib/auth";
-import { ReportType } from "@prisma/client";
+import { ReportType } from "@/types/enums";
 import { createReport } from "@/lib/services/analytics/report-generator";
 import { requireMemberDataAccess } from "@/lib/middleware/authorization";
 

@@ -5,7 +5,7 @@
 
 import { PriceEstimator } from "@/lib/services/price-estimator";
 import { prisma } from "@/lib/db";
-import type { FoodCategory } from "@prisma/client";
+import type { FoodCategory } from "@/types/enums";
 
 // Mock Prisma
 jest.mock("@/lib/db", () => ({

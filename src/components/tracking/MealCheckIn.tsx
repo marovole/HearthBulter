@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MealType } from "@prisma/client";
+import { MealType } from "@/types/enums";
 import { FoodSearchDialog } from "./FoodSearchDialog";
 
 interface Food {

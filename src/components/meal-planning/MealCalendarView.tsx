@@ -20,13 +20,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Plus, AlertTriangle, Heart, Eye } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { MealType } from "@/types/enums";
 
 type ViewMode = "day" | "week" | "month";
 
-interface Meal {
+interface CalendarMeal {
   id: string;
   date: Date;
-  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
+  mealType: string;
   calories: number;
   protein: number;
   carbs: number;
@@ -45,27 +46,27 @@ interface Meal {
 }
 
 interface MealCalendarViewProps {
-  meals: Meal[];
+  meals: CalendarMeal[];
   viewMode: ViewMode;
   currentDate: Date;
   onMealUpdate?: () => void;
 }
 
-const MEAL_TYPE_LABELS = {
+const MEAL_TYPE_LABELS: Record<string, string> = {
   BREAKFAST: "早餐",
   LUNCH: "午餐",
   DINNER: "晚餐",
   SNACK: "加餐",
 };
 
-const MEAL_TYPE_COLORS = {
+const MEAL_TYPE_COLORS: Record<string, string> = {
   BREAKFAST: "bg-yellow-100 text-yellow-800 border-yellow-200",
   LUNCH: "bg-blue-100 text-blue-800 border-blue-200",
   DINNER: "bg-purple-100 text-purple-800 border-purple-200",
   SNACK: "bg-green-100 text-green-800 border-green-200",
 };
 
-const MEAL_TYPE_ICONS = {
+const MEAL_TYPE_ICONS: Record<string, string> = {
   BREAKFAST: "🍳",
   LUNCH: "🍱",
   DINNER: "🍽️",
@@ -78,7 +79,7 @@ export function MealCalendarView({
   currentDate,
   onMealUpdate,
 }: MealCalendarViewProps) {
-  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
+  const [selectedMeal, setSelectedMeal] = useState<CalendarMeal | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   // 按日期组织餐食
@@ -87,7 +88,7 @@ export function MealCalendarView({
   };
 
   // 处理餐食点击
-  const handleMealClick = (meal: Meal) => {
+  const handleMealClick = (meal: CalendarMeal) => {
     setSelectedMeal(meal);
     setShowDetailModal(true);
   };
@@ -142,7 +143,7 @@ export function MealCalendarView({
         acc[key]!.push(meal);
         return acc;
       },
-      {} as Partial<Record<keyof typeof MEAL_TYPE_LABELS, Meal[]>>
+      {} as Partial<Record<keyof typeof MEAL_TYPE_LABELS, CalendarMeal[]>>
     );
 
     return (
@@ -375,7 +376,7 @@ export function MealCalendarView({
                     }`}
                     onClick={() => {
                       if (dayMeals.length > 0) {
-                        setSelectedMeal(dayMeals[0] as Meal);
+                        setSelectedMeal(dayMeals[0] as CalendarMeal);
                         setShowDetailModal(true);
                       }
                     }}

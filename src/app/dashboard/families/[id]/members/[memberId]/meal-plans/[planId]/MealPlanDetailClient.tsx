@@ -6,7 +6,7 @@ import Link from "next/link";
 import { WeeklyPlan } from "@/components/meal-planning/WeeklyPlan";
 import { NutritionSummary } from "@/components/meal-planning/NutritionSummary";
 import { SwapIngredient } from "@/components/meal-planning/SwapIngredient";
-import type { MealPlan, Meal, MealIngredient } from "@prisma/client";
+import type { MealPlan, Meal, MealIngredient } from "@/types/models";
 
 interface MealPlanWithMeals extends MealPlan {
   meals: (Meal & {

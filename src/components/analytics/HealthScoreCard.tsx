@@ -1,6 +1,6 @@
 "use client";
 
-import { ScoreGrade } from "@prisma/client";
+import { ScoreGrade } from "@/types/enums";
 
 interface HealthScoreCardProps {
   score: number;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { Permission, hasPermission, getUserFamilyRole } from "@/lib/permissions";
-import { FamilyMemberRole } from "@prisma/client";
+import { FamilyMemberRole } from "@/types/enums";
 import { prisma } from "@/lib/db";
 
 // 权限中间件配置

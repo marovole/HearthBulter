@@ -3,7 +3,8 @@
  */
 
 import { generateShareContent } from "@/lib/services/social/share-generator";
-import { ShareContentType, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { ShareContentType } from "@/types/enums";
 
 // Mock Prisma Client
 jest.mock("@prisma/client", () => ({

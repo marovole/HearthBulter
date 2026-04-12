@@ -1,7 +1,7 @@
 import { expiryMonitor } from "@/services/expiry-monitor";
 import { inventoryTracker } from "@/services/inventory-tracker";
 import { prisma } from "@/lib/db";
-import { InventoryStatus, StorageLocation } from "@prisma/client";
+import { InventoryStatus, StorageLocation } from "@/types/enums";
 
 describe("ExpiryMonitor", () => {
   let testMemberId: string;

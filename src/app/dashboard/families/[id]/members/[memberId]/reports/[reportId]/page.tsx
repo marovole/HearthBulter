@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OcrResult } from "@/components/reports/OcrResult";
 import { CorrectionForm } from "@/components/reports/CorrectionForm";
-import type { MedicalReport, MedicalIndicator } from "@prisma/client";
+import type { MedicalReport, MedicalIndicator } from "@/types/models";
 
 interface ReportWithIndicators extends MedicalReport {
   indicators: MedicalIndicator[];

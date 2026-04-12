@@ -1,4 +1,4 @@
-import { FamilyMemberRole } from "@prisma/client";
+import { FamilyMemberRole } from "@/types/enums";
 
 // 重新导出 FamilyMemberRole 以便其他模块使用
 export { FamilyMemberRole };

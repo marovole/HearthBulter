@@ -3,7 +3,8 @@ import { expiryMonitor } from "@/services/expiry-monitor";
 import { inventoryAnalyzer } from "@/services/inventory-analyzer";
 import { inventoryShoppingIntegration } from "@/services/inventory-shopping-integration";
 import { inventoryRecipeIntegration } from "@/services/inventory-recipe-integration";
-import { PrismaClient, InventoryStatus, StorageLocation, RecipeCategory } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { InventoryStatus, StorageLocation, RecipeCategory } from "@/types/enums";
 
 const prisma = new PrismaClient();
 

@@ -5,7 +5,7 @@
 
 import { ListGenerator } from "@/lib/services/list-generator";
 import { prisma } from "@/lib/db";
-import type { FoodCategory, MealType } from "@prisma/client";
+import type { FoodCategory, MealType } from "@/types/enums";
 
 // Define FoodCategory enum values that match Prisma
 const FoodCategoryValues = {

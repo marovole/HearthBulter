@@ -21,11 +21,10 @@ import {
   Eye,
 } from "lucide-react";
 import { toast } from "@/lib/toast";
-
-interface Meal {
+interface ListMeal {
   id: string;
   date: Date;
-  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
+  mealType: string;
   calories: number;
   protein: number;
   carbs: number;
@@ -44,7 +43,7 @@ interface Meal {
 }
 
 interface MealListViewProps {
-  meals: Meal[];
+  meals: ListMeal[];
 }
 
 type SortField = "date" | "calories" | "protein" | "mealType";
@@ -71,7 +70,7 @@ export function MealListView({ meals }: MealListViewProps) {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [filterMealType, setFilterMealType] = useState<FilterMealType>("ALL");
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
+  const [selectedMeal, setSelectedMeal] = useState<ListMeal | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   // 过滤和排序餐食
@@ -127,11 +126,11 @@ export function MealListView({ meals }: MealListViewProps) {
       groups[dateKey].meals.push(meal);
       return groups;
     },
-    {} as Record<string, { date: Date; meals: Meal[] }>
+    {} as Record<string, { date: Date; meals: ListMeal[] }>
   );
 
   // 处理餐食点击
-  const handleMealClick = (meal: Meal) => {
+  const handleMealClick = (meal: ListMeal) => {
     setSelectedMeal(meal);
     setShowDetailModal(true);
   };

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neonAdapter } from "@/lib/db/neon-adapter";
 import { auth } from "@/lib/auth";
-import { AnomalyStatus } from "@prisma/client";
+import { AnomalyStatus } from "@/types/enums";
 import {
   acknowledgeAnomaly,
   resolveAnomaly,

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { MealCard } from "./MealCard";
-import type { MealType } from "@prisma/client";
 
 interface MealIngredient {
   id: string;
@@ -16,7 +15,7 @@ interface MealIngredient {
 interface Meal {
   id: string;
   date: string;
-  mealType: MealType;
+  mealType: string;
   calories: number;
   protein: number;
   carbs: number;
@@ -32,7 +31,7 @@ interface SwapIngredientProps {
   onSuccess?: () => void;
 }
 
-const MEAL_TYPE_LABELS: Record<MealType, string> = {
+const MEAL_TYPE_LABELS: Record<string, string> = {
   BREAKFAST: "早餐",
   LUNCH: "午餐",
   DINNER: "晚餐",

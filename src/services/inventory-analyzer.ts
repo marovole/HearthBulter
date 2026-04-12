@@ -1,11 +1,6 @@
-import {
-  PrismaClient,
-  InventoryItem,
-  InventoryUsage,
-  WasteLog,
-  FoodCategory,
-  WasteReason,
-} from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { FoodCategory, WasteReason } from "@/types/enums";
+import type { InventoryItem, InventoryUsage, WasteLog } from "@/types/models";
 
 const prisma = new PrismaClient();
 

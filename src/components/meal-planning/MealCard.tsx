@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import type { MealType } from "@prisma/client";
 
 interface MealIngredient {
   id: string;
@@ -17,7 +16,7 @@ interface MealIngredient {
 interface Meal {
   id: string;
   date: string;
-  mealType: MealType;
+  mealType: string;
   calories: number;
   protein: number;
   carbs: number;
@@ -31,14 +30,14 @@ interface MealCardProps {
   showDate?: boolean;
 }
 
-const MEAL_TYPE_LABELS: Record<MealType, string> = {
+const MEAL_TYPE_LABELS: Record<string, string> = {
   BREAKFAST: "早餐",
   LUNCH: "午餐",
   DINNER: "晚餐",
   SNACK: "加餐",
 };
 
-const MEAL_TYPE_COLORS: Record<MealType, string> = {
+const MEAL_TYPE_COLORS: Record<string, string> = {
   BREAKFAST: "bg-yellow-100 text-yellow-800",
   LUNCH: "bg-blue-100 text-blue-800",
   DINNER: "bg-purple-100 text-purple-800",

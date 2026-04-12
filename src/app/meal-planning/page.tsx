@@ -40,7 +40,7 @@ type MealIngredient = {
 type Meal = {
   id: string;
   date: Date;
-  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
+  mealType: string;
   calories: number;
   protein: number;
   carbs: number;

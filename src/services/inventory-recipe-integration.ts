@@ -1,4 +1,4 @@
-import { RecipeCategory } from "@prisma/client";
+import { RecipeCategory } from "@/types/enums";
 
 export interface RecipeIngredient {
   foodId: string;

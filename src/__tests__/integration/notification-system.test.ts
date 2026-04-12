@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { NotificationManager } from "@/lib/services/notification";
-import { NotificationType, NotificationPriority, NotificationChannel } from "@prisma/client";
+import { NotificationType, NotificationPriority, NotificationChannel } from "@/types/enums";
 
 describe("Notification System Integration", () => {
   let prisma: PrismaClient;

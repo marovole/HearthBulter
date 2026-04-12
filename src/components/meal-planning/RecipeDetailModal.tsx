@@ -63,7 +63,7 @@ interface CookingStep {
 interface Meal {
   id: string;
   date: Date;
-  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
+  mealType: string;
   calories: number;
   protein: number;
   carbs: number;
@@ -87,7 +87,7 @@ interface RecipeDetailModalProps {
   onToggleFavorite?: () => void;
 }
 
-const MEAL_TYPE_LABELS = {
+const MEAL_TYPE_LABELS: Record<string, string> = {
   BREAKFAST: "早餐",
   LUNCH: "午餐",
   DINNER: "晚餐",

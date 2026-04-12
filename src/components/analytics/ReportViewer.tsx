@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ReportType } from "@prisma/client";
+import { ReportType } from "@/types/enums";
 import DOMPurify from "isomorphic-dompurify";
 
 interface Report {

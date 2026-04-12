@@ -1,4 +1,4 @@
-import { ListStatus } from "@prisma/client";
+import { ListStatus } from "@/types/enums";
 
 export interface ShoppingSuggestion {
   foodId: string;

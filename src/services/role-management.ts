@@ -1,6 +1,6 @@
 // @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { prisma } from "@/lib/db";
-import { FamilyMemberRole } from "@prisma/client";
+import { FamilyMemberRole } from "@/types/enums";
 import { PermissionError, isFamilyCreator, isFamilyAdmin } from "@/lib/permissions";
 
 // 角色管理服务

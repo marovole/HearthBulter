@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 import { GET, POST } from "@/app/api/notifications/route";
 import { mockNotificationManager } from "@/lib/container/service-container";
 import { NotificationUtils } from "@/lib/services/notification";
-import { NotificationType, NotificationChannel, NotificationPriority } from "@prisma/client";
+import { NotificationType, NotificationChannel, NotificationPriority } from "@/types/enums";
 
 // Use global mocked service-container from moduleNameMapper
 // mockNotificationManager is imported from the mocked service-container

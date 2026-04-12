@@ -1,6 +1,6 @@
 // @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 import { prisma } from "@/lib/db";
-import { TaskCategory, TaskStatus, TaskPriority } from "@prisma/client";
+import { TaskCategory, TaskStatus, TaskPriority } from "@/types/enums";
 import { hasPermission, Permission, FamilyMemberRole } from "@/lib/permissions";
 
 // 任务管理服务

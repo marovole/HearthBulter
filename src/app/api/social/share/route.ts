@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { shareContentGenerator } from "@/lib/services/social/share-generator";
 import type { ShareContentInput } from "@/types/social-sharing";
 import { SocialPlatform } from "@/types/social-sharing";
-import { ShareContentType } from "@prisma/client";
+import { ShareContentType } from "@/types/enums";
 import { generateSecureShareToken } from "@/lib/security/token-generator";
 import { validateBody, validationErrorResponse } from "@/lib/validation/api-validator";
 import { convexClient, api } from "@/lib/convex-client";

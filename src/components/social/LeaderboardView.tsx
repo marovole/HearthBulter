@@ -28,7 +28,10 @@ import {
   Star,
   Zap,
 } from "lucide-react";
-import { LeaderboardType, LeaderboardPeriod } from "@prisma/client";
+import { LeaderboardType, LeaderboardPeriod } from "@/types/enums";
+
+const DEFAULT_LEADERBOARD_TYPE = LeaderboardType.HEALTH_SCORE;
+const DEFAULT_LEADERBOARD_PERIOD = LeaderboardPeriod.WEEKLY;
 import { toast } from "sonner";
 
 interface LeaderboardEntry {
@@ -69,8 +72,8 @@ export function LeaderboardView({
 }: LeaderboardViewProps) {
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeType, setActiveType] = useState<LeaderboardType>("HEALTH_SCORE");
-  const [activePeriod, setActivePeriod] = useState<LeaderboardPeriod>("WEEKLY");
+  const [activeType, setActiveType] = useState<LeaderboardType>(DEFAULT_LEADERBOARD_TYPE);
+  const [activePeriod, setActivePeriod] = useState<LeaderboardPeriod>(DEFAULT_LEADERBOARD_PERIOD);
 
   // 获取排行榜数据
   const fetchLeaderboard = async () => {

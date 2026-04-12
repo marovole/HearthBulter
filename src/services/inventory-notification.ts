@@ -1,4 +1,4 @@
-import { NotificationType } from "@prisma/client";
+import { NotificationType } from "@/types/enums";
 import type { InventoryRepository } from "@/lib/repositories/interfaces/inventory-repository";
 import type { NotificationRepository } from "@/lib/repositories/interfaces/notification-repository";
 import { inventoryRepository } from "@/lib/repositories/inventory-repository-singleton";

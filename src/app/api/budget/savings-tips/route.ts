@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SavingsType } from "@prisma/client";
+import { SavingsType } from "@/types/enums";
 import { auth } from "@/lib/auth";
 import { savingsRecommender } from "@/lib/services/budget/savings-recommender";
 import { economicMode } from "@/lib/services/budget/economic-mode";

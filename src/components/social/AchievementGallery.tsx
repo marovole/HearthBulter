@@ -18,7 +18,7 @@ import {
   Award,
   Medal,
 } from "lucide-react";
-import { AchievementType, AchievementRarity } from "@prisma/client";
+import { AchievementType, AchievementRarity, ShareContentType } from "@/types/enums";
 import { ShareButton } from "./ShareButton";
 import { toast } from "sonner";
 
@@ -351,7 +351,7 @@ function AchievementCard({
         {/* 分享按钮 */}
         {showShareButton && achievement.isUnlocked && !achievement.isShared && (
           <ShareButton
-            contentType="ACHIEVEMENT"
+            contentType={ShareContentType.ACHIEVEMENT}
             contentId={achievement.id}
             title={achievement.title}
             description={achievement.description}

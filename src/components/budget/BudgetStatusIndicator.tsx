@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import { BudgetStatus as BudgetStatusType, FoodCategory } from "@prisma/client";
+import { BudgetStatus as BudgetStatusType, FoodCategory } from "@/types/enums";
 
 interface BudgetStatus {
   budget: any;

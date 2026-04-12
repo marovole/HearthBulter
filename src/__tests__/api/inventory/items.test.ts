@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { GET, POST } from "@/app/api/inventory/items/route";
-import { InventoryStatus, StorageLocation } from "@prisma/client";
+import { InventoryStatus, StorageLocation } from "@/types/enums";
 import { URL } from "url";
 
 // Ensure URL is available in Jest environment

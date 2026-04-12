@@ -10,7 +10,7 @@ import type {
   TaskStatus,
   NotificationType,
   NotificationPriority,
-} from "@prisma/client";
+} from "@/types/enums";
 
 // ============ 库存相关类型 ============
 

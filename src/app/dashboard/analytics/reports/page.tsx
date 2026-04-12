@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import type { ReportType } from "@prisma/client";
+import type { ReportType } from "@/types/enums";
 
 export default function ReportsPage() {
   const router = useRouter();

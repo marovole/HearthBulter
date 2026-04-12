@@ -30,7 +30,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { BudgetPeriod, FoodCategory } from "@prisma/client";
+import { BudgetPeriod, FoodCategory } from "@/types/enums";
 
 const budgetFormSchema = z
   .object({

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { MedicalIndicator, IndicatorStatus } from "@prisma/client";
+import { IndicatorStatus } from "@/types/enums";
+import type { MedicalIndicator } from "@/types/models";
 
 interface CorrectionFormProps {
   reportId: string;
@@ -12,10 +13,10 @@ interface CorrectionFormProps {
 }
 
 const STATUS_OPTIONS: Array<{ value: IndicatorStatus; label: string }> = [
-  { value: "NORMAL", label: "正常" },
-  { value: "LOW", label: "偏低" },
-  { value: "HIGH", label: "偏高" },
-  { value: "CRITICAL", label: "严重异常" },
+  { value: IndicatorStatus.NORMAL, label: "正常" },
+  { value: IndicatorStatus.LOW, label: "偏低" },
+  { value: IndicatorStatus.HIGH, label: "偏高" },
+  { value: IndicatorStatus.CRITICAL, label: "严重异常" },
 ];
 
 export function CorrectionForm({
@@ -44,10 +45,10 @@ export function CorrectionForm({
     const initialData: typeof formData = {};
     indicators.forEach((ind) => {
       initialData[ind.id] = {
-        value: ind.value,
-        unit: ind.unit,
+        value: ind.numericValue ?? 0,
+        unit: ind.unit ?? "",
         referenceRange: ind.referenceRange || undefined,
-        status: ind.status,
+        status: (ind.status as IndicatorStatus) || IndicatorStatus.NORMAL,
       };
     });
     setFormData(initialData);
