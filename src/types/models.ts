@@ -3,14 +3,12 @@ import type {
   TaskCategory,
   TaskPriority,
   FamilyMemberRole,
-  HealthGoalType,
   MealType,
   NotificationType,
   NotificationPriority,
   NotificationChannel,
   DeviceType,
   OrderStatus,
-  ShoppingItemStatus,
 } from "./enums";
 
 export interface User {
@@ -105,7 +103,7 @@ export interface HealthData {
 export interface HealthGoal {
   id: string;
   memberId: string;
-  type: HealthGoalType | string;
+  type: string;
   targetValue: number;
   currentValue?: number | null;
   unit: string;
@@ -203,7 +201,7 @@ export interface ShoppingItem {
   category?: string | null;
   estimatedPrice?: number | null;
   actualPrice?: number | null;
-  status: ShoppingItemStatus | string;
+  status: string;
   priority?: string | null;
   notes?: string | null;
   addedById: string;

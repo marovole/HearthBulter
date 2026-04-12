@@ -39,20 +39,6 @@ export enum GoalType {
   IMPROVE_HEALTH = "IMPROVE_HEALTH",
 }
 
-export enum HealthGoalType {
-  WEIGHT_LOSS = "WEIGHT_LOSS",
-  WEIGHT_GAIN = "WEIGHT_GAIN",
-  MUSCLE_GAIN = "MUSCLE_GAIN",
-  MAINTENANCE = "MAINTENANCE",
-  BLOOD_PRESSURE = "BLOOD_PRESSURE",
-  BLOOD_SUGAR = "BLOOD_SUGAR",
-  CHOLESTEROL = "CHOLESTEROL",
-  NUTRITION = "NUTRITION",
-  EXERCISE = "EXERCISE",
-  SLEEP = "SLEEP",
-  OTHER = "OTHER",
-}
-
 export enum GoalStatus {
   ACTIVE = "ACTIVE",
   COMPLETED = "COMPLETED",
@@ -212,13 +198,6 @@ export enum ListStatus {
   PENDING = "PENDING",
   IN_PROGRESS = "IN_PROGRESS",
   COMPLETED = "COMPLETED",
-}
-
-export enum ShoppingItemStatus {
-  PENDING = "PENDING",
-  PURCHASED = "PURCHASED",
-  SKIPPED = "SKIPPED",
-  OUT_OF_STOCK = "OUT_OF_STOCK",
 }
 
 // ========== 报告 ==========
@@ -400,6 +379,7 @@ export enum EcommercePlatform {
   SAMS_CLUB = "SAMS_CLUB",
   HEMA = "HEMA",
   DINGDONG = "DINGDONG",
+  INSTACART = "INSTACART",
 }
 
 export enum PlatformAccountStatus {
@@ -821,20 +801,3 @@ export type $Enums = {
   DevicePermission: typeof DevicePermission;
   HealthDataType: typeof HealthDataType;
 };
-
-// ========== Prisma 兼容类型（占位） ==========
-// 这些类型用于保持与旧代码的兼容性
-// 实际数据库操作已迁移到 Neon adapter
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type PrismaClient = any;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Prisma = any;
-
-export type Food = Record<string, unknown>;
-export type MealPlan = Record<string, unknown>;
-export type Meal = Record<string, unknown>;
-export type MealIngredient = Record<string, unknown>;
-export type MedicalReport = Record<string, unknown>;
-export type MedicalIndicator = Record<string, unknown>;
