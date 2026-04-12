@@ -1,4 +1,3 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 /**
  * 权限验证中间件
  * 提供基于角色的访问控制(RBAC)和细粒度权限检查
@@ -6,10 +5,12 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { convexClient, api } from "@/lib/convex-client";
 import { Permission, FamilyMemberRole, hasPermission } from "@/lib/permissions";
 import { APIError, createErrorResponse } from "@/lib/errors/api-error";
 import { logger } from "@/lib/logger";
+
+type Id<TableName extends string> = string & { __tableName: TableName };
 
 export interface PermissionRequirement {
   permissions: Permission[];
@@ -217,16 +218,11 @@ export class PermissionMiddleware {
 
     // 从数据库获取
     try {
-      const member = await prisma.familyMember.findFirst({
-        where: {
-          userId,
-          familyId,
-          deletedAt: null,
-        },
-        select: {
-          role: true,
-        },
-      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex query return type is not fully inferred here
+      const member = (await convexClient.query(api.members.getByClerkInFamily, {
+        familyId: familyId as Id<"families">,
+        clerkId: userId,
+      })) as any;
 
       const roleValue = typeof member?.role === "string" ? member.role : null;
       const role = roleValue
