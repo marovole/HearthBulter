@@ -1,9 +1,11 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
+// @ts-nocheck - Convex returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { convexClient } from "@/lib/convex-client";
+import { asConvexQueryReference, asConvexMutationReference } from "@/lib/convex-reference";
 import { platformAdapterFactory } from "@/lib/services/ecommerce";
 import { PlatformError, PlatformErrorType } from "@/lib/services/ecommerce/types";
+import { Id } from "../../../../convex/_generated/dataModel";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
@@ -18,24 +20,28 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 获取订单信息
-    const order = await prisma.order.findFirst({
-      where: {
-        id: orderId,
-        userId: session.user.id,
-      },
-      include: {
-        platformAccount: true,
-      },
+    // 获取订单信息 (Convex)
+    const orders = await convexClient.query(asConvexQueryReference("ecommerce:getOrders"), {
+      memberId: session.user.id,
+      limit: 100, // 获取较多订单以便查找
     });
+
+    const order = orders?.orders?.find((o: any) => o._id === orderId);
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // 获取平台账号信息
-    const platformAccount = order.platformAccount;
-    if (!platformAccount || !platformAccount.isActive) {
+    // 获取平台账号信息 (Convex)
+    const platformAccount = await convexClient.query(
+      asConvexQueryReference("ecommerce:getOrCreatePlatformAccount"),
+      {
+        memberId: session.user.id,
+        platform: order.platform,
+      }
+    );
+
+    if (!platformAccount || !platformAccount.accessToken) {
       return NextResponse.json({ error: "Platform account is not active" }, { status: 400 });
     }
 
@@ -52,16 +58,17 @@ export async function GET(
         try {
           const newTokenInfo = await adapter.refreshToken(platformAccount.refreshToken);
 
-          // 更新数据库中的token
-          await prisma.platformAccount.update({
-            where: { id: platformAccount.id },
-            data: {
+          // 更新数据库中的token (Convex)
+          await convexClient.mutation(
+            asConvexMutationReference("ecommerce:upsertPlatformAccount"),
+            {
+              memberId: session.user.id,
+              platform: order.platform,
               accessToken: newTokenInfo.accessToken,
               refreshToken: newTokenInfo.refreshToken,
-              expiresAt: newTokenInfo.expiresAt,
-              lastSyncAt: new Date(),
-            },
-          });
+              tokenExpiresAt: newTokenInfo.expiresAt?.getTime(),
+            }
+          );
 
           accessToken = newTokenInfo.accessToken;
         } catch (refreshError) {
@@ -78,43 +85,35 @@ export async function GET(
     // 同步订单状态
     const platformOrderStatus = await adapter.getOrderStatus(order.platformOrderId, accessToken);
 
-    // 更新数据库中的订单状态
-    const updatedOrder = await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        status: platformOrderStatus.status,
-        paymentStatus: platformOrderStatus.paymentStatus,
-        deliveryStatus: platformOrderStatus.deliveryStatus,
-        trackingNumber: platformOrderStatus.trackingNumber,
-        estimatedDeliveryTime: platformOrderStatus.estimatedDeliveryTime,
-        actualDeliveryTime: platformOrderStatus.actualDeliveryTime,
-        lastSyncAt: new Date(),
-        platformResponse: platformOrderStatus.platformResponse,
-      },
+    // 更新数据库中的订单状态 (Convex)
+    await convexClient.mutation(asConvexMutationReference("ecommerce:updateOrderStatus"), {
+      orderId: orderId as Id<"ecommerceOrders">,
+      status: platformOrderStatus.status,
     });
 
     // 格式化响应
     const formattedOrder = {
-      id: updatedOrder.id,
-      platformOrderId: updatedOrder.platformOrderId,
-      platform: updatedOrder.platform,
-      status: updatedOrder.status,
-      paymentStatus: updatedOrder.paymentStatus,
-      deliveryStatus: updatedOrder.deliveryStatus,
-      items: updatedOrder.items,
-      totalAmount: updatedOrder.totalAmount,
-      subtotal: updatedOrder.subtotal,
-      shippingFee: updatedOrder.shippingFee,
-      discount: updatedOrder.discount,
-      deliveryAddress: updatedOrder.deliveryAddress,
-      estimatedDeliveryTime: updatedOrder.estimatedDeliveryTime,
-      actualDeliveryTime: updatedOrder.actualDeliveryTime,
-      trackingNumber: updatedOrder.trackingNumber,
-      paymentMethod: updatedOrder.paymentMethod,
-      createdAt: updatedOrder.createdAt,
-      updatedAt: updatedOrder.updatedAt,
-      lastSyncAt: updatedOrder.lastSyncAt,
-      platformResponse: updatedOrder.platformResponse,
+      id: order._id,
+      platformOrderId: order.platformOrderId,
+      platform: order.platform,
+      status: platformOrderStatus.status || order.status,
+      paymentStatus: platformOrderStatus.paymentStatus || order.paymentStatus,
+      deliveryStatus: platformOrderStatus.deliveryStatus || order.deliveryStatus,
+      items: order.items,
+      totalAmount: order.totalAmount,
+      subtotal: order.subtotal,
+      shippingFee: order.shippingFee,
+      discount: order.discount,
+      deliveryAddress: order.deliveryAddress,
+      estimatedDeliveryTime:
+        platformOrderStatus.estimatedDeliveryTime || order.estimatedDeliveryTime,
+      actualDeliveryTime: platformOrderStatus.actualDeliveryTime || order.actualDeliveryTime,
+      trackingNumber: platformOrderStatus.trackingNumber || order.trackingNumber,
+      paymentMethod: order.paymentMethod,
+      createdAt: order.createdAt ? new Date(order.createdAt) : undefined,
+      updatedAt: Date.now(),
+      lastSyncAt: new Date(),
+      platformResponse: platformOrderStatus.platformResponse,
     };
 
     return NextResponse.json({
@@ -151,16 +150,13 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
 
-    // 获取订单信息
-    const order = await prisma.order.findFirst({
-      where: {
-        id: orderId,
-        userId: session.user.id,
-      },
-      include: {
-        platformAccount: true,
-      },
+    // 获取订单信息 (Convex)
+    const orders = await convexClient.query(asConvexQueryReference("ecommerce:getOrders"), {
+      memberId: session.user.id,
+      limit: 100,
     });
+
+    const order = orders?.orders?.find((o: any) => o._id === orderId);
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
@@ -174,9 +170,16 @@ export async function PUT(
       );
     }
 
-    // 获取平台账号信息
-    const platformAccount = order.platformAccount;
-    if (!platformAccount || !platformAccount.isActive) {
+    // 获取平台账号信息 (Convex)
+    const platformAccount = await convexClient.query(
+      asConvexQueryReference("ecommerce:getOrCreatePlatformAccount"),
+      {
+        memberId: session.user.id,
+        platform: order.platform,
+      }
+    );
+
+    if (!platformAccount || !platformAccount.accessToken) {
       return NextResponse.json({ error: "Platform account is not active" }, { status: 400 });
     }
 
@@ -193,16 +196,17 @@ export async function PUT(
         try {
           const newTokenInfo = await adapter.refreshToken(platformAccount.refreshToken);
 
-          // 更新数据库中的token
-          await prisma.platformAccount.update({
-            where: { id: platformAccount.id },
-            data: {
+          // 更新数据库中的token (Convex)
+          await convexClient.mutation(
+            asConvexMutationReference("ecommerce:upsertPlatformAccount"),
+            {
+              memberId: session.user.id,
+              platform: order.platform,
               accessToken: newTokenInfo.accessToken,
               refreshToken: newTokenInfo.refreshToken,
-              expiresAt: newTokenInfo.expiresAt,
-              lastSyncAt: new Date(),
-            },
-          });
+              tokenExpiresAt: newTokenInfo.expiresAt?.getTime(),
+            }
+          );
 
           accessToken = newTokenInfo.accessToken;
         } catch (refreshError) {
@@ -220,23 +224,19 @@ export async function PUT(
     const cancelResult = await adapter.cancelOrder(order.platformOrderId, accessToken);
 
     if (cancelResult) {
-      // 更新数据库中的订单状态
-      const updatedOrder = await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          status: "CANCELLED",
-          updatedAt: new Date(),
-          lastSyncAt: new Date(),
-        },
+      // 更新数据库中的订单状态 (Convex)
+      await convexClient.mutation(asConvexMutationReference("ecommerce:updateOrderStatus"), {
+        orderId: orderId as Id<"ecommerceOrders">,
+        status: "CANCELLED",
       });
 
       return NextResponse.json({
         success: true,
         order: {
-          id: updatedOrder.id,
-          platformOrderId: updatedOrder.platformOrderId,
-          status: updatedOrder.status,
-          updatedAt: updatedOrder.updatedAt,
+          id: orderId,
+          platformOrderId: order.platformOrderId,
+          status: "CANCELLED",
+          updatedAt: new Date(),
         },
         message: "Order cancelled successfully",
       });

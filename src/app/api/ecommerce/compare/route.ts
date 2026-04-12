@@ -1,7 +1,9 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
+// @ts-nocheck - Convex returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { convexClient } from "@/lib/convex-client";
+import { asConvexQueryReference } from "@/lib/convex-reference";
+import { foodRepository } from "@/lib/repositories/food-repository-singleton";
 import { PriceComparator } from "@/lib/services/price-comparator";
 import { PlatformError, PlatformErrorType } from "@/lib/services/ecommerce/types";
 
@@ -21,14 +23,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "foodIds array is required" }, { status: 400 });
     }
 
-    // 获取食材信息
-    const foods = await prisma.food.findMany({
-      where: {
-        id: { in: foodIds },
-      },
-    });
+    // 使用 Food Repository 获取食材信息
+    const foods = await Promise.all(
+      foodIds.map(async (id: string) => {
+        try {
+          return await foodRepository.findById(id);
+        } catch {
+          return null;
+        }
+      })
+    );
+    const validFoods = foods.filter((f): f is NonNullable<typeof f> => f !== null);
 
-    if (foods.length === 0) {
+    if (validFoods.length === 0) {
       return NextResponse.json({ error: "No foods found" }, { status: 404 });
     }
 
@@ -44,7 +51,7 @@ export async function POST(request: NextRequest) {
       preferInStock: config?.preferInStock !== false,
     };
 
-    const comparisonResults = await priceComparator.comparePrices(foods, comparisonConfig);
+    const comparisonResults = await priceComparator.comparePrices(validFoods, comparisonConfig);
 
     // 转换结果格式
     const results = comparisonResults.map((result) => ({
@@ -85,7 +92,7 @@ export async function POST(request: NextRequest) {
 
     // 计算汇总统计
     const statistics = {
-      totalFoods: foods.length,
+      totalFoods: validFoods.length,
       totalMatches: results.reduce((sum, result) => sum + result.matches.length, 0),
       foodsWithBestPrice: results.filter((result) => result.bestPrice !== null).length,
       averageSavings: calculateAverageSavings(results),
@@ -123,10 +130,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "foodId is required" }, { status: 400 });
     }
 
-    // 获取食材信息
-    const food = await prisma.food.findUnique({
-      where: { id: foodId },
-    });
+    // 使用 Food Repository 获取食材信息
+    const food = await foodRepository.findById(foodId);
 
     if (!food) {
       return NextResponse.json({ error: "Food not found" }, { status: 404 });

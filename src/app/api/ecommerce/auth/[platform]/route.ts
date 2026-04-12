@@ -1,7 +1,8 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
+// @ts-nocheck - Convex returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { convexClient } from "@/lib/convex-client";
+import { asConvexQueryReference, asConvexMutationReference } from "@/lib/convex-reference";
 import { platformAdapterFactory } from "@/lib/services/ecommerce";
 import { EcommercePlatform } from "@/lib/services/ecommerce/types";
 import { PlatformError, PlatformErrorType } from "@/lib/services/ecommerce/types";
@@ -76,42 +77,22 @@ export async function POST(
       state,
     });
 
-    // 保存平台账号信息到数据库
-    const platformAccount = await prisma.platformAccount.upsert({
-      where: {
-        userId_platform: {
-          userId: session.user.id,
-          platform,
-        },
-      },
-      update: {
-        platformUserId: tokenInfo.platformUserId,
-        accessToken: tokenInfo.accessToken,
-        refreshToken: tokenInfo.refreshToken,
-        tokenType: tokenInfo.tokenType,
-        scope: tokenInfo.scope,
-        expiresAt: tokenInfo.expiresAt,
-        status: "ACTIVE",
-        isActive: true,
-        lastSyncAt: new Date(),
-      },
-      create: {
-        userId: session.user.id,
+    // 保存平台账号信息到数据库 (Convex)
+    const accountId = await convexClient.mutation(
+      asConvexMutationReference("ecommerce:upsertPlatformAccount"),
+      {
+        memberId: session.user.id,
         platform,
-        platformUserId: tokenInfo.platformUserId,
         accessToken: tokenInfo.accessToken,
         refreshToken: tokenInfo.refreshToken,
-        tokenType: tokenInfo.tokenType,
-        scope: tokenInfo.scope,
-        expiresAt: tokenInfo.expiresAt,
-        status: "ACTIVE",
-        isActive: true,
-      },
-    });
+        tokenExpiresAt: tokenInfo.expiresAt?.getTime(),
+        platformUserId: tokenInfo.platformUserId,
+      }
+    );
 
     return NextResponse.json({
       success: true,
-      accountId: platformAccount.id,
+      accountId,
       platform,
       platformName: adapter.platformName,
     });

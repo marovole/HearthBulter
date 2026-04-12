@@ -1,7 +1,7 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
+// @ts-nocheck - Convex returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { foodRepository } from "@/lib/repositories/food-repository-singleton";
 import { CartAggregator } from "@/lib/services/cart-aggregator";
 import { PlatformError, PlatformErrorType } from "@/lib/services/ecommerce/types";
 
@@ -33,14 +33,19 @@ export async function POST(request: NextRequest) {
       quantities.set(item.foodId, item.quantity || 1);
     });
 
-    // 获取食材信息
-    const foods = await prisma.food.findMany({
-      where: {
-        id: { in: foodIds },
-      },
-    });
+    // 使用 Food Repository 获取食材信息
+    const foods = await Promise.all(
+      foodIds.map(async (id: string) => {
+        try {
+          return await foodRepository.findById(id);
+        } catch {
+          return null;
+        }
+      })
+    );
+    const validFoods = foods.filter((f): f is NonNullable<typeof f> => f !== null);
 
-    if (foods.length === 0) {
+    if (validFoods.length === 0) {
       return NextResponse.json({ error: "No foods found" }, { status: 404 });
     }
 
@@ -59,7 +64,7 @@ export async function POST(request: NextRequest) {
     };
 
     const aggregationResult = await cartAggregator.aggregateCart(
-      foods,
+      validFoods,
       quantities,
       address,
       aggregationConfig
@@ -157,14 +162,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "No valid foodIds provided" }, { status: 400 });
     }
 
-    // 获取食材信息
-    const foods = await prisma.food.findMany({
-      where: {
-        id: { in: foodIdArray },
-      },
-    });
+    // 使用 Food Repository 获取食材信息
+    const foods = await Promise.all(
+      foodIdArray.map(async (id: string) => {
+        try {
+          return await foodRepository.findById(id);
+        } catch {
+          return null;
+        }
+      })
+    );
+    const validFoods = foods.filter((f): f is NonNullable<typeof f> => f !== null);
 
-    if (foods.length === 0) {
+    if (validFoods.length === 0) {
       return NextResponse.json({ error: "No foods found" }, { status: 404 });
     }
 
@@ -173,7 +183,7 @@ export async function GET(request: NextRequest) {
 
     // 为每个食材设置默认数量1
     const quantities = new Map<string, number>();
-    foods.forEach((food) => {
+    validFoods.forEach((food) => {
       quantities.set(food.id, 1);
     });
 
@@ -190,7 +200,7 @@ export async function GET(request: NextRequest) {
 
     // 执行购物车聚合
     const aggregationResult = await cartAggregator.aggregateCart(
-      foods,
+      validFoods,
       quantities,
       defaultAddress,
       {
@@ -206,7 +216,7 @@ export async function GET(request: NextRequest) {
 
     // 转换为简化格式
     const simplifiedResult = {
-      foods: foods.map((food) => ({
+      foods: validFoods.map((food) => ({
         foodId: food.id,
         foodName: food.name,
         category: food.category,
@@ -224,7 +234,7 @@ export async function GET(request: NextRequest) {
             })) || [],
       })),
       summary: {
-        totalFoods: foods.length,
+        totalFoods: validFoods.length,
         totalMatches: aggregationResult.items.reduce((sum, item) => sum + item.matches.length, 0),
         platformsAvailable: Array.from(
           new Set(

@@ -1,7 +1,8 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
+// @ts-nocheck - Convex returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { convexClient } from "@/lib/convex-client";
+import { asConvexQueryReference, asConvexMutationReference } from "@/lib/convex-reference";
 import { platformAdapterFactory } from "@/lib/services/ecommerce";
 import { EcommercePlatform } from "@/lib/services/ecommerce/types";
 import {
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 否则从缓存搜索
+    // 否则从缓存搜索 (Convex)
     return await searchFromCache({
       keyword,
       category: category ?? undefined,
@@ -82,17 +83,16 @@ async function searchFromPlatformAPI(
   request: ProductSearchRequest
 ) {
   try {
-    // 获取用户的平台账号
-    const platformAccount = await prisma.platformAccount.findFirst({
-      where: {
-        userId,
+    // 获取用户的平台账号 (Convex)
+    const platformAccount = await convexClient.query(
+      asConvexQueryReference("ecommerce:getOrCreatePlatformAccount"),
+      {
+        memberId: userId,
         platform,
-        isActive: true,
-        status: "ACTIVE",
-      },
-    });
+      }
+    );
 
-    if (!platformAccount) {
+    if (!platformAccount || !platformAccount.accessToken) {
       return NextResponse.json(
         { error: "Platform account not found or inactive" },
         { status: 400 }
@@ -109,16 +109,17 @@ async function searchFromPlatformAPI(
         try {
           const newTokenInfo = await adapter.refreshToken(platformAccount.refreshToken);
 
-          // 更新数据库中的token
-          await prisma.platformAccount.update({
-            where: { id: platformAccount.id },
-            data: {
+          // 更新数据库中的token (Convex)
+          await convexClient.mutation(
+            asConvexMutationReference("ecommerce:upsertPlatformAccount"),
+            {
+              memberId: userId,
+              platform,
               accessToken: newTokenInfo.accessToken,
               refreshToken: newTokenInfo.refreshToken,
-              expiresAt: newTokenInfo.expiresAt,
-              lastSyncAt: new Date(),
-            },
-          });
+              tokenExpiresAt: newTokenInfo.expiresAt?.getTime(),
+            }
+          );
 
           platformAccount.accessToken = newTokenInfo.accessToken;
         } catch (refreshError) {
@@ -149,82 +150,46 @@ async function searchFromPlatformAPI(
 
 async function searchFromCache(request: ProductSearchRequest) {
   try {
-    // 构建搜索条件
-    const whereConditions: any = {
-      isValid: true,
-      expiresAt: { gt: new Date() },
-    };
+    // 使用 Convex 搜索产品
+    const offset = ((request.page ?? 1) - 1) * (request.pageSize ?? 20);
+    const limit = request.pageSize ?? 20;
 
-    if (request.keyword) {
-      whereConditions.OR = [
-        { name: { contains: request.keyword, mode: "insensitive" } },
-        { description: { contains: request.keyword, mode: "insensitive" } },
-        { brand: { contains: request.keyword, mode: "insensitive" } },
-      ];
-    }
+    const result = await convexClient.query(asConvexQueryReference("ecommerce:searchProducts"), {
+      keyword: request.keyword || "",
+      minPrice: request.minPrice,
+      maxPrice: request.maxPrice,
+      inStock: request.inStock,
+      limit,
+      offset,
+    });
 
-    if (request.category) {
-      whereConditions.category = {
-        contains: request.category,
-        mode: "insensitive",
-      };
-    }
-
-    if (request.brand) {
-      whereConditions.brand = { contains: request.brand, mode: "insensitive" };
-    }
-
-    if (request.minPrice !== undefined) {
-      whereConditions.price = { gte: request.minPrice };
-    }
-
-    if (request.maxPrice !== undefined) {
-      whereConditions.price = {
-        ...whereConditions.price,
-        lte: request.maxPrice,
-      };
-    }
-
-    if (request.inStock !== undefined) {
-      whereConditions.isInStock = request.inStock;
-    }
-
-    // 构建排序条件
-    const orderBy: any = {};
+    // 客户端排序
+    let products = result.products || [];
     if (request.sortBy) {
-      switch (request.sortBy) {
-        case "price":
-          orderBy.price = request.sortOrder || "asc";
-          break;
-        case "sales":
-          orderBy.salesCount = request.sortOrder || "desc";
-          break;
-        case "rating":
-          orderBy.rating = request.sortOrder || "desc";
-          break;
-        case "name":
-          orderBy.name = request.sortOrder || "asc";
-          break;
-        default:
-          orderBy.cachedAt = "desc";
-      }
-    } else {
-      orderBy.cachedAt = "desc";
+      products = products.sort((a: any, b: any) => {
+        let comparison = 0;
+        switch (request.sortBy) {
+          case "price":
+            comparison = (a.price || 0) - (b.price || 0);
+            break;
+          case "sales":
+            comparison = (a.salesCount || 0) - (b.salesCount || 0);
+            break;
+          case "rating":
+            comparison = (a.rating || 0) - (b.rating || 0);
+            break;
+          case "name":
+            comparison = (a.name || "").localeCompare(b.name || "");
+            break;
+          default:
+            comparison = (a.cachedAt || 0) - (b.cachedAt || 0);
+        }
+        return request.sortOrder === "desc" ? -comparison : comparison;
+      });
     }
-
-    // 查询数据库
-    const [products, total] = await Promise.all([
-      prisma.platformProduct.findMany({
-        where: whereConditions,
-        orderBy,
-        skip: (request.page! - 1) * request.pageSize!,
-        take: request.pageSize!,
-      }),
-      prisma.platformProduct.count({ where: whereConditions }),
-    ]);
 
     // 转换为标准格式
-    const standardizedProducts = products.map((product) => ({
+    const standardizedProducts = products.map((product: any) => ({
       platformProductId: product.platformProductId,
       platform: product.platform,
       sku: product.sku,
@@ -257,10 +222,10 @@ async function searchFromCache(request: ProductSearchRequest) {
     return NextResponse.json({
       success: true,
       products: standardizedProducts,
-      total,
+      total: result.total,
       page: request.page,
       pageSize: request.pageSize,
-      hasMore: request.page! * request.pageSize! < total,
+      hasMore: result.hasMore,
     });
   } catch (error) {
     console.error("Cache search error:", error);

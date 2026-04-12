@@ -1,9 +1,8 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
+// @ts-nocheck - Convex returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { foodRepository } from "@/lib/repositories/food-repository-singleton";
 import { SKUMatcher } from "@/lib/services/sku-matcher";
-import { PriceComparator } from "@/lib/services/price-comparator";
 import { PlatformError, PlatformErrorType } from "@/lib/services/ecommerce/types";
 
 // Force dynamic rendering for auth()
@@ -22,20 +21,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "foodIds array is required" }, { status: 400 });
     }
 
-    // 获取食材信息
-    const foods = await prisma.food.findMany({
-      where: {
-        id: { in: foodIds },
-      },
-    });
+    // 使用 Food Repository 获取食材信息
+    const foods = await Promise.all(
+      foodIds.map(async (id: string) => {
+        try {
+          return await foodRepository.findById(id);
+        } catch {
+          return null;
+        }
+      })
+    );
+    const validFoods = foods.filter((f): f is NonNullable<typeof f> => f !== null);
 
-    if (foods.length === 0) {
+    if (validFoods.length === 0) {
       return NextResponse.json({ error: "No foods found" }, { status: 404 });
     }
 
     // 初始化服务
     const skuMatcher = new SKUMatcher();
-    const priceComparator = new PriceComparator();
 
     // 执行SKU匹配
     const matchConfig = {
@@ -45,11 +48,11 @@ export async function POST(request: NextRequest) {
       priceRange: config?.priceRange,
     };
 
-    const matches = await skuMatcher.matchMultipleFoods(foods, matchConfig);
+    const matches = await skuMatcher.matchMultipleFoods(validFoods, matchConfig);
 
     // 转换结果格式
     const results = Array.from(matches.entries()).map(([foodId, foodMatches]) => {
-      const food = foods.find((f) => f.id === foodId);
+      const food = validFoods.find((f) => f.id === foodId);
       return {
         foodId,
         foodName: food?.name || "Unknown",
@@ -77,7 +80,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       results,
-      totalFoods: foods.length,
+      totalFoods: validFoods.length,
       totalMatches: results.reduce((sum, result) => sum + result.matches.length, 0),
     });
   } catch (error) {
@@ -105,10 +108,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "foodId is required" }, { status: 400 });
     }
 
-    // 获取食材信息
-    const food = await prisma.food.findUnique({
-      where: { id: foodId },
-    });
+    // 使用 Food Repository 获取食材信息
+    const food = await foodRepository.findById(foodId);
 
     if (!food) {
       return NextResponse.json({ error: "Food not found" }, { status: 404 });

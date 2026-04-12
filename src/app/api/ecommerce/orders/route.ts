@@ -1,11 +1,14 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
+// @ts-nocheck - Convex returns untyped data, pending proper type definitions
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { convexClient } from "@/lib/convex-client";
+import { asConvexQueryReference, asConvexMutationReference } from "@/lib/convex-reference";
+import { foodRepository } from "@/lib/repositories/food-repository-singleton";
 import { CartAggregator } from "@/lib/services/cart-aggregator";
 import { platformAdapterFactory } from "@/lib/services/ecommerce";
 import { EcommercePlatform, OrderStatus } from "@/lib/services/ecommerce/types";
 import { PlatformError, PlatformErrorType } from "@/lib/services/ecommerce/types";
+import { Id } from "../../../../convex/_generated/dataModel";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
@@ -35,14 +38,19 @@ export async function POST(request: NextRequest) {
       quantities.set(item.foodId, item.quantity || 1);
     });
 
-    // 获取食材信息
-    const foods = await prisma.food.findMany({
-      where: {
-        id: { in: foodIds },
-      },
-    });
+    // 使用 Food Repository 获取食材信息
+    const foods = await Promise.all(
+      foodIds.map(async (id: string) => {
+        try {
+          return await foodRepository.findById(id);
+        } catch {
+          return null;
+        }
+      })
+    );
+    const validFoods = foods.filter((f): f is NonNullable<typeof f> => f !== null);
 
-    if (foods.length === 0) {
+    if (validFoods.length === 0) {
       return NextResponse.json({ error: "No foods found" }, { status: 404 });
     }
 
@@ -61,7 +69,7 @@ export async function POST(request: NextRequest) {
     };
 
     const aggregationResult = await cartAggregator.aggregateCart(
-      foods,
+      validFoods,
       quantities,
       address,
       aggregationConfig
@@ -89,17 +97,17 @@ export async function POST(request: NextRequest) {
       paymentMethod || "wechat_pay"
     );
 
-    // 保存订单到数据库
+    // 保存订单到数据库 (Convex)
     const savedOrders = [];
     for (const orderResult of orderResults) {
-      const platformAccount = await prisma.platformAccount.findFirst({
-        where: {
-          userId: session.user.id,
+      // 获取平台账号
+      const platformAccount = await convexClient.query(
+        asConvexQueryReference("ecommerce:getOrCreatePlatformAccount"),
+        {
+          memberId: session.user.id,
           platform: orderResult.platform,
-          isActive: true,
-          status: "ACTIVE",
-        },
-      });
+        }
+      );
 
       if (!platformAccount) {
         throw new PlatformError(
@@ -123,38 +131,44 @@ export async function POST(request: NextRequest) {
         specification: item.selectedProduct!.specification,
       }));
 
-      const savedOrder = await prisma.order.create({
-        data: {
-          userId: session.user.id,
-          platformAccountId: platformAccount.id,
-          platformOrderId: orderResult.orderId,
+      const subtotal = platformItems.reduce(
+        (sum, item) => sum + item.selectedProduct!.price * item.quantity,
+        0
+      );
+      const shippingFee = orderResult.total - subtotal;
+
+      // 创建订单 (Convex)
+      const orderId = await convexClient.mutation(
+        asConvexMutationReference("ecommerce:createOrder"),
+        {
+          memberId: session.user.id as Id<"familyMembers">,
           platform: orderResult.platform,
+          platformOrderId: orderResult.orderId,
           status: OrderStatus.PENDING_PAYMENT,
           items: orderItems,
           totalAmount: orderResult.total,
-          subtotal: platformItems.reduce(
-            (sum, item) => sum + item.selectedProduct!.price * item.quantity,
-            0
-          ),
-          shippingFee:
-            orderResult.total -
-            platformItems.reduce(
-              (sum, item) => sum + item.selectedProduct!.price * item.quantity,
-              0
-            ),
+          subtotal,
+          shippingFee,
+          discount: 0,
           deliveryAddress: address,
           estimatedDeliveryTime: orderResult.estimatedDeliveryTime,
-          paymentMethod: paymentMethod || "wechat_pay",
-        },
+        }
+      );
+
+      // 获取创建的订单详情
+      const orders = await convexClient.query(asConvexQueryReference("ecommerce:getOrders"), {
+        memberId: session.user.id,
+        limit: 1,
       });
+      const savedOrder = orders?.orders?.find((o: any) => o._id === orderId);
 
       savedOrders.push({
-        id: savedOrder.id,
-        platformOrderId: savedOrder.platformOrderId,
-        platform: savedOrder.platform,
-        status: savedOrder.status,
-        totalAmount: savedOrder.totalAmount,
-        estimatedDeliveryTime: savedOrder.estimatedDeliveryTime,
+        id: orderId,
+        platformOrderId: orderResult.orderId,
+        platform: orderResult.platform,
+        status: OrderStatus.PENDING_PAYMENT,
+        totalAmount: orderResult.total,
+        estimatedDeliveryTime: orderResult.estimatedDeliveryTime,
         items: orderItems,
       });
     }
@@ -193,65 +207,44 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(searchParams.get("pageSize") || "10");
     const limit = parseInt(searchParams.get("limit") || "20");
 
-    // 构建查询条件
-    const whereConditions: any = {
-      userId: session.user.id,
-    };
+    const offset = (page - 1) * pageSize;
+    const actualLimit = Math.min(pageSize, limit);
 
-    if (status) {
-      whereConditions.status = status.toUpperCase();
-    }
-
-    if (platform) {
-      whereConditions.platform = platform.toUpperCase();
-    }
-
-    // 查询订单
-    const [orders, total] = await Promise.all([
-      prisma.order.findMany({
-        where: whereConditions,
-        orderBy: { createdAt: "desc" },
-        skip: (page - 1) * pageSize,
-        take: Math.min(pageSize, limit),
-      }),
-      prisma.order.count({ where: whereConditions }),
-    ]);
-
-    // 获取平台账号信息
-    const platformAccountIds = orders.map((order) => order.platformAccountId);
-    const platformAccounts = await prisma.platformAccount.findMany({
-      where: { id: { in: platformAccountIds } },
-      select: { id: true, platform: true, platformUserId: true },
+    // 使用 Convex 查询订单
+    const result = await convexClient.query(asConvexQueryReference("ecommerce:getOrders"), {
+      memberId: session.user.id,
+      status: status?.toUpperCase(),
+      platform: platform?.toUpperCase(),
+      limit: actualLimit,
+      offset,
     });
 
-    const accountMap = new Map(platformAccounts.map((account) => [account.id, account]));
+    const orders = result?.orders || [];
+    const total = result?.total || 0;
 
     // 格式化订单数据
-    const formattedOrders = orders.map((order) => {
-      const platformAccount = accountMap.get(order.platformAccountId);
-      return {
-        id: order.id,
-        platformOrderId: order.platformOrderId,
-        platform: order.platform,
-        platformUserId: platformAccount?.platformUserId,
-        status: order.status,
-        paymentStatus: order.paymentStatus,
-        deliveryStatus: order.deliveryStatus,
-        items: order.items,
-        totalAmount: order.totalAmount,
-        subtotal: order.subtotal,
-        shippingFee: order.shippingFee,
-        discount: order.discount,
-        deliveryAddress: order.deliveryAddress,
-        estimatedDeliveryTime: order.estimatedDeliveryTime,
-        actualDeliveryTime: order.actualDeliveryTime,
-        trackingNumber: order.trackingNumber,
-        paymentMethod: order.paymentMethod,
-        createdAt: order.createdAt,
-        updatedAt: order.updatedAt,
-        lastSyncAt: order.lastSyncAt,
-      };
-    });
+    const formattedOrders = orders.map((order: any) => ({
+      id: order._id,
+      platformOrderId: order.platformOrderId,
+      platform: order.platform,
+      platformUserId: undefined, // Convex schema doesn't store this in orders
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      deliveryStatus: order.deliveryStatus,
+      items: order.items,
+      totalAmount: order.totalAmount,
+      subtotal: order.subtotal,
+      shippingFee: order.shippingFee,
+      discount: order.discount,
+      deliveryAddress: order.deliveryAddress,
+      estimatedDeliveryTime: order.estimatedDeliveryTime,
+      actualDeliveryTime: order.actualDeliveryTime,
+      trackingNumber: order.trackingNumber,
+      paymentMethod: order.paymentMethod,
+      createdAt: order.createdAt ? new Date(order.createdAt) : undefined,
+      updatedAt: order.updatedAt ? new Date(order.updatedAt) : undefined,
+      lastSyncAt: order.lastSyncAt ? new Date(order.lastSyncAt) : undefined,
+    }));
 
     return NextResponse.json({
       success: true,
