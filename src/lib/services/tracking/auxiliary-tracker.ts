@@ -1,33 +1,119 @@
-// @ts-nocheck - neonAdapter returns untyped data, pending proper type definitions
 /**
  * 辅助打卡服务
  * 负责处理饮水、运动、睡眠、体重等辅助打卡功能
  */
 
-import { db } from "@/lib/db";
+import { convexClient, api } from "@/lib/convex-client";
+
+type Id<TableName extends string> = string & { __tableName: TableName };
+
+type SleepQuality = "EXCELLENT" | "GOOD" | "FAIR" | "POOR";
+
+type AuxiliaryTrackingRecord = {
+  memberId: Id<"familyMembers">;
+  date: number;
+  exerciseMinutes?: number;
+  sleepHours?: number;
+  sleepQuality?: string;
+  waterIntake?: number;
+  waterTarget?: number;
+  steps?: number;
+  standingHours?: number;
+  caloriesBurned?: number;
+  exerciseType?: string;
+  weight?: number;
+  bodyFat?: number;
+};
+
+function toMemberId(memberId: string): Id<"familyMembers"> {
+  return memberId as Id<"familyMembers">;
+}
+
+function toStartOfDayTimestamp(date: Date): number {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized.getTime();
+}
+
+function pickDefinedTrackingFields(
+  source: Partial<AuxiliaryTrackingRecord>
+): Partial<AuxiliaryTrackingRecord> {
+  const fields: Partial<AuxiliaryTrackingRecord> = {};
+
+  if (source.exerciseMinutes !== undefined) fields.exerciseMinutes = source.exerciseMinutes;
+  if (source.sleepHours !== undefined) fields.sleepHours = source.sleepHours;
+  if (source.sleepQuality !== undefined) fields.sleepQuality = source.sleepQuality;
+  if (source.waterIntake !== undefined) fields.waterIntake = source.waterIntake;
+  if (source.waterTarget !== undefined) fields.waterTarget = source.waterTarget;
+  if (source.steps !== undefined) fields.steps = source.steps;
+  if (source.standingHours !== undefined) fields.standingHours = source.standingHours;
+  if (source.caloriesBurned !== undefined) fields.caloriesBurned = source.caloriesBurned;
+  if (source.exerciseType !== undefined) fields.exerciseType = source.exerciseType;
+  if (source.weight !== undefined) fields.weight = source.weight;
+  if (source.bodyFat !== undefined) fields.bodyFat = source.bodyFat;
+
+  return fields;
+}
+
+async function getTrackingByDate(memberId: Id<"familyMembers">, date: number) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (await convexClient.query(api.analytics.getAuxiliaryTracking, {
+    memberId,
+    date,
+  })) as any as AuxiliaryTrackingRecord | null;
+}
+
+async function listTrackingsByDateRange(
+  memberId: Id<"familyMembers">,
+  startDate: number,
+  endDate: number
+) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (await convexClient.query(api.analytics.listAuxiliaryTrackings, {
+    memberId,
+    startDate,
+    endDate,
+  })) as any as AuxiliaryTrackingRecord[];
+}
+
+async function upsertTrackingByDate(
+  memberId: Id<"familyMembers">,
+  date: number,
+  updates: Partial<AuxiliaryTrackingRecord>
+) {
+  const existing = await getTrackingByDate(memberId, date);
+
+  await convexClient.mutation(api.analytics.upsertAuxiliaryTracking, {
+    memberId,
+    date,
+    ...pickDefinedTrackingFields(existing ?? {}),
+    ...pickDefinedTrackingFields(updates),
+  });
+
+  return getTrackingByDate(memberId, date);
+}
 
 /**
  * 获取或创建今日辅助打卡记录
  */
 export async function getOrCreateTodayTracking(memberId: string) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const memberIdRef = toMemberId(memberId);
+  const todayTimestamp = toStartOfDayTimestamp(new Date());
 
-  let tracking = await db.auxiliaryTracking.findUnique({
-    where: {
-      memberId_date: {
-        memberId,
-        date: today,
-      },
-    },
+  let tracking = await convexClient.query(api.analytics.getAuxiliaryTracking, {
+    memberId: memberIdRef,
+    date: todayTimestamp,
   });
 
   if (!tracking) {
-    tracking = await db.auxiliaryTracking.create({
-      data: {
-        memberId,
-        date: today,
-      },
+    await convexClient.mutation(api.analytics.upsertAuxiliaryTracking, {
+      memberId: memberIdRef,
+      date: todayTimestamp,
+    });
+
+    tracking = await convexClient.query(api.analytics.getAuxiliaryTracking, {
+      memberId: memberIdRef,
+      date: todayTimestamp,
     });
   }
 
@@ -38,53 +124,26 @@ export async function getOrCreateTodayTracking(memberId: string) {
  * 饮水打卡
  */
 export async function trackWater(memberId: string, amount: number) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const memberIdRef = toMemberId(memberId);
+  const todayTimestamp = toStartOfDayTimestamp(new Date());
 
-  const tracking = await db.auxiliaryTracking.upsert({
-    where: {
-      memberId_date: {
-        memberId,
-        date: today,
-      },
-    },
-    update: {
-      waterIntake: {
-        increment: amount,
-      },
-    },
-    create: {
-      memberId,
-      date: today,
-      waterIntake: amount,
-    },
+  const existing = await getTrackingByDate(memberIdRef, todayTimestamp);
+  const waterIntake = (existing?.waterIntake ?? 0) + amount;
+
+  return upsertTrackingByDate(memberIdRef, todayTimestamp, {
+    waterIntake,
   });
-
-  return tracking;
 }
 
 /**
  * 设置饮水目标
  */
 export async function setWaterTarget(memberId: string, target: number) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const memberIdRef = toMemberId(memberId);
+  const todayTimestamp = toStartOfDayTimestamp(new Date());
 
-  return db.auxiliaryTracking.upsert({
-    where: {
-      memberId_date: {
-        memberId,
-        date: today,
-      },
-    },
-    update: {
-      waterTarget: target,
-    },
-    create: {
-      memberId,
-      date: today,
-      waterTarget: target,
-    },
+  return upsertTrackingByDate(memberIdRef, todayTimestamp, {
+    waterTarget: target,
   });
 }
 
@@ -99,32 +158,17 @@ export async function trackExercise(
     exerciseType: string[];
   }
 ) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const memberIdRef = toMemberId(memberId);
+  const todayTimestamp = toStartOfDayTimestamp(new Date());
 
-  return db.auxiliaryTracking.upsert({
-    where: {
-      memberId_date: {
-        memberId,
-        date: today,
-      },
-    },
-    update: {
-      exerciseMinutes: {
-        increment: data.minutes,
-      },
-      caloriesBurned: {
-        increment: data.caloriesBurned,
-      },
-      exerciseType: JSON.stringify(data.exerciseType),
-    },
-    create: {
-      memberId,
-      date: today,
-      exerciseMinutes: data.minutes,
-      caloriesBurned: data.caloriesBurned,
-      exerciseType: JSON.stringify(data.exerciseType),
-    },
+  const existing = await getTrackingByDate(memberIdRef, todayTimestamp);
+  const exerciseMinutes = (existing?.exerciseMinutes ?? 0) + data.minutes;
+  const caloriesBurned = (existing?.caloriesBurned ?? 0) + data.caloriesBurned;
+
+  return upsertTrackingByDate(memberIdRef, todayTimestamp, {
+    exerciseMinutes,
+    caloriesBurned,
+    exerciseType: JSON.stringify(data.exerciseType),
   });
 }
 
@@ -163,31 +207,17 @@ export async function trackSleep(
   memberId: string,
   data: {
     hours: number;
-    quality: "EXCELLENT" | "GOOD" | "FAIR" | "POOR";
+    quality: SleepQuality;
   }
 ) {
   // 睡眠记录的日期应该是前一天（因为睡眠是前一晚的）
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  yesterday.setHours(0, 0, 0, 0);
+  const yesterdayTimestamp = toStartOfDayTimestamp(yesterday);
 
-  return db.auxiliaryTracking.upsert({
-    where: {
-      memberId_date: {
-        memberId,
-        date: yesterday,
-      },
-    },
-    update: {
-      sleepHours: data.hours,
-      sleepQuality: data.quality,
-    },
-    create: {
-      memberId,
-      date: yesterday,
-      sleepHours: data.hours,
-      sleepQuality: data.quality,
-    },
+  return upsertTrackingByDate(toMemberId(memberId), yesterdayTimestamp, {
+    sleepHours: data.hours,
+    sleepQuality: data.quality,
   });
 }
 
@@ -201,50 +231,40 @@ export async function trackWeight(
     bodyFat?: number;
   }
 ) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const memberIdRef = toMemberId(memberId);
+  const todayTimestamp = toStartOfDayTimestamp(new Date());
 
-  const tracking = await db.auxiliaryTracking.upsert({
-    where: {
-      memberId_date: {
-        memberId,
-        date: today,
-      },
-    },
-    update: {
-      weight: data.weight,
-      ...(data.bodyFat !== undefined && { bodyFat: data.bodyFat }),
-    },
-    create: {
-      memberId,
-      date: today,
-      weight: data.weight,
-      bodyFat: data.bodyFat,
-    },
+  const tracking = await upsertTrackingByDate(memberIdRef, todayTimestamp, {
+    weight: data.weight,
+    ...(data.bodyFat !== undefined && { bodyFat: data.bodyFat }),
   });
 
   // 同时更新 FamilyMember 的体重（最新值）
-  await db.familyMember.update({
-    where: { id: memberId },
-    data: {
+  await convexClient.mutation(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (api.members as any).update,
+    {
+      memberId: memberIdRef,
       weight: data.weight,
-    },
-  });
+    }
+  );
 
   // 重新计算BMI
-  const member = await db.familyMember.findUnique({
-    where: { id: memberId },
-    select: { height: true, weight: true },
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const member = (await convexClient.query(api.members.getById, { memberId: memberIdRef })) as any;
 
-  if (member?.height && member?.weight) {
+  if (member?.height && data.weight) {
     const heightInMeters = member.height / 100;
-    const bmi = member.weight / (heightInMeters * heightInMeters);
+    const bmi = data.weight / (heightInMeters * heightInMeters);
 
-    await db.familyMember.update({
-      where: { id: memberId },
-      data: { bmi },
-    });
+    await convexClient.mutation(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (api.members as any).update,
+      {
+        memberId: memberIdRef,
+        bmi,
+      }
+    );
   }
 
   return tracking;
@@ -262,24 +282,20 @@ export async function getAuxiliaryTrackingHistory(
   } = {}
 ) {
   const { startDate, endDate, limit = 30 } = options;
+  const memberIdRef = toMemberId(memberId);
 
-  const where: any = {
-    memberId,
-  };
+  const startTimestamp = startDate ? toStartOfDayTimestamp(startDate) : 0;
+  const endTimestamp = endDate
+    ? (() => {
+        const normalized = new Date(endDate);
+        normalized.setHours(23, 59, 59, 999);
+        return normalized.getTime();
+      })()
+    : Date.now();
 
-  if (startDate || endDate) {
-    where.date = {};
-    if (startDate) where.date.gte = startDate;
-    if (endDate) where.date.lte = endDate;
-  }
+  const trackings = await listTrackingsByDateRange(memberIdRef, startTimestamp, endTimestamp);
 
-  return db.auxiliaryTracking.findMany({
-    where,
-    orderBy: {
-      date: "desc",
-    },
-    take: limit,
-  });
+  return [...trackings].sort((a, b) => b.date - a.date).slice(0, limit);
 }
 
 /**
@@ -287,33 +303,21 @@ export async function getAuxiliaryTrackingHistory(
  */
 export async function getWeightTrend(memberId: string, days: number = 30) {
   const endDate = new Date();
-  endDate.setHours(0, 0, 0, 0);
+  const endTimestamp = toStartOfDayTimestamp(endDate);
 
   const startDate = new Date(endDate);
   startDate.setDate(startDate.getDate() - (days - 1));
+  const startTimestamp = toStartOfDayTimestamp(startDate);
 
-  const trackings = await db.auxiliaryTracking.findMany({
-    where: {
-      memberId,
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-      weight: {
-        not: null,
-      },
-    },
-    select: {
-      date: true,
-      weight: true,
-      bodyFat: true,
-    },
-    orderBy: {
-      date: "asc",
-    },
-  });
+  const trackings = await listTrackingsByDateRange(
+    toMemberId(memberId),
+    startTimestamp,
+    endTimestamp
+  );
 
-  if (trackings.length === 0) {
+  const weightTrackings = trackings.filter((t) => t.weight !== undefined && t.weight !== null);
+
+  if (weightTrackings.length === 0) {
     return {
       trend: "no_data" as const,
       data: [],
@@ -322,11 +326,12 @@ export async function getWeightTrend(memberId: string, days: number = 30) {
     };
   }
 
-  const firstWeight = trackings[0].weight!;
-  const lastWeight = trackings[trackings.length - 1].weight!;
+  const firstWeight = weightTrackings.at(0)?.weight ?? 0;
+  const lastWeight = weightTrackings.at(-1)?.weight ?? 0;
   const change = lastWeight - firstWeight;
 
-  const avgWeight = trackings.reduce((sum, t) => sum + (t.weight || 0), 0) / trackings.length;
+  const avgWeight =
+    weightTrackings.reduce((sum, t) => sum + (t.weight ?? 0), 0) / weightTrackings.length;
 
   let trend: "increasing" | "decreasing" | "stable" = "stable";
   if (Math.abs(change) > 1) {
@@ -335,7 +340,7 @@ export async function getWeightTrend(memberId: string, days: number = 30) {
 
   return {
     trend,
-    data: trackings,
+    data: weightTrackings,
     change,
     avgWeight,
   };
@@ -346,33 +351,23 @@ export async function getWeightTrend(memberId: string, days: number = 30) {
  */
 export async function getSleepStats(memberId: string, days: number = 7) {
   const endDate = new Date();
-  endDate.setHours(0, 0, 0, 0);
+  const endTimestamp = toStartOfDayTimestamp(endDate);
 
   const startDate = new Date(endDate);
   startDate.setDate(startDate.getDate() - (days - 1));
+  const startTimestamp = toStartOfDayTimestamp(startDate);
 
-  const trackings = await db.auxiliaryTracking.findMany({
-    where: {
-      memberId,
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-      sleepHours: {
-        not: null,
-      },
-    },
-    select: {
-      date: true,
-      sleepHours: true,
-      sleepQuality: true,
-    },
-    orderBy: {
-      date: "asc",
-    },
-  });
+  const trackings = await listTrackingsByDateRange(
+    toMemberId(memberId),
+    startTimestamp,
+    endTimestamp
+  );
 
-  if (trackings.length === 0) {
+  const sleepTrackings = trackings.filter(
+    (t) => t.sleepHours !== undefined && t.sleepHours !== null
+  );
+
+  if (sleepTrackings.length === 0) {
     return {
       avgHours: 0,
       totalNights: 0,
@@ -381,10 +376,11 @@ export async function getSleepStats(memberId: string, days: number = 7) {
     };
   }
 
-  const avgHours = trackings.reduce((sum, t) => sum + (t.sleepHours || 0), 0) / trackings.length;
+  const avgHours =
+    sleepTrackings.reduce((sum, t) => sum + (t.sleepHours ?? 0), 0) / sleepTrackings.length;
 
   const qualityDistribution: { [key: string]: number } = {};
-  trackings.forEach((t) => {
+  sleepTrackings.forEach((t) => {
     if (t.sleepQuality) {
       qualityDistribution[t.sleepQuality] = (qualityDistribution[t.sleepQuality] || 0) + 1;
     }
@@ -392,9 +388,9 @@ export async function getSleepStats(memberId: string, days: number = 7) {
 
   return {
     avgHours: Math.round(avgHours * 10) / 10,
-    totalNights: trackings.length,
+    totalNights: sleepTrackings.length,
     qualityDistribution,
-    data: trackings,
+    data: sleepTrackings,
   };
 }
 
@@ -403,47 +399,34 @@ export async function getSleepStats(memberId: string, days: number = 7) {
  */
 export async function getExerciseStats(memberId: string, days: number = 7) {
   const endDate = new Date();
-  endDate.setHours(0, 0, 0, 0);
+  const endTimestamp = toStartOfDayTimestamp(endDate);
 
   const startDate = new Date(endDate);
   startDate.setDate(startDate.getDate() - (days - 1));
+  const startTimestamp = toStartOfDayTimestamp(startDate);
 
-  const trackings = await db.auxiliaryTracking.findMany({
-    where: {
-      memberId,
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-      exerciseMinutes: {
-        gt: 0,
-      },
-    },
-    select: {
-      date: true,
-      exerciseMinutes: true,
-      caloriesBurned: true,
-      exerciseType: true,
-    },
-    orderBy: {
-      date: "asc",
-    },
-  });
+  const trackings = await listTrackingsByDateRange(
+    toMemberId(memberId),
+    startTimestamp,
+    endTimestamp
+  );
 
-  const totalMinutes = trackings.reduce((sum, t) => sum + (t.exerciseMinutes || 0), 0);
-  const totalCalories = trackings.reduce((sum, t) => sum + (t.caloriesBurned || 0), 0);
-  const activeDays = trackings.length;
+  const exerciseTrackings = trackings.filter((t) => (t.exerciseMinutes ?? 0) > 0);
+
+  const totalMinutes = exerciseTrackings.reduce((sum, t) => sum + (t.exerciseMinutes ?? 0), 0);
+  const totalCalories = exerciseTrackings.reduce((sum, t) => sum + (t.caloriesBurned ?? 0), 0);
+  const activeDays = exerciseTrackings.length;
 
   // 统计运动类型分布
   const typeDistribution: { [key: string]: number } = {};
-  trackings.forEach((t) => {
+  exerciseTrackings.forEach((t) => {
     if (t.exerciseType) {
       try {
         const types = JSON.parse(t.exerciseType) as string[];
         types.forEach((type) => {
           typeDistribution[type] = (typeDistribution[type] || 0) + 1;
         });
-      } catch (error) {
+      } catch {
         // 忽略解析错误
       }
     }
@@ -455,7 +438,7 @@ export async function getExerciseStats(memberId: string, days: number = 7) {
     activeDays,
     avgMinutesPerDay: Math.round(totalMinutes / days),
     typeDistribution,
-    data: trackings,
+    data: exerciseTrackings,
   };
 }
 
@@ -464,34 +447,23 @@ export async function getExerciseStats(memberId: string, days: number = 7) {
  */
 export async function getWaterStats(memberId: string, days: number = 7) {
   const endDate = new Date();
-  endDate.setHours(0, 0, 0, 0);
+  const endTimestamp = toStartOfDayTimestamp(endDate);
 
   const startDate = new Date(endDate);
   startDate.setDate(startDate.getDate() - (days - 1));
+  const startTimestamp = toStartOfDayTimestamp(startDate);
 
-  const trackings = await db.auxiliaryTracking.findMany({
-    where: {
-      memberId,
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
-    select: {
-      date: true,
-      waterIntake: true,
-      waterTarget: true,
-    },
-    orderBy: {
-      date: "asc",
-    },
-  });
+  const trackings = await listTrackingsByDateRange(
+    toMemberId(memberId),
+    startTimestamp,
+    endTimestamp
+  );
 
-  const totalIntake = trackings.reduce((sum, t) => sum + (t.waterIntake || 0), 0);
+  const totalIntake = trackings.reduce((sum, t) => sum + (t.waterIntake ?? 0), 0);
   const avgIntake = Math.round(totalIntake / days);
 
   const targetReachedDays = trackings.filter(
-    (t) => (t.waterIntake || 0) >= (t.waterTarget || 2000)
+    (t) => (t.waterIntake ?? 0) >= (t.waterTarget ?? 2000)
   ).length;
 
   const completionRate = (targetReachedDays / days) * 100;

@@ -56,9 +56,7 @@ export const listAnomaliesByMember = query({
       .collect();
 
     return data
-      .filter(
-        (a) => a.detectedAt >= args.startDate && a.detectedAt <= args.endDate,
-      )
+      .filter((a) => a.detectedAt >= args.startDate && a.detectedAt <= args.endDate)
       .sort((a, b) => b.detectedAt - a.detectedAt)
       .slice(0, args.limit ?? 100);
   },
@@ -83,11 +81,7 @@ export const countAnomaliesByMember = query({
       if (a.detectedAt < args.startDate || a.detectedAt > args.endDate) {
         return false;
       }
-      if (
-        args.severities &&
-        args.severities.length > 0 &&
-        !args.severities.includes(a.severity)
-      ) {
+      if (args.severities && args.severities.length > 0 && !args.severities.includes(a.severity)) {
         return false;
       }
       if (args.status && a.status !== args.status) {
@@ -145,9 +139,7 @@ export const getDailyNutritionTarget = query({
   handler: async (ctx, args) => {
     const data = await ctx.db
       .query("dailyNutritionTargets")
-      .withIndex("by_member_date", (q) =>
-        q.eq("memberId", args.memberId).eq("date", args.date),
-      )
+      .withIndex("by_member_date", (q) => q.eq("memberId", args.memberId).eq("date", args.date))
       .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .unique();
     return data ?? null;
@@ -164,14 +156,12 @@ export const listDailyNutritionTargets = query({
     const data = await ctx.db
       .query("dailyNutritionTargets")
       .withIndex("by_member_date", (q) =>
-        q.eq("memberId", args.memberId).gte("date", args.startDate),
+        q.eq("memberId", args.memberId).gte("date", args.startDate)
       )
       .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .collect();
 
-    return data
-      .filter((t) => t.date <= args.endDate)
-      .sort((a, b) => a.date - b.date);
+    return data.filter((t) => t.date <= args.endDate).sort((a, b) => a.date - b.date);
   },
 });
 
@@ -191,9 +181,7 @@ export const upsertDailyNutritionTarget = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("dailyNutritionTargets")
-      .withIndex("by_member_date", (q) =>
-        q.eq("memberId", args.memberId).eq("date", args.date),
-      )
+      .withIndex("by_member_date", (q) => q.eq("memberId", args.memberId).eq("date", args.date))
       .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .unique();
 
@@ -226,9 +214,7 @@ export const getAuxiliaryTracking = query({
   handler: async (ctx, args) => {
     const data = await ctx.db
       .query("auxiliaryTrackings")
-      .withIndex("by_member_date", (q) =>
-        q.eq("memberId", args.memberId).eq("date", args.date),
-      )
+      .withIndex("by_member_date", (q) => q.eq("memberId", args.memberId).eq("date", args.date))
       .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .unique();
     return data ?? null;
@@ -245,14 +231,12 @@ export const listAuxiliaryTrackings = query({
     const data = await ctx.db
       .query("auxiliaryTrackings")
       .withIndex("by_member_date", (q) =>
-        q.eq("memberId", args.memberId).gte("date", args.startDate),
+        q.eq("memberId", args.memberId).gte("date", args.startDate)
       )
       .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .collect();
 
-    return data
-      .filter((t) => t.date <= args.endDate)
-      .sort((a, b) => a.date - b.date);
+    return data.filter((t) => t.date <= args.endDate).sort((a, b) => a.date - b.date);
   },
 });
 
@@ -264,15 +248,18 @@ export const upsertAuxiliaryTracking = mutation({
     sleepHours: v.optional(v.number()),
     sleepQuality: v.optional(v.string()),
     waterIntake: v.optional(v.number()),
+    waterTarget: v.optional(v.number()),
     steps: v.optional(v.number()),
     standingHours: v.optional(v.number()),
+    caloriesBurned: v.optional(v.number()),
+    exerciseType: v.optional(v.string()),
+    weight: v.optional(v.number()),
+    bodyFat: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("auxiliaryTrackings")
-      .withIndex("by_member_date", (q) =>
-        q.eq("memberId", args.memberId).eq("date", args.date),
-      )
+      .withIndex("by_member_date", (q) => q.eq("memberId", args.memberId).eq("date", args.date))
       .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .unique();
 
@@ -283,8 +270,13 @@ export const upsertAuxiliaryTracking = mutation({
         sleepHours: args.sleepHours,
         sleepQuality: args.sleepQuality,
         waterIntake: args.waterIntake,
+        waterTarget: args.waterTarget,
         steps: args.steps,
         standingHours: args.standingHours,
+        caloriesBurned: args.caloriesBurned,
+        exerciseType: args.exerciseType,
+        weight: args.weight,
+        bodyFat: args.bodyFat,
         updatedAt: now,
       });
       return existing._id;
@@ -303,9 +295,7 @@ export const getHealthScore = query({
   handler: async (ctx, args) => {
     const data = await ctx.db
       .query("healthScores")
-      .withIndex("by_member_date", (q) =>
-        q.eq("memberId", args.memberId).eq("date", args.date),
-      )
+      .withIndex("by_member_date", (q) => q.eq("memberId", args.memberId).eq("date", args.date))
       .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .unique();
     return data ?? null;
@@ -322,14 +312,12 @@ export const listHealthScores = query({
     const data = await ctx.db
       .query("healthScores")
       .withIndex("by_member_date", (q) =>
-        q.eq("memberId", args.memberId).gte("date", args.startDate),
+        q.eq("memberId", args.memberId).gte("date", args.startDate)
       )
       .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .collect();
 
-    return data
-      .filter((s) => s.date <= args.endDate)
-      .sort((a, b) => a.date - b.date);
+    return data.filter((s) => s.date <= args.endDate).sort((a, b) => a.date - b.date);
   },
 });
 
@@ -349,9 +337,7 @@ export const upsertHealthScore = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("healthScores")
-      .withIndex("by_member_date", (q) =>
-        q.eq("memberId", args.memberId).eq("date", args.date),
-      )
+      .withIndex("by_member_date", (q) => q.eq("memberId", args.memberId).eq("date", args.date))
       .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .unique();
 
@@ -519,7 +505,7 @@ export const countMealLogs = query({
     const data = await ctx.db
       .query("mealLogs")
       .withIndex("by_member_date", (q) =>
-        q.eq("memberId", args.memberId).gte("date", args.startDate),
+        q.eq("memberId", args.memberId).gte("date", args.startDate)
       )
       .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .collect();
@@ -538,7 +524,7 @@ export const groupMealLogsByDate = query({
     const data = await ctx.db
       .query("mealLogs")
       .withIndex("by_member_date", (q) =>
-        q.eq("memberId", args.memberId).gte("date", args.startDate),
+        q.eq("memberId", args.memberId).gte("date", args.startDate)
       )
       .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .collect();

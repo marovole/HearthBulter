@@ -905,8 +905,13 @@ export default defineSchema({
     sleepHours: v.optional(v.number()),
     sleepQuality: v.optional(v.string()),
     waterIntake: v.optional(v.number()),
+    waterTarget: v.optional(v.number()),
     steps: v.optional(v.number()),
     standingHours: v.optional(v.number()),
+    caloriesBurned: v.optional(v.number()),
+    exerciseType: v.optional(v.string()),
+    weight: v.optional(v.number()),
+    bodyFat: v.optional(v.number()),
     ...softDelete,
     ...timestamps,
   }).index("by_member_date", ["memberId", "date"]),
@@ -1224,4 +1229,20 @@ export default defineSchema({
     max: v.optional(v.number()),
     expiresAt: v.optional(v.number()),
   }).index("by_member_type", ["memberId", "dataType"]),
+
+  familyInvitations: defineTable({
+    inviteCode: v.string(),
+    email: v.string(),
+    role: v.string(),
+    status: v.string(), // PENDING, ACCEPTED, REJECTED, EXPIRED, DELETED
+    familyId: v.id("families"),
+    userId: v.optional(v.id("users")),
+    expiresAt: v.number(),
+    ...softDelete,
+    ...timestamps,
+  })
+    .index("by_invite_code", ["inviteCode"])
+    .index("by_family", ["familyId"])
+    .index("by_email", ["email"])
+    .index("by_status", ["status"]),
 });
