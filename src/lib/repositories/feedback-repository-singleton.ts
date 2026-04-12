@@ -1,11 +1,11 @@
-import { NeonFeedbackRepository } from "./implementations/neon-feedback-repository";
+import { ConvexFeedbackRepository } from "./implementations/convex-feedback-repository";
 import type { FeedbackRepository } from "./interfaces/feedback-repository";
 
 let instance: FeedbackRepository | null = null;
 
 export function getFeedbackRepository(): FeedbackRepository {
   if (!instance) {
-    instance = new NeonFeedbackRepository();
+    instance = new ConvexFeedbackRepository();
   }
   return instance;
 }
