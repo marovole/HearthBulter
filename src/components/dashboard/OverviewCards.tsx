@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { Card, CardContent } from "@/components/ui/card";
-import { HealthScoreGauge } from "./HealthScoreGauge";
+import { HealthScoreGaugeLazy } from "@/components/charts/lazy-registry";
 import { GoalProgressBar } from "./GoalProgressBar";
 import { EmptyStateGuide } from "./EmptyStateGuide";
 import { TrendingUp, TrendingDown, Scale, Target, Utensils, Activity } from "lucide-react";
@@ -124,7 +124,10 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
         <Card variant="elevated">
           <CardContent className="p-6">
             <h3 className="mb-4 font-display text-lg font-semibold text-foreground">健康评分</h3>
-            <HealthScoreGauge score={healthScore.totalScore} breakdown={healthScore.breakdown} />
+            <HealthScoreGaugeLazy
+              score={healthScore.totalScore}
+              breakdown={healthScore.breakdown}
+            />
           </CardContent>
         </Card>
 

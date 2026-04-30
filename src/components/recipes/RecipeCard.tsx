@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +82,16 @@ export function RecipeCard({
     <Card className="overflow-hidden transition-shadow hover:shadow-lg">
       {recipe.imageUrl && (
         <div className="relative h-48 overflow-hidden">
-          <img src={recipe.imageUrl} alt={recipe.name} className="h-full w-full object-cover" />
+          <Image
+            src={recipe.imageUrl}
+            alt={recipe.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 400px"
+            loading="lazy"
+            decoding="async"
+            unoptimized
+          />
           <div className="absolute right-2 top-2">
             <FavoriteButton recipeId={recipe.id} memberId={memberId} />
           </div>

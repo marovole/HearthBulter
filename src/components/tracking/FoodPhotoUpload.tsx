@@ -261,7 +261,15 @@ export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadPr
         <div className="space-y-4">
           {/* Image Preview */}
           <div className="relative">
-            <img src={preview} alt="Food preview" className="h-64 w-full rounded-lg object-cover" />
+            <img
+              src={preview}
+              alt="Food preview"
+              width={800}
+              height={256}
+              loading="lazy"
+              decoding="async"
+              className="h-64 w-full rounded-lg object-cover"
+            />
 
             {isRecognizing && (
               <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black bg-opacity-50">

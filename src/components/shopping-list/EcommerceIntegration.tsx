@@ -184,6 +184,10 @@ export function EcommerceIntegration({
                         <img
                           src={product.image}
                           alt={product.name}
+                          width={80}
+                          height={80}
+                          loading="lazy"
+                          decoding="async"
                           className="h-full w-full object-cover"
                         />
                       ) : (

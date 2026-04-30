@@ -262,7 +262,15 @@ export function FavoriteMeals({
             {/* 图片 */}
             {meal.image && (
               <div className="h-32 w-full overflow-hidden rounded-lg bg-gray-100">
-                <img src={meal.image} alt={meal.name} className="h-full w-full object-cover" />
+                <img
+                  src={meal.image}
+                  alt={meal.name}
+                  width={800}
+                  height={128}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-cover"
+                />
               </div>
             )}
 
@@ -372,7 +380,15 @@ export function FavoriteMeals({
               {/* 图片 */}
               {meal.image && (
                 <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                  <img src={meal.image} alt={meal.name} className="h-full w-full object-cover" />
+                  <img
+                    src={meal.image}
+                    alt={meal.name}
+                    width={64}
+                    height={64}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
               )}
 

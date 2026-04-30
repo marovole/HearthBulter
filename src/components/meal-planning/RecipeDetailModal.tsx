@@ -26,8 +26,7 @@ import {
   X,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { NutritionChart } from "./NutritionChart";
-import { MacroNutrientChart } from "./MacroNutrientChart";
+import { MacroNutrientChartLazy } from "@/components/charts/lazy-registry";
 import { IngredientSubstitutes } from "./IngredientSubstitutes";
 import { EnhancedIngredientSubstitutes } from "./EnhancedIngredientSubstitutes";
 import { AllergyAlert } from "./AllergyAlert";
@@ -389,7 +388,7 @@ export function RecipeDetailModal({
                   <CardTitle className="text-lg">营养分布</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <MacroNutrientChart
+                  <MacroNutrientChartLazy
                     calories={meal.calories}
                     protein={meal.protein}
                     carbs={meal.carbs}

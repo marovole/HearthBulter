@@ -143,6 +143,10 @@ export function OneClickPurchase({ items, onPurchaseComplete, onCancel }: OneCli
                       <img
                         src={item.image}
                         alt={item.productName}
+                        width={48}
+                        height={48}
+                        loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-cover"
                       />
                     ) : (

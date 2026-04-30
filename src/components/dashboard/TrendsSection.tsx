@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { WeightTrendChart } from "./WeightTrendChart";
-import { MacroPieChart } from "./MacroPieChart";
+import { MacroPieChartLazy, WeightTrendChartLazy } from "@/components/charts/lazy-registry";
 
 interface TrendsSectionProps {
   memberId: string;
@@ -49,7 +48,7 @@ export function TrendsSection({ memberId }: TrendsSectionProps) {
         {/* 体重趋势图 */}
         <div className="mb-6">
           <h4 className="mb-3 text-sm font-medium text-gray-700">体重趋势</h4>
-          <WeightTrendChart memberId={memberId} days={days} />
+          <WeightTrendChartLazy memberId={memberId} days={days} />
         </div>
 
         {/* 营养分析图 */}
@@ -114,7 +113,7 @@ function NutritionChart({
   }
 
   return (
-    <MacroPieChart
+    <MacroPieChartLazy
       target={
         data.targetCarbs && data.targetProtein && data.targetFat
           ? {

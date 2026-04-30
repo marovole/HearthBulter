@@ -291,6 +291,10 @@ export function CookingSteps({
                         <img
                           src={step.image}
                           alt={step.title}
+                          width={800}
+                          height={192}
+                          loading="lazy"
+                          decoding="async"
                           className="h-48 w-full rounded-lg object-cover"
                         />
                       </div>

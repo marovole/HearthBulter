@@ -9,15 +9,17 @@ import { DashboardLayout } from "./DashboardLayout";
 import { OverviewCards } from "./OverviewCards";
 import { TrendsSection } from "./TrendsSection";
 import { InsightsPanel } from "./InsightsPanel";
-import { HealthMetricsChart } from "./HealthMetricsChart";
 import { FamilyMembersCard } from "./FamilyMembersCard";
-import { NutritionTrendChart } from "./NutritionTrendChart";
 import { HealthScoreDisplay } from "./HealthScoreDisplay";
 import { QuickActionsPanel } from "./QuickActionsPanel";
-import { WeightTrendChart } from "./WeightTrendChart";
-import { NutritionAnalysisChart } from "./NutritionAnalysisChart";
-import HealthScoreCard from "./HealthScoreCard";
 import { EmptyFamilyState } from "./EmptyFamilyState";
+import {
+  DashboardHealthScoreCardLazy,
+  HealthMetricsChartLazy,
+  NutritionAnalysisChartLazy,
+  NutritionTrendChartLazy,
+  WeightTrendChartLazy,
+} from "@/components/charts/lazy-registry";
 
 interface EnhancedDashboardProps {
   userEmail: string;
@@ -204,11 +206,11 @@ function EnhancedDashboardContent({
           <div className="space-y-6">
             <OverviewCards memberId={selectedMemberId} />
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-              <WeightTrendChart memberId={selectedMemberId} />
-              <HealthScoreCard memberId={selectedMemberId} />
+              <WeightTrendChartLazy memberId={selectedMemberId} />
+              <DashboardHealthScoreCardLazy memberId={selectedMemberId} />
             </div>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <NutritionAnalysisChart memberId={selectedMemberId} />
+              <NutritionAnalysisChartLazy memberId={selectedMemberId} />
               <TrendsSection memberId={selectedMemberId} />
             </div>
             <QuickActionsPanel memberId={selectedMemberId} />
@@ -218,9 +220,9 @@ function EnhancedDashboardContent({
       case "health":
         return (
           <div className="space-y-6">
-            <WeightTrendChart memberId={selectedMemberId} />
+            <WeightTrendChartLazy memberId={selectedMemberId} />
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <HealthMetricsChart memberId={selectedMemberId} />
+              <HealthMetricsChartLazy memberId={selectedMemberId} />
               <TrendsSection memberId={selectedMemberId} />
             </div>
           </div>
@@ -229,9 +231,9 @@ function EnhancedDashboardContent({
       case "nutrition":
         return (
           <div className="space-y-6">
-            <NutritionAnalysisChart memberId={selectedMemberId} />
+            <NutritionAnalysisChartLazy memberId={selectedMemberId} />
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <NutritionTrendChart memberId={selectedMemberId} />
+              <NutritionTrendChartLazy memberId={selectedMemberId} />
               <div className="rounded-lg bg-white p-6 shadow">
                 <h3 className="mb-4 text-lg font-semibold">营养建议</h3>
                 <p className="text-gray-600">基于您的健康数据，我们建议...</p>
@@ -256,7 +258,7 @@ function EnhancedDashboardContent({
       case "score":
         return (
           <div className="space-y-6">
-            <HealthScoreCard memberId={selectedMemberId} />
+            <DashboardHealthScoreCardLazy memberId={selectedMemberId} />
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <HealthScoreDisplay memberId={selectedMemberId} />
               <div className="rounded-lg bg-white p-6 shadow">

@@ -203,7 +203,15 @@ export function ShareButton({
             {/* 分享图片预览 */}
             {shareData.imageUrl && (
               <div className="overflow-hidden rounded-lg border">
-                <img src={shareData.imageUrl} alt="分享图片" className="h-auto w-full" />
+                <img
+                  src={shareData.imageUrl}
+                  alt="分享图片"
+                  width={800}
+                  height={450}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-auto w-full"
+                />
               </div>
             )}
 

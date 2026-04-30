@@ -215,6 +215,10 @@ export function ShareCard({
             <img
               src={share.imageUrl}
               alt={share.title}
+              width={800}
+              height={384}
+              loading="lazy"
+              decoding="async"
               className="h-auto max-h-96 w-full object-cover"
             />
           </div>

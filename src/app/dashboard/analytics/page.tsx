@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import TrendChart from "@/components/analytics/TrendChart";
+import { AnalyticsTrendChartLazy } from "@/components/charts/lazy-registry";
 import HealthScoreCard from "@/components/analytics/HealthScoreCard";
 import AnomalyAlert from "@/components/analytics/AnomalyAlert";
 import type { TrendDataType } from "@/lib/types/analytics";
@@ -213,7 +213,7 @@ export default function AnalyticsPage() {
           <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
             {trendData && (
               <div className="rounded-lg bg-white p-6 shadow-sm">
-                <TrendChart
+                <AnalyticsTrendChartLazy
                   data={trendData.dataPoints}
                   title="体重趋势"
                   unit="kg"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MacroPieChart } from "@/components/dashboard/MacroPieChart";
+import { MacroPieChartLazy } from "@/components/charts/lazy-registry";
 
 interface NutritionData {
   planId: string;
@@ -201,7 +201,7 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
         <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
           <div className="rounded-lg bg-gray-50 p-4">
             <h4 className="mb-3 text-center text-sm font-medium text-gray-600">🎯 目标分布</h4>
-            <MacroPieChart
+            <MacroPieChartLazy
               target={{
                 carbs: nutrition.target.carbs,
                 protein: nutrition.target.protein,
@@ -211,7 +211,7 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
           </div>
           <div className="rounded-lg bg-gray-50 p-4">
             <h4 className="mb-3 text-center text-sm font-medium text-gray-600">✅ 实际分布</h4>
-            <MacroPieChart
+            <MacroPieChartLazy
               actual={{
                 carbs: nutrition.daily.carbs,
                 protein: nutrition.daily.protein,

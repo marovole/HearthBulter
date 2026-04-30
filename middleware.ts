@@ -41,6 +41,15 @@ async function handleRequest(req: NextRequest, getUserId: () => Promise<string |
   }
 
   try {
+    if ((pathname === "/" || pathname === "") && method === "GET") {
+      const signedInUserId = await getUserId();
+      if (signedInUserId) {
+        let redirect = NextResponse.redirect(new URL("/dashboard", req.url));
+        redirect = applyBasicSecurityHeaders(req, redirect, cors);
+        return redirect;
+      }
+    }
+
     const requiresAuth =
       isProtectedRoute(req) || (pathname.startsWith("/api/") && !isPublicApiRoute(req));
 

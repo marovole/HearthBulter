@@ -121,7 +121,15 @@ export function IngredientItem({
       {/* Food Image */}
       <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
         {food.image ? (
-          <img src={food.image} alt={food.name} className="h-full w-full object-cover" />
+          <img
+            src={food.image}
+            alt={food.name}
+            width={48}
+            height={48}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-gray-400">🛒</div>
         )}
