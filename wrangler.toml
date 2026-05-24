@@ -1,5 +1,5 @@
-# Cloudflare Pages + Neon 架构配置文件
-# 适配 Next.js 15 + Neon Serverless PostgreSQL
+# Cloudflare Pages 配置文件
+# 当前架构: Next.js 14 + Convex + Clerk
 #
 # ⚠️ 重要: 敏感变量已移至 Cloudflare Dashboard Secrets
 # 参见: docs/deployment/cloudflare-secrets.md

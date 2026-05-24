@@ -1,7 +1,6 @@
-// Learn more: https://github.com/testing-library/jest-dom
 import "@testing-library/jest-dom";
 
-// 当前架构：Convex + Clerk（NextAuth 已迁移）
+// 当前架构：Convex + Clerk + Cloudflare Pages
 process.env.NEXT_PUBLIC_CONVEX_URL =
   process.env.NEXT_PUBLIC_CONVEX_URL || "https://test-convex.convex.cloud";
 process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY =
