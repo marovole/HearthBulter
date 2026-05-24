@@ -10,7 +10,7 @@
 // Convex 已成为唯一数据源
 // 所有数据访问通过 @/lib/convex-client
 
-export { convexClient } from "./convex-client";
+export { convexClient } from "@/lib/convex-client";
 
 // 为了保持向后兼容，导出空对象
 // 所有代码应直接导入 convexClient

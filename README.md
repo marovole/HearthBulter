@@ -31,7 +31,7 @@
     <img src="https://img.shields.io/badge/TypeScript-5.6+-3178C6?style=flat-square&logo=typescript" alt="TypeScript" />
   </a>
   <a href="#">
-    <img src="https://img.shields.io/badge/Database-Neon-00E599?style=flat-square&logo=postgresql" alt="Neon" />
+    <img src="https://img.shields.io/badge/Database-Convex-EE342F?style=flat-square&logo=convex" alt="Convex" />
   </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="MIT License" />
@@ -51,7 +51,7 @@
 
 > 💡 **让个人与家庭的健康管理从「主观感性」走向「客观数据驱动」**
 
-**Health Butler** 是一个开源的家庭健康管理平台，通过 AI 营养规划、智能食谱生成和电商自动采购，帮助家庭建立可持续的健康管理习惯。项目采用 **Cloudflare Pages + Neon PostgreSQL** 的 Serverless 架构，实现**完全免费**部署。
+**Health Butler** 是一个开源的家庭健康管理平台，通过 AI 营养规划、智能食谱生成和电商自动采购，帮助家庭建立可持续的健康管理习惯。项目采用 **Cloudflare Pages + Convex + Clerk** 的 Serverless 架构，实现**完全免费**部署。
 
 ---
 
@@ -61,7 +61,7 @@
 | ------------ | --------- | -------------------------------------------------------- | ------------------------------ |
 | **生产环境** | ✅ 运行中 | [hearthbulter.pages.dev](https://hearthbulter.pages.dev) | 主站点，自动从 `main` 分支部署 |
 | **预览环境** | ✅ 可用   | `*.hearthbulter.pages.dev`                               | 每个 PR 自动生成预览链接       |
-| **数据库**   | ✅ 在线   | Neon Serverless PostgreSQL                               | 72 张数据表，0.5GB 免费配额    |
+| **数据库**   | ✅ 在线   | Convex                                                   | 实时数据库，当前架构主数据源   |
 | **CI/CD**    | ✅ 激活   | GitHub Actions                                           | 7 个 Job 自动化流水线          |
 
 ### CI/CD 流水线
@@ -233,21 +233,19 @@ Push to main → 代码质量检查 → TypeScript 类型检查 → 单元测试
 
 #### ⚙️ 后端技术
 
-| 技术                     | 版本   | 用途           |
-| ------------------------ | ------ | -------------- |
-| **Cloudflare Functions** | Latest | Serverless API |
-| **Prisma**               | 6.19.0 | ORM + 类型生成 |
-| **Clerk**                | 6.36.8 | 认证授权       |
-| **Neon**                 | 1.0.2  | Serverless PG  |
-| **PostgreSQL**           | 16     | 关系型数据库   |
-| **Upstash Redis**        | 1.35.6 | 边缘缓存       |
-| **OpenAI SDK**           | 6.7.0  | AI 服务 SDK    |
-| **Tesseract.js**         | 6.0.1  | OCR 识别       |
-| **Jose**                 | 6.1.3  | JWT 处理       |
-| **Nodemailer**           | 7.0.11 | 邮件服务       |
-| **sharp**                | 0.34.4 | 图片处理       |
-| **qrcode**               | 1.5.3  | 二维码生成     |
-| **html2canvas**          | 1.4.1  | 截图生成       |
+| 技术                     | 版本   | 用途              |
+| ------------------------ | ------ | ----------------- |
+| **Cloudflare Functions** | Latest | Serverless API    |
+| **Convex**               | 1.31.4 | 实时数据库 + 后端 |
+| **Clerk**                | 6.36.8 | 认证授权          |
+| **Upstash Redis**        | 1.35.6 | 边缘缓存          |
+| **OpenAI SDK**           | 6.7.0  | AI 服务 SDK       |
+| **Tesseract.js**         | 6.0.1  | OCR 识别          |
+| **Jose**                 | 6.1.3  | JWT 处理          |
+| **Nodemailer**           | 7.0.11 | 邮件服务          |
+| **sharp**                | 0.34.4 | 图片处理          |
+| **qrcode**               | 1.5.3  | 二维码生成        |
+| **html2canvas**          | 1.4.1  | 截图生成          |
 
 </td>
 </tr>
@@ -283,18 +281,20 @@ Push to main → 代码质量检查 → TypeScript 类型检查 → 单元测试
 
 ### 数据库架构
 
-项目使用 **72 张 PostgreSQL 数据表**，按功能域组织：
+项目使用 **Convex** 作为主数据库（实时数据库，Schema 定义在 `convex/schema.ts`），按功能域组织：
 
-| 功能域         | 表数量 | 核心表                                                                               |
-| -------------- | ------ | ------------------------------------------------------------------------------------ |
-| **用户和认证** | 5      | `users`, `families`, `family_members`, `family_invitations`, `user_consents`         |
-| **健康数据**   | 15     | `health_data`, `health_goals`, `health_reports`, `health_scores`, `health_anomalies` |
-| **营养和食谱** | 20     | `foods`, `meals`, `meal_plans`, `meal_logs`, `recipes`, `daily_nutrition_targets`    |
-| **购物和预算** | 11     | `shopping_lists`, `shopping_items`, `budgets`, `price_histories`, `instacart_carts`  |
-| **库存管理**   | 4      | `inventory_items`, `inventory_usages`, `waste_logs`, `orders`                        |
-| **协作和社区** | 12     | `tasks`, `activities`, `community_posts`, `achievements`, `leaderboard_entries`      |
-| **通知系统**   | 4      | `notifications`, `notification_preferences`, `notification_logs`                     |
-| **AI 和分析**  | 4      | `ai_conversations`, `ai_advice`, `prompt_templates`, `smart_trigger_logs`            |
+| 功能域         | Convex 模块                                            |
+| -------------- | ------------------------------------------------------ |
+| **用户和认证** | `users.ts`, `families.ts`, `members.ts`, `consents.ts` |
+| **健康数据**   | `health.ts`, `tracking.ts`, `activities.ts`            |
+| **营养和食谱** | `meals.ts`, `recipes.ts`, `recipeInteractions.ts`      |
+| **购物和预算** | `shoppingLists.ts`, `budget.ts`, `ecommerce.ts`        |
+| **库存管理**   | `inventory.ts`                                         |
+| **协作和社区** | `tasks.ts`, `community.ts`, `achievements.ts`          |
+| **通知系统**   | `notifications.ts`, `notificationTemplates.ts`         |
+| **AI 和分析**  | `ai.ts`, `analytics.ts`, `recommendations.ts`          |
+
+> **历史注:** PostgreSQL/Prisma (72 张表) 已于 2026-01-18 迁移至 Supabase，再于 2026-01-27 迁移至 Convex。
 
 ---
 
@@ -359,7 +359,8 @@ Push to main → 代码质量检查 → TypeScript 类型检查 → 单元测试
 
 - **Node.js** 20.0+ LTS
 - **pnpm** 8.0+ (推荐) 或 npm
-- **PostgreSQL** 16+ (或使用 Neon)
+- **Convex** 账号（[convex.dev](https://convex.dev)，免费额度足够开发）
+- **Clerk** 账号（[clerk.com](https://clerk.com)，免费额度足够开发）
 
 ### 安装步骤
 
@@ -375,10 +376,7 @@ pnpm install
 cp .env.example .env.local
 # 编辑 .env.local，填入必要的配置
 
-# 4. 生成 Prisma Client
-pnpm db:generate
-
-# 5. 启动开发服务器
+# 4. 启动开发服务器
 pnpm dev
 ```
 
@@ -390,36 +388,38 @@ pnpm dev
 <summary>📋 点击展开完整环境变量列表</summary>
 
 ```env
-# ========== 必需配置 ==========
+# ========== 必需配置（当前架构：Convex + Clerk + Cloudflare Pages）==========
 
-# 数据库连接 (Neon Serverless PostgreSQL)
-DATABASE_URL=postgresql://user:pass@ep-xxx.us-east-1.aws.neon.tech/neondb?sslmode=require
+# Convex 实时数据库
+NEXT_PUBLIC_CONVEX_URL=https://your-project.convex.cloud
+CONVEX_DEPLOYMENT=your-convex-deployment-name
 
 # Clerk 认证配置
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxx
 CLERK_SECRET_KEY=sk_test_xxx
+CLERK_WEBHOOK_SECRET=whsec_xxx
 
 # ========== 可选配置 ==========
 
 # USDA 营养数据 API
-USDA_API_KEY=your-usda-api-key
+USDA_API_KEY=<your-usda-api-key>
 
 # Redis 缓存 (Upstash, 可选)
 UPSTASH_REDIS_REST_URL=https://[ref].upstash.io
-UPSTASH_REDIS_REST_TOKEN=your-redis-token
+UPSTASH_REDIS_REST_TOKEN=<your-redis-token>
 
 # Redis (可选，本地或自建)
 REDIS_URL=redis://localhost:6379
 
 # Web Push (可选)
-NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=<your-vapid-public-key>
 
 # OAuth 登录 (通过 Clerk 配置)
 # GOOGLE_CLIENT_ID 和 GOOGLE_CLIENT_SECRET 在 Clerk Dashboard 配置
 
 # AI 服务 (OpenAI / OpenRouter)
-OPENAI_API_KEY=your-openai-api-key
-OPENROUTER_API_KEY=your-openrouter-api-key
+OPENAI_API_KEY=<your-openai-api-key>
+OPENROUTER_API_KEY=<your-openrouter-api-key>
 
 # 日志级别 (可选)
 LOG_LEVEL=info
@@ -462,13 +462,14 @@ HearthBulter/
 │   │   └── features/       # 业务功能组件
 │   ├── hooks/              # 自定义 Hooks
 │   ├── lib/                # 核心库 (260+ 模块)
-│   │   ├── db/             # Prisma Client
+│   │   ├── db/             # 数据库抽象层（已迁移至 Convex）
 │   │   ├── services/       # 业务逻辑服务 (117+ 文件)
 │   │   └── utils/          # 工具函数
 │   ├── schemas/            # Zod 验证 Schema
 │   ├── services/           # 服务层
 │   └── types/              # TypeScript 类型定义
-├── supabase/               # Supabase 配置
+├── convex/                 # Convex 数据库模块（当前主数据源）
+├── supabase/               # Supabase 配置（历史遗留，已迁移至 Convex）
 ├── tests/                  # 测试文件
 │   ├── unit/               # 单元测试
 │   └── e2e/                # E2E 测试
@@ -503,12 +504,6 @@ pnpm test             # 运行单元测试
 pnpm test:watch       # Watch 模式
 pnpm test:coverage    # 生成覆盖率报告
 pnpm test:e2e         # E2E 测试
-
-# 数据库
-pnpm db:generate      # 生成 Prisma Client
-pnpm db:push          # 推送 Schema 变更
-pnpm db:migrate       # 运行迁移
-pnpm db:studio        # 打开 Prisma Studio
 
 # 部署
 pnpm build:cloudflare # Cloudflare Pages 构建
@@ -603,9 +598,9 @@ chore: 构建过程或辅助工具变动
 
 - **2025-10-30**: MVP 核心功能开发（家庭档案、健康数据、食谱规划等 20 个提案）
 - **2025-11-02**: 代码质量提升（自动化审查、测试覆盖率等 9 个提案）
-- **2025-11-10**: 部署平台迁移（Vercel → Cloudflare Pages）
-- **2026-01-18**: 数据库重构（Prisma → Supabase）
-- **2026-01-27**: 认证系统现代化（NextAuth → Clerk + Convex）
+- **2025-11-10**: 部署平台迁移（Vercel → Cloudflare Pages）[已迁移]
+- **2026-01-18**: 数据库重构（Prisma/Neon → Supabase）[已迁移]
+- **2026-01-27**: 认证 + 数据库现代化（NextAuth → Clerk；Supabase → Convex）[**当前架构**]
 
 ### 如何创建提案
 
@@ -618,7 +613,7 @@ chore: 构建过程或辅助工具变动
 ### MVP 阶段 ✅ (已完成)
 
 - [x] 项目初始化 + 架构设计
-- [x] Cloudflare Pages + Neon 部署
+- [x] Cloudflare Pages + Convex + Clerk 部署
 - [x] 用户认证 (邮箱 + Google + GitHub OAuth)
 - [x] 家庭档案管理 + 邀请系统
 - [x] 健康数据录入与可视化
