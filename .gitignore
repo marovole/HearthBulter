@@ -88,7 +88,7 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
-# Prisma
+# Prisma [已迁移至 Convex，保留排除项防止残留缓存]
 /prisma/migrations/**/migration.sql
 node_modules/.prisma/
 

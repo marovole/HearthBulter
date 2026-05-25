@@ -34,7 +34,7 @@ const nextConfig = {
     // 输出文件追踪配置
     outputFileTracingExcludes: {
       "*": [
-        // 排除 Prisma 的本地二进制文件
+        // 排除 Prisma 的本地二进制文件 [已迁移至 Convex，保留排除项防止残留引用]
         "**/node_modules/@prisma/engines/**",
         "**/node_modules/.prisma/client/libquery_engine-*",
         // 排除 Puppeteer 和 Chromium
@@ -76,9 +76,7 @@ const nextConfig = {
     let corsOrigin = "http://localhost:3000";
     if (process.env.NODE_ENV === "production") {
       // Cloudflare Pages 环境变量优先级
-      const cfPagesUrl = process.env.CF_PAGES_URL
-        ? process.env.CF_PAGES_URL.trim()
-        : "";
+      const cfPagesUrl = process.env.CF_PAGES_URL ? process.env.CF_PAGES_URL.trim() : "";
       const cfPagesCustomDomain = process.env.CF_PAGES_CUSTOM_DOMAIN
         ? `https://${process.env.CF_PAGES_CUSTOM_DOMAIN.trim()}`
         : "";
@@ -91,9 +89,7 @@ const nextConfig = {
       ).trim();
 
       if (!process.env.NEXT_PUBLIC_ALLOWED_ORIGINS) {
-        console.warn(
-          "⚠️  警告：未设置 NEXT_PUBLIC_ALLOWED_ORIGINS，使用默认值",
-        );
+        console.warn("⚠️  警告：未设置 NEXT_PUBLIC_ALLOWED_ORIGINS，使用默认值");
       }
     }
 

@@ -9,7 +9,7 @@ import { defineCloudflareConfig } from "@opennextjs/cloudflare/config";
 export default defineCloudflareConfig({
   // 优化构建配置
   build: {
-    // 排除大型依赖项
+    // 排除大型依赖项 [已迁移至 Convex，以下 Prisma 排除项保留防止残留]
     external: [
       // 排除Prisma的其他数据库引擎WASM文件
       "@prisma/client/runtime/query_engine_bg.mysql.wasm",
@@ -33,13 +33,13 @@ export default defineCloudflareConfig({
     ],
     // 优化chunk分割
     splitChunks: {
-      chunks: 'all',
+      chunks: "all",
       maxAsyncRequests: 30,
       maxInitialRequests: 30,
       cacheGroups: {
         vendor: {
           test: /[\\/]node_modules[\\/]/,
-          name: 'vendor',
+          name: "vendor",
           priority: 10,
           reuseExistingChunk: true,
         },

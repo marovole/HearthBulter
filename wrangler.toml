@@ -1,5 +1,5 @@
-# Cloudflare Pages + Neon 架构配置文件
-# 适配 Next.js 15 + Neon Serverless PostgreSQL
+# Cloudflare Pages + Convex/Clerk 架构配置文件
+# [已迁移] — Neon PostgreSQL 已迁移至 Convex，DATABASE_URL 仅旧 Workers 层兼容使用
 #
 # ⚠️ 重要: 敏感变量已移至 Cloudflare Dashboard Secrets
 # 参见: docs/deployment/cloudflare-secrets.md
@@ -54,7 +54,7 @@ NEXT_PUBLIC_ALLOWED_ORIGINS = "https://preview.hearthbulter.pages.dev"
 # 以下变量必须通过 Cloudflare Dashboard 或 wrangler secret 设置:
 #
 # 必需 (生产环境):
-# - DATABASE_URL (Neon PostgreSQL 连接字符串)
+# - DATABASE_URL (Neon PostgreSQL 连接字符串) [已迁移至 Convex，仅 Workers 层兼容]
 # - CLERK_SECRET_KEY
 # - OPENAI_API_KEY (可选，用于 AI 功能)
 # - UPSTASH_REDIS_REST_TOKEN (可选，用于缓存)

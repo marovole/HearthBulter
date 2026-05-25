@@ -20,6 +20,7 @@ import { TrendAnalyzer } from "@/lib/services/analytics/trend-analyzer";
 
 /**
  * Repository 后端类型
+ * [已迁移] — Prisma 后端已移除，当前仅 "neon"(历史遗留命名) 和 "mock"
  */
 export type RepositoryBackend = "neon" | "mock";
 

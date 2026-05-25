@@ -1,3 +1,4 @@
+/* [已迁移至 Clerk] — 此路由仅保留 410 响应，防止旧客户端报 404 */
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";

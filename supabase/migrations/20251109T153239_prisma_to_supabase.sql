@@ -1,3 +1,4 @@
+-- [已迁移至 Convex，仅保留历史参考]
 -- Supabase Migration: Generated from Prisma Schema
 -- Generated at: 2025-11-09T15:32:39.696Z
 -- Total Models: 68

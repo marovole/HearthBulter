@@ -3,7 +3,9 @@
  *
  * 验证 JWT Token 并提取用户信息
  *
- * 注意：此模块已从 Supabase 迁移，使用 jose 进行 JWT 验证
+ * [已迁移至 Clerk，env 仅供旧 Workers 层兼容]
+ * NEXTAUTH_SECRET / DATABASE_URL 等环境变量已不再为主线使用，
+ * 保留仅为 Cloudflare Functions 遗留接口兼容。
  */
 
 export interface AuthenticatedRequest extends Request {
@@ -36,30 +38,25 @@ function extractBearerToken(request: Request): string | null {
 
 async function verifyToken(
   _token: string,
-  _env: CloudflareContext["env"],
+  _env: CloudflareContext["env"]
 ): Promise<{ id: string; email: string; role: string } | null> {
   // TODO: Implement JWT verification with jose library
   // For now, return null to indicate auth is not implemented
-  console.warn(
-    "Auth middleware: JWT verification not implemented for Neon migration",
-  );
+  console.warn("Auth middleware: JWT verification not implemented for Neon migration");
   return null;
 }
 
 export async function requireAuth(
   context: CloudflareContext,
-  next: () => Promise<Response>,
+  next: () => Promise<Response>
 ): Promise<Response> {
   const token = extractBearerToken(context.request);
 
   if (!token) {
-    return new Response(
-      JSON.stringify({ error: "Missing authentication token" }),
-      {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return new Response(JSON.stringify({ error: "Missing authentication token" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   const user = await verifyToken(token, context.env);
@@ -78,7 +75,7 @@ export async function requireAuth(
 
 export async function optionalAuth(
   context: CloudflareContext,
-  next: () => Promise<Response>,
+  next: () => Promise<Response>
 ): Promise<Response> {
   const token = extractBearerToken(context.request);
 
@@ -93,30 +90,21 @@ export async function optionalAuth(
 }
 
 export function requireRole(allowedRoles: string[]) {
-  return async (
-    context: CloudflareContext,
-    next: () => Promise<Response>,
-  ): Promise<Response> => {
+  return async (context: CloudflareContext, next: () => Promise<Response>): Promise<Response> => {
     const user = (context.request as AuthenticatedRequest).user;
 
     if (!user) {
-      return new Response(
-        JSON.stringify({ error: "Authentication required" }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     if (!allowedRoles.includes(user.role)) {
-      return new Response(
-        JSON.stringify({ error: "Insufficient permissions" }),
-        {
-          status: 403,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
+      return new Response(JSON.stringify({ error: "Insufficient permissions" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     return next();
@@ -125,7 +113,7 @@ export function requireRole(allowedRoles: string[]) {
 
 export async function cors(
   context: CloudflareContext,
-  next: () => Promise<Response>,
+  next: () => Promise<Response>
 ): Promise<Response> {
   if (context.request.method === "OPTIONS") {
     return new Response(null, {
@@ -143,10 +131,7 @@ export async function cors(
 
   const headers = new Headers(response.headers);
   headers.set("Access-Control-Allow-Origin", "*");
-  headers.set(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS",
-  );
+  headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   return new Response(response.body, {
@@ -158,7 +143,7 @@ export async function cors(
 
 export async function errorHandler(
   _context: CloudflareContext,
-  next: () => Promise<Response>,
+  next: () => Promise<Response>
 ): Promise<Response> {
   try {
     return await next();
@@ -173,22 +158,19 @@ export async function errorHandler(
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
-      },
+      }
     );
   }
 }
 
 export function composeMiddlewares(
   ...middlewares: Array<
-    (
-      context: CloudflareContext,
-      next: () => Promise<Response>,
-    ) => Promise<Response>
+    (context: CloudflareContext, next: () => Promise<Response>) => Promise<Response>
   >
 ) {
   return async (
     context: CloudflareContext,
-    handler: () => Promise<Response>,
+    handler: () => Promise<Response>
   ): Promise<Response> => {
     let index = 0;
 

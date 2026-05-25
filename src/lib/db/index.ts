@@ -1,7 +1,7 @@
 /**
  * 数据库访问层 - Convex
  *
- * 本文件已迁移到 Convex。
+ * [已迁移至 Convex] — Prisma/Neon 已完全移除。
  * 所有数据库操作现在通过 convexClient 进行。
  *
  * 迁移日期: 2026-04-12
@@ -12,8 +12,7 @@
 
 export { convexClient } from "./convex-client";
 
-// 为了保持向后兼容，导出空对象
-// 所有代码应直接导入 convexClient
+// [已迁移至 Convex] — 以下空导出仅为防止旧 import 崩溃，新代码请直接用 convexClient
 export const prisma = null;
 export const db = null;
 export const neonAdapter = null;
