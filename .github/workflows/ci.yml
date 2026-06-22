@@ -87,9 +87,6 @@ jobs:
       - name: 📚 安装依赖
         run: pnpm install --frozen-lockfile
 
-      - name: 🏗️ 生成 Prisma Client
-        run: pnpm db:generate
-
       - name: 🔧 TypeScript 类型检查
         run: pnpm type-check
         continue-on-error: true
@@ -120,9 +117,6 @@ jobs:
 
       - name: 📚 安装依赖
         run: pnpm install --frozen-lockfile
-
-      - name: 🏗️ 生成 Prisma Client
-        run: pnpm db:generate
 
       - name: 🧪 运行单元测试
         run: pnpm test:coverage
@@ -181,9 +175,6 @@ jobs:
       - name: 📚 安装依赖
         run: pnpm install --frozen-lockfile
 
-      - name: 🏗️ 生成 Prisma Client
-        run: pnpm db:generate
-
       - name: 🔨 运行 Next.js 构建
         run: pnpm build
         env:
@@ -240,9 +231,6 @@ jobs:
 
       - name: 📚 安装依赖
         run: pnpm install --frozen-lockfile
-
-      - name: 🏗️ 生成 Prisma Client
-        run: pnpm db:generate
 
       - name: 🏗️ Cloudflare 构建测试
         run: pnpm build:cloudflare
