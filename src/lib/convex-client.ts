@@ -123,32 +123,32 @@ export function getConvexClient(): WorkersConvexHttpClient {
   return _convexClient;
 }
 
-function query<T>(query: FunctionReference<"query">, args?: Record<string, unknown>): Promise<T>;
 function query<Query extends FunctionReference<"query">>(
   query: Query,
   args?: FunctionArgs<Query>
 ): Promise<FunctionReturnType<Query>>;
+function query<T>(query: FunctionReference<"query">, args?: Record<string, unknown>): Promise<T>;
 function query(query: any, args?: any) {
   return getConvexClient().query(query, args);
 }
 
-function mutation<T>(
-  mutation: FunctionReference<"mutation">,
-  args?: Record<string, unknown>
-): Promise<T>;
 function mutation<Mutation extends FunctionReference<"mutation">>(
   mutation: Mutation,
   args?: FunctionArgs<Mutation>
 ): Promise<FunctionReturnType<Mutation>>;
+function mutation<T>(
+  mutation: FunctionReference<"mutation">,
+  args?: Record<string, unknown>
+): Promise<T>;
 function mutation(mutation: any, args?: any) {
   return getConvexClient().mutation(mutation, args);
 }
 
-function action<T>(action: FunctionReference<"action">, args?: Record<string, unknown>): Promise<T>;
 function action<Action extends FunctionReference<"action">>(
   action: Action,
   args?: FunctionArgs<Action>
 ): Promise<FunctionReturnType<Action>>;
+function action<T>(action: FunctionReference<"action">, args?: Record<string, unknown>): Promise<T>;
 function action(action: any, args?: any) {
   return getConvexClient().action(action, args);
 }
