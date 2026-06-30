@@ -87,9 +87,6 @@ jobs:
       - name: 📚 安装依赖
         run: pnpm install --frozen-lockfile
 
-      - name: 🏗️ 生成 Prisma Client
-        run: pnpm db:generate
-
       - name: 🔧 TypeScript 类型检查
         run: pnpm type-check
         continue-on-error: true
@@ -121,18 +118,18 @@ jobs:
       - name: 📚 安装依赖
         run: pnpm install --frozen-lockfile
 
-      - name: 🏗️ 生成 Prisma Client
-        run: pnpm db:generate
-
       - name: 🧪 运行单元测试
         run: pnpm test:coverage
         env:
-          # 测试环境变量（使用 mock 值）
+          # 测试环境变量（使用 mock 值，当前架构：Convex + Clerk）
           DATABASE_URL: "postgresql://test:test@localhost:5432/test"
           NEXT_PUBLIC_SUPABASE_URL: "https://test.supabase.co"
           SUPABASE_SERVICE_KEY: "test-service-key"
           NEXTAUTH_SECRET: "test-secret-key-for-ci-testing-only"
           NEXTAUTH_URL: "http://localhost:3000"
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_Y2xlcmsuZXhhbXBsZS5jb20k"
+          CLERK_SECRET_KEY: "sk_test_not_a_real_secret_for_ci_only_00000000"
+          NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud"
 
       - name: 📊 上传测试覆盖率报告
         uses: codecov/codecov-action@v4
@@ -181,18 +178,18 @@ jobs:
       - name: 📚 安装依赖
         run: pnpm install --frozen-lockfile
 
-      - name: 🏗️ 生成 Prisma Client
-        run: pnpm db:generate
-
       - name: 🔨 运行 Next.js 构建
         run: pnpm build
         env:
-          # 构建环境变量（使用 mock 值）
+          # 构建环境变量（使用 mock 值，当前架构：Convex + Clerk + Cloudflare Pages）
           DATABASE_URL: "postgresql://test:test@localhost:5432/test"
           NEXT_PUBLIC_SUPABASE_URL: "https://test.supabase.co"
           SUPABASE_SERVICE_KEY: "test-service-key"
           NEXTAUTH_SECRET: "test-secret-key-for-ci-building-only"
           NEXTAUTH_URL: "http://localhost:3000"
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_Y2xlcmsuZXhhbXBsZS5jb20k"
+          CLERK_SECRET_KEY: "sk_test_not_a_real_secret_for_ci_only_00000000"
+          NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud"
           SKIP_ENV_VALIDATION: "true"
           CI: "false" # 禁用严格模式以确保上线
 
@@ -240,9 +237,6 @@ jobs:
 
       - name: 📚 安装依赖
         run: pnpm install --frozen-lockfile
-
-      - name: 🏗️ 生成 Prisma Client
-        run: pnpm db:generate
 
       - name: 🏗️ Cloudflare 构建测试
         run: pnpm build:cloudflare

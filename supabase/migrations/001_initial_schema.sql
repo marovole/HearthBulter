@@ -1,3 +1,4 @@
+-- [已迁移至 Convex，仅保留历史参考]
 -- Supabase 数据库初始架构
 -- 为 Cloudflare Pages + Supabase 混合架构创建表结构
 

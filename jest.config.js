@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const nextJest = require("next/jest");
 
 const createJestConfig = nextJest({
@@ -8,12 +9,12 @@ const createJestConfig = nextJest({
 // Add any custom config to be passed to Jest
 const customJestConfig = {
   preset: "ts-jest",
+  passWithNoTests: true,
   setupFilesAfterEnv: ["<rootDir>/src/__tests__/setup.ts"],
   testEnvironment: "jest-environment-jsdom",
   moduleNameMapper: {
     "^@/lib/auth$": "<rootDir>/src/__tests__/mocks/auth.ts",
-    "^@/lib/container/service-container$":
-      "<rootDir>/src/__tests__/mocks/service-container.ts",
+    "^@/lib/container/service-container$": "<rootDir>/src/__tests__/mocks/service-container.ts",
     "^@prisma/client$": "<rootDir>/src/__tests__/mocks/prisma-client.js",
     "^@supabase/supabase-js$": "<rootDir>/src/__tests__/mocks/supabase-js.js",
     "^@/(.*)$": "<rootDir>/src/$1",

@@ -7,6 +7,6 @@ build:
   output_directory: .open-next
 
 # 环境变量已通过 wrangler secret 配置：
-# - DATABASE_URL
-# - NEXTAUTH_SECRET
+# - DATABASE_URL [已迁移至 Convex，仅 Workers 层兼容]
+# - NEXTAUTH_SECRET [已迁移至 Clerk]
 # 公开变量通过 wrangler.toml 配置

@@ -1,3 +1,4 @@
+-- [已迁移至 Convex，仅保留历史参考]
 -- Migration: Add missing budget category columns
 -- Description: Extends budgets table to support all 10 FoodCategory types
 -- Added columns: seafood_budget, oils_budget, snacks_budget, beverages_budget
