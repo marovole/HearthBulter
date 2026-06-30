@@ -63,6 +63,11 @@ const nextConfig = {
   },
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
+    // CF Pages 预览构建未注入 Clerk publishable key 时的构建期兜底，避免 prerender 抛
+    // Missing publishableKey；生产由 Cloudflare Pages 注入真实 key 覆盖。publishable key
+    // 本就随前端 bundle 公开，非密钥。
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || "pk_test_Y2xlcmsuZXhhbXBsZS5jb20k",
   },
   async rewrites() {
     return [
