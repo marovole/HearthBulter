@@ -142,12 +142,6 @@ pnpm dev                  # 启动开发服务器
 pnpm build                # 构建生产版本
 pnpm build:cloudflare     # 构建 Cloudflare Pages 版本
 
-# 数据库 (Neon PostgreSQL)
-pnpm db:generate          # 生成 Prisma 客户端
-pnpm db:push              # 推送 schema 变更
-pnpm db:migrate           # 创建并应用迁移
-pnpm db:studio            # 打开 Prisma Studio
-
 # 代码质量
 pnpm lint                 # ESLint 检查
 pnpm lint:fix             # 自动修复
@@ -170,7 +164,7 @@ pnpm check:deployment     # 检查部署状态
 
 ## 技术栈
 
-**架构**: Cloudflare Pages + Neon PostgreSQL (Serverless, 完全免费)
+**架构**: Cloudflare Pages + Convex + Clerk (Serverless, 完全免费)
 
 **前端**:
 
@@ -182,9 +176,8 @@ pnpm check:deployment     # 检查部署状态
 
 **后端**:
 
-- Neon Serverless PostgreSQL (71 张表)
-- Prisma 6.19 (ORM)
-- Clerk 6.x (认证)
+- Convex (实时数据库 + 后端函数，`convex/` 目录)
+- Clerk 6.x (认证，NextAuth 已迁移)
 - OpenAI GPT-4 + OpenRouter (AI 服务)
 
 **部署**: Cloudflare Pages (全球 CDN + Edge Functions)
@@ -202,12 +195,12 @@ src/
 │   └── features/       # 业务功能组件
 ├── lib/
 │   ├── services/       # 106+ 业务服务
-│   ├── db/             # Prisma 客户端
+│   ├── db/             # 数据库抽象层（指向 Convex）
 │   └── utils/          # 工具函数
 ├── schemas/            # Zod 验证 Schema
 └── types/              # TypeScript 类型
 
-prisma/schema.prisma    # 71 张表，2400+ 行
+convex/                 # Convex 数据库模块（当前主数据源）
 openspec/               # 规范驱动开发 (变更提案)
 ```
 
@@ -215,7 +208,7 @@ openspec/               # 规范驱动开发 (变更提案)
 
 必需:
 
-- `DATABASE_URL` - Neon PostgreSQL 连接字符串
+- `NEXT_PUBLIC_CONVEX_URL` - Convex 实时数据库 URL
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Clerk 公钥
 - `CLERK_SECRET_KEY` - Clerk 密钥
 
@@ -223,19 +216,19 @@ openspec/               # 规范驱动开发 (变更提案)
 
 - `USDA_API_KEY` - 营养数据库 API
 - `OPENAI_API_KEY` - AI 服务
-- `OPENROUTER_API_KEY` - Claude 集成
+- `OPENROUTER_API_KEY` - OpenRouter 集成
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` - 边缘缓存
 
 ## 开发准则
 
 1. **TypeScript Strict Mode** - 所有代码必须通过严格类型检查
-2. **测试覆盖率** - 最低 25% 覆盖率要求
+2. **数据层** - 数据读写通过 `convex/` 目录的 mutation/query
 3. **API 开发** - 使用 Zod 验证输入，统一错误处理格式
-4. **数据库** - 修改前备份，使用 Prisma 查询优化
-5. **变更管理** - 复杂变更先创建 OpenSpec 提案
+4. **变更管理** - 复杂变更先创建 OpenSpec 提案
 
 ## 故障排除
 
-**数据库连接失败**: 检查 DATABASE_URL 格式，验证 Neon 服务状态
+**Convex 连接失败**: 检查 `NEXT_PUBLIC_CONVEX_URL` 格式，验证 Convex Dashboard 状态
 
 **构建失败**: 运行 `pnpm type-check` 检查类型错误
 

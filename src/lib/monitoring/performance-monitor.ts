@@ -5,7 +5,19 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
-import { queryOptimizer } from "@/lib/middleware/query-optimization";
+
+// query-optimization middleware 已随 Prisma/Neon 迁移移除，以下为向后兼容 stub
+const queryOptimizer = {
+  getStats: () => ({
+    avgDuration: 0,
+    avgQueryTime: 0,
+    slowQueries: 0,
+    totalQueries: 0,
+    cacheHitRate: 0,
+  }),
+  getSlowQueries: () => [] as { query: string; duration: number }[],
+  resetMetrics: () => {},
+};
 
 export interface PerformanceMetrics {
   // API响应时间

@@ -1,12 +1,11 @@
 /**
  * 多层缓存协调器
  *
- * 实现三层缓存架构：
+ * 实现两层缓存架构（L2 Neon/Supabase 已于 2026-01-27 迁移至 Convex，L2 当前为 no-op）：
  * - L1: Cloudflare KV (60s TTL) - 边缘缓存，最快
- * - L2: Supabase trend_data 表 (300s TTL) - 数据库缓存
- * - L3: Materialized View - 聚合视图（未来扩展）
+ * - L2: (已迁移) 原 Supabase trend_data 表，现为 no-op stub
  *
- * 降级策略：L1 miss → L2 → L3 → 实时查询
+ * 降级策略：L1 miss → 实时查询（L2 已禁用）
  *
  * 使用方式：
  * ```typescript
@@ -18,8 +17,35 @@
  */
 
 import { KvCache, type KvResult } from "./cloudflare-kv";
-import { NeonTrendCache, type TrendCacheQuery, type TrendCacheData } from "./neon-trend-cache";
 import { buildCacheKey } from "./edge-cache-helpers";
+
+// L2 (Neon trend_data) 已迁移至 Convex，以下为向后兼容 stub
+export interface TrendCacheQuery {
+  memberId: string;
+  dataType: string;
+  startDate: Date;
+  endDate: Date;
+}
+
+export interface TrendCacheData {
+  aggregatedData: unknown;
+  hitCount?: number;
+}
+
+type TrendCacheGetResult = { aggregatedData: unknown; hitCount: number } | null;
+
+class NeonTrendCache {
+  async get(_query: TrendCacheQuery): Promise<TrendCacheGetResult> {
+    return null;
+  }
+  async set(
+    _query: TrendCacheQuery,
+    _data: Partial<TrendCacheData>,
+    _ttl?: number
+  ): Promise<void> {}
+  async delete(_query: TrendCacheQuery): Promise<void> {}
+  async deleteByMember(_memberId: string): Promise<void> {}
+}
 
 /**
  * 缓存层枚举
