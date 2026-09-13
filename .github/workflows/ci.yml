@@ -123,7 +123,11 @@ jobs:
         env:
           # 测试环境变量（使用 mock 值，当前架构：Convex + Clerk）
           NEXT_PUBLIC_CONVEX_URL: "https://test-convex-url.convex.cloud"
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_ci-placeholder"
+          # ⚠️ publishable key 必须是合法格式：base64 段解码后需为 "$" 结尾的
+          # Frontend API host，否则 next build 在 prerender 阶段会抛
+          # throwInvalidPublishableKeyError，所有静态页失败。当前值解码为
+          # "clerk.example.com$"。改动前请先本地跑 pnpm build 验证。
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_Y2xlcmsuZXhhbXBsZS5jb20k"
           CLERK_SECRET_KEY: "sk_test_ci-placeholder"
           SKIP_ENV_VALIDATION: "true"
 
@@ -179,7 +183,11 @@ jobs:
         env:
           # 构建环境变量（使用 mock 值，当前架构：Convex + Clerk + Cloudflare Pages）
           NEXT_PUBLIC_CONVEX_URL: "https://test-convex-url.convex.cloud"
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_ci-placeholder"
+          # ⚠️ publishable key 必须是合法格式：base64 段解码后需为 "$" 结尾的
+          # Frontend API host，否则 next build 在 prerender 阶段会抛
+          # throwInvalidPublishableKeyError，所有静态页失败。当前值解码为
+          # "clerk.example.com$"。改动前请先本地跑 pnpm build 验证。
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_Y2xlcmsuZXhhbXBsZS5jb20k"
           CLERK_SECRET_KEY: "sk_test_ci-placeholder"
           SKIP_ENV_VALIDATION: "true"
           CI: "false" # 禁用严格模式以确保上线
@@ -234,7 +242,11 @@ jobs:
         env:
           # 当前架构：Convex + Clerk + Cloudflare Pages
           NEXT_PUBLIC_CONVEX_URL: "https://test-convex-url.convex.cloud"
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_ci-placeholder"
+          # ⚠️ publishable key 必须是合法格式：base64 段解码后需为 "$" 结尾的
+          # Frontend API host，否则 next build 在 prerender 阶段会抛
+          # throwInvalidPublishableKeyError，所有静态页失败。当前值解码为
+          # "clerk.example.com$"。改动前请先本地跑 pnpm build 验证。
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_Y2xlcmsuZXhhbXBsZS5jb20k"
           CLERK_SECRET_KEY: "sk_test_ci-placeholder"
           SKIP_ENV_VALIDATION: "true"
 

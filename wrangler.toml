@@ -54,11 +54,11 @@ NEXT_PUBLIC_ALLOWED_ORIGINS = "https://preview.hearthbulter.pages.dev"
 # 以下变量必须通过 Cloudflare Dashboard 或 wrangler secret 设置:
 #
 # 必需 (生产环境):
-# - DATABASE_URL (Neon PostgreSQL 连接字符串)
 # - CLERK_SECRET_KEY
 # - OPENAI_API_KEY (可选，用于 AI 功能)
 # - UPSTASH_REDIS_REST_TOKEN (可选，用于缓存)
 #
 # 公开变量 (也需要设置):
 # - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+# - NEXT_PUBLIC_CONVEX_URL
 # ============================================================

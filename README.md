@@ -304,7 +304,7 @@ Push to main → 代码质量检查 → TypeScript 类型检查 → 单元测试
 
 | 模块              | 状态      | 完成度 | 说明                                 |
 | ----------------- | --------- | ------ | ------------------------------------ |
-| 🔐 认证授权       | 🟢 已完成 | 100%   | NextAuth.js + JWT + OAuth (多提供商) |
+| 🔐 认证授权       | 🟢 已完成 | 100%   | Clerk（多提供商 OAuth）              |
 | 👨‍👩‍👧‍👦 家庭档案管理   | 🟢 已完成 | 100%   | 成员信息、健康目标、过敏史、邀请系统 |
 | 📊 健康数据管理   | 🟢 已完成 | 100%   | 体重/血压/血糖等指标 + 趋势可视化    |
 | 🤖 AI 健康顾问    | 🟢 已完成 | 100%   | 智能对话 + 营养建议 + 健康洞察       |
@@ -325,14 +325,14 @@ Push to main → 代码质量检查 → TypeScript 类型检查 → 单元测试
 
 ### 代码统计
 
-| 指标            | 数量    | 说明                |
-| --------------- | ------- | ------------------- |
-| **API 端点**    | 198+    | 完整的后端 API 覆盖 |
-| **服务模块**    | 117+    | 核心业务逻辑服务    |
-| **数据表**      | 72      | PostgreSQL 数据库表 |
-| **Schema 代码** | 2522 行 | Prisma 数据模型定义 |
-| **React 组件**  | 180+    | UI 组件 + 业务组件  |
-| **代码模块**    | 260+    | 工具函数与库模块    |
+| 指标            | 数量     | 说明                 |
+| --------------- | -------- | -------------------- |
+| **API 端点**    | 198+     | 完整的后端 API 覆盖  |
+| **服务模块**    | 117+     | 核心业务逻辑服务     |
+| **数据表**      | 72       | PostgreSQL 数据库表  |
+| **Schema 代码** | 11843 行 | Convex Schema + 函数 |
+| **React 组件**  | 180+     | UI 组件 + 业务组件   |
+| **代码模块**    | 260+     | 工具函数与库模块     |
 
 ---
 
@@ -344,7 +344,7 @@ Push to main → 代码质量检查 → TypeScript 类型检查 → 单元测试
 | ------------------------ | ------------------------ | -------------- | ------- |
 | **Cloudflare Pages**     | 无限请求 / 500 次构建/月 | ~50 次构建/月  | ✅ 免费 |
 | **Cloudflare Functions** | 100,000 请求/天          | ~1,000 请求/天 | ✅ 免费 |
-| **Neon PostgreSQL**      | 0.5GB storage, 191h/月   | ~50MB          | ✅ 免费 |
+| **Convex**               | 免费额度充足             | ~50MB          | ✅ 免费 |
 | **Clerk Auth**           | 10,000 MAU               | ~100 用户      | ✅ 免费 |
 | **GitHub Actions**       | 2,000 分钟/月            | ~200 分钟/月   | ✅ 免费 |
 | **Upstash Redis**        | 10,000 请求/天           | ~500 请求/天   | ✅ 免费 |
@@ -442,10 +442,9 @@ HearthBulter/
 │   └── workflows/          # GitHub Actions CI/CD
 │       ├── ci.yml          # 主 CI 流水线
 │       └── code-review.yml # 代码审查
-├── prisma/
-│   ├── schema.prisma       # 数据库 Schema (72 张表, 2522 行)
-│   ├── seed.ts             # 种子数据脚本
-│   └── migrations/         # 数据库迁移
+├── convex/
+│   ├── schema.ts           # Convex Schema 定义
+│   └── *.ts                # 查询 / 变更 / action 函数
 ├── public/                 # 静态资源
 ├── scripts/                # 构建和部署脚本 (100+ 脚本)
 ├── src/
@@ -688,10 +687,9 @@ chore: 构建过程或辅助工具变动
 
 - [Next.js](https://nextjs.org/) - React 全栈框架
 - [Cloudflare Pages](https://pages.cloudflare.com/) - 边缘部署平台
-- [Neon](https://neon.tech/) - Serverless PostgreSQL
+- [Convex](https://www.convex.dev/) - 实时数据库与后端平台
 - [Clerk](https://clerk.com/) - 现代认证平台
 - [shadcn/ui](https://ui.shadcn.com/) - 精美的 UI 组件库
-- [Prisma](https://www.prisma.io/) - 下一代 ORM
 - [USDA FoodData Central](https://fdc.nal.usda.gov/) - 营养数据 API
 
 ---
